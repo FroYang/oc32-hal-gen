@@ -1,0 +1,72 @@
+{
+    "name": "CV32S6015",
+    "ihosc_freq": 24,
+    "sclk_freq": 99,
+    "flash_size": 256,
+    "zone0_size": 30,
+    "zone1_size": 98,
+    "dma_channels": 4,
+    "dma_map0": "SPI0",
+    "dma_map1": "SPI1",
+    "dma_map2": "IIC",
+    "dma_map3": "UART0",
+    "dma_map4": "UART1",
+    "dma_map5": "ADC0",
+    "dma_map6": "MPWM0",
+    "dma_map7": "MPWM1",
+    "dma_map8": "MPWM2",
+    "dma_map9": "FLASH",
+    "dma_map10": "DAC0",
+    "dma_map11": "ADC1",
+    "dma_map12": "DAC1",
+    "dma_map13": "reserved0",
+    "dma_map14": "reserved1",
+    "dma_map15": "CRC",
+    "vdd_value": 5000,
+    "features": [
+        {
+            "key": "FLASH",
+            "description": "Read/Write Flash",
+            "always": false
+        },
+        {
+            "key": "FLASH_VERIFY",
+            "description": "Verify Flash Code",
+            "always": false,
+            "macro_name": "FLASH_VERIFY",
+            "dependencies": [
+                "FLASH"
+            ]
+        },
+        {
+            "key": "LVD",
+            "description": "Low Voltage Detection",
+            "always": false
+        },
+        {
+            "key": "WDT",
+            "description": "Watchdog Timer",
+            "always": false
+        },
+        {
+            "key": "VTS",
+            "description": "Voltage Temperature Sensor",
+            "always": false
+        },
+        {
+            "key": "UART",
+            "description": "UART",
+            "always": false
+        },
+        {
+            "key": "TIMER",
+            "description": "Timer",
+            "always": false
+        },
+        {
+            "key": "DEBUG",
+            "description": "Debug Printf",
+            "always": false
+        }
+    ]
+}
