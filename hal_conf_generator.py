@@ -68,18 +68,24 @@ def render_conf_template(chip_config, user_settings):
     with open(tmpl_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    ihosc = chip_config.get("ihosc_freq", 24)
-    sclk = chip_config.get("sclk_freq", 99)
+    ihosc = chip_config.get("ihosc_freq", 24000000)
+    ilosc = chip_config.get("ilosc_freq", 4000)
+    sclk = chip_config.get("sclk_freq", 99000000)
     tick = user_settings["tick_priority"]
     debug_uart = user_settings["debug_uart"]
+    int_priority = chip_config["int_priority"]
     dma_channels = chip_config["dma_channels"]
     features = chip_config["features"]
     user_features = user_settings.get("features", {})
 
+    name = chip_config.get("name", "OC32")
+    content = content.replace("__HAL_CONFIG_NAME__", name)
+
     # Clock definitions
     xhosc = user_settings["xhosc_freq"]
-    content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(xhosc))
+    content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(xhosc * 1000000))
     content = content.replace("__HAL_CONFIG_IHOSC_FREQ__", str(ihosc))
+    content = content.replace("__HAL_CONFIG_ILOSC_FREQ__", str(ilosc))
     content = content.replace("__HAL_CONFIG_SCLK_FREQ__", str(sclk))
 
     # FLASH definitions — match reference output format (hex, with comments)
@@ -99,6 +105,14 @@ def render_conf_template(chip_config, user_settings):
     content = content.replace("__HAL_CONFIG_TICK_PRIORITY__", f'{tick}U')
     content = content.replace("__HAL_CONFIG_TICK_FREQ__", f'HAL_TICK_FREQ_{user_settings["tick_freq"]}')
     content = content.replace("__HAL_CONFIG_UART_DEBUG_SUB__", _gen_uart_debug_sub(debug_uart))
+
+    # Int enum — generate PRI0..PRI(n-1) entries
+    int_enum_lines = []
+    for i in range(int_priority):
+        suffix = f"{i:02d}" if i >= 10 else str(i)
+        comma = "," if i < int_priority - 1 else ""
+        int_enum_lines.append(f"OC32_INT_PRI{suffix}       = {i}U{comma}")
+    content = content.replace("__HAL_CONFIG_INT_PRI_ENUM__", "\n".join(int_enum_lines))    
 
     # DMA enum — generate CH0..CH(n-1) entries
     dma_enum_lines = []
@@ -170,7 +184,7 @@ class App:
         self.root.resizable(True, True)
 
         self.chip_config = None
-        self.output_dir = "c:\\oc32\\include"
+        self.output_dir = str(Path.home() / "Desktop" )
         self.module_vars = {}      # key -> IntVar (persisted across chip changes)
         self._last_chip_key = None # track last selected chip
 
@@ -222,9 +236,9 @@ class App:
         tick_freq_frame = Frame(sys_frame)
         tick_freq_frame.pack(fill=X, pady=2)
         Label(tick_freq_frame, text="Tick Frequency:").pack(side=LEFT, anchor=W)
-        self.var_tick_freq = StringVar(value="1KHZ")
+        self.var_tick_freq = StringVar(value="1KHz")
         self.tick_freq_combo = ttk.Combobox(tick_freq_frame, textvariable=self.var_tick_freq,
-                                           values=["10HZ", "100HZ", "1KHZ"], state="readonly", width=8)
+                                           values=["10Hz", "100Hz", "1KHz"], state="readonly", width=8)
         self.tick_freq_combo.pack(side=RIGHT, padx=(4, 0))
 
         # Debug UART selection
@@ -243,14 +257,13 @@ class App:
         self.var_baud = StringVar(value="115200")
         self.baud_combo = ttk.Combobox(uart_baud_frame, textvariable=self.var_baud,
                                        values=["9600", "14400", "19200", "38400",
-                                               "57600", "115200", "230400", "460800", "921600"],
+                                               "57600", "115200", "230400", "460800", "921600", "1000000"],
                                        state="readonly", width=10)
         self.baud_combo.pack(side=RIGHT, padx=(4, 0))
 
         # Bottom: Output dir
         out_frame = _colored_label_frame(left, "Output Directory", "green")
         out_frame.pack(fill=X, padx=2, pady=2, expand=True)
-        Label(out_frame, text="Save to:").pack(anchor=W)
         self.var_outdir = StringVar(value=self.output_dir)
         Entry(out_frame, textvariable=self.var_outdir).pack(fill=X, pady=2)
         Button(out_frame, text="Browse...", command=self._browse_outdir).pack(pady=4)

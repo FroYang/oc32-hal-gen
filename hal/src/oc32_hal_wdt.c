@@ -1,15 +1,13 @@
 /**
-  ******************************************************************************
-  * @file    oc32_hal_wdt.c
-  * @author
-  * @brief   OC32 HAL WDT (Watchdog Timer) module driver.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    oc32_hal_wdt.c
+ * @author
+ * @brief   OC32 HAL WDT (Watchdog Timer) module driver.
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "oc32_hal.h"
-
-#ifdef HAL_WDT_ENABLE
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -19,139 +17,130 @@
 /* Private functions ---------------------------------------------------------*/
 
 /**
-  * @brief  Initializes the WDT peripheral according to the specified parameters.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @retval HAL status
-  */
-HAL_StatusTypeDef HAL_WDT_Init(WDT_HandleTypeDef *hwdt)
+ * @brief  Initializes the WDT peripheral according to the specified parameters.
+ * @param  Init: pointer to a HAL_WDTInitTypeDef structure.
+ * @retval HAL status
+ */
+HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
 {
-    /* TODO: Implement WDT initialization
-     * 1. Validate WDT handle
-     * 2. Configure WDT prescaler
-     * 3. Configure WDT auto-reload value
-     * 4. Enable WDT
-     */
+  if (Init == NULL || Init->WDTCON == NULL)
+    return HAL_ERROR;
 
-    hwdt->State = HAL_WDT_STATE_READY;
+  uint32_t wdtclkperiod;
+  if (CLKCON->IOSCH)
+  {
+    /* 6MHz clock */
+    wdtclkperiod = 1000000000U / (OC32_IHOSC_FREQ / 6);
+    if ((Init->Period < WDT_H_PERIOD_MIN) || (Init->Period > WDT_H_PERIOD_MAX))
+      return HAL_ERROR;
+  }
+  else
+  {
+    wdtclkperiod = 1000000000U / (OC32_ILOSC_FREQ / 6);
+    /* 1K clock */
+    if ((Init->Period < WDT_L_PERIOD_MIN) || (Init->Period > WDT_L_PERIOD_MAX))
+      return HAL_ERROR;
+  }
 
-    /* Initialize the WDT MSP */
-    HAL_WDT_MspInit(hwdt);
+  /* caculates period in ns */
+  uint32_t wdtovperiod = Init->Period * 1000U;
 
-    return HAL_OK;
+  /* caculates cycles */
+  uint32_t wdtcycles = wdtovperiod / wdtclkperiod;
+
+  /* WDT reload counter width: 8-bit (WDTRLV = 0x00~0xFF, max count = 256) */
+  static const uint32_t prescaler[] = {32u, 256u, 2048u, 16384u, 32768u, 65536u, 131072u, 262144u};
+
+  uint32_t counter = 0;
+  uint32_t i;
+  /* Select the smallest prescaler that yields a valid 8-bit reload value
+     Iterate from fastest (smallest prescaler) to slowest. */
+  for (i = 0; i < sizeof(prescaler) / sizeof(prescaler[0]); i++)
+  {
+    counter = wdtcycles / prescaler[i];
+    if (counter <= 256)
+    {
+
+      Init->WDTCON->WDT1E = 0;
+      Init->WDTCON->WDTCD = i;
+      Init->WDTCON->WDTRLV = counter - 1U;
+
+      break;
+    }
+  }
+
+  if (Init->Mode == WDT_MODE_RST)
+  {
+
+    Init->WDTCON->WDTRE = 1U;
+  }
+  else
+  {
+    if ((Init->Mode == WDT_MODE_INT) || (Init->Mode == WDT_MODE_INT_AND_WAKE))
+    {
+
+      Init->WDTCON->WDTIE = 1U;
+      HIE->WDTHIE = 1u;
+      HIPL0->WDTHIPL0 = (Init->IntPri & 1u);        /* Bit 0 of priority */
+      HIPL1->WDTHIPL1 = ((Init->IntPri >> 1) & 1u); /* Bit 1 of priority */
+    }
+
+    if ((Init->Mode == WDT_MODE_WAKE) || (Init->Mode == WDT_MODE_INT_AND_WAKE))
+    {
+      Init->WDTCON->WDTWE = 1U;
+    }
+  }
+
+  /* enable the timer */
+  Init->WDTCON->WDTE = 1U;
+
+  return HAL_OK;
 }
 
 /**
-  * @brief  DeInitializes the WDT peripheral.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @retval HAL status
-  */
-HAL_StatusTypeDef HAL_WDT_DeInit(WDT_HandleTypeDef *hwdt)
+ * @brief  Refreshes the WDT.
+ * @param  clear: pointer to a HAL_WDTInitTypeDef structure.
+ * @retval HAL status
+ */
+HAL_StatusTypeDef HAL_WDT_Clear(HAL_WDTInitTypeDef *Clear)
 {
-    /* TODO: Implement WDT de-initialization
-     * 1. Disable WDT
-     * 2. Reset WDT registers to default
-     */
+  if (Init == NULL || Init->WDTCON == NULL)
+    return HAL_ERROR;
 
-    hwdt->State = HAL_WDT_STATE_RESET;
-
-    /* DeInitialize the WDT MSP */
-    HAL_WDT_MspDeInit(hwdt);
-
-    return HAL_OK;
+  Clear->WDTCON->WDTCLR = WDT_CLR_KEY;
+  while (Clear->WDTCON->WDTO)
+    ;
+  return HAL_OK;
 }
 
 /**
-  * @brief  Initializes the WDT MSP.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @note   This is a weak implementation that can be overridden by the user.
-  */
-__weak void HAL_WDT_MspInit(WDT_HandleTypeDef *hwdt)
+ * @brief  DeInitializes the WDT peripheral.
+ * @param  Init: pointer to a HAL_WDTInitTypeDef structure.
+ * @retval HAL status
+ */
+HAL_StatusTypeDef HAL_WDT_DeInit(HAL_WDTInitTypeDef *Init)
 {
-    /* NOTE: This function should be implemented in the user file.
-     * TODO: Implement WDT MSP initialization
-     */
+  if (Init == NULL || Init->WDTCON == NULL)
+    return HAL_ERROR;
+
+  Init->WDTCON->WDTRE = 0;
+  Init->WDTCON->WDTWE = 0;
+  Init->WDTCON->WDTIE = 0;
+  HIE->WDTHIE = 0;
+  HIPL0->WDTHIPL0 = 0;
+  HIPL1->WDTHIPL1 = 0;
+  HAL_WDT_Clear(Init);
+  Init->WDTCON->WDTE = 0;
+  return HAL_OK;
 }
 
 /**
-  * @brief  DeInitializes the WDT MSP.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @note   This is a weak implementation that can be overridden by the user.
-  */
-__weak void HAL_WDT_MspDeInit(WDT_HandleTypeDef *hwdt)
+ * @brief  Handles LVD interrupt request.
+ * @note   This is a weak implementation that can be overridden by the user.
+ */
+__weak__ void HAL_WDT_IRQHandler(void)
 {
-    /* NOTE: This function should be implemented in the user file.
-     * TODO: Implement WDT MSP de-initialization
-     */
+  HAL_WDTInitTypeDef clear = {
+      .WDTCON = WDT0CON};
+  HAL_WDT_Clear(clear);
 }
-
-/**
-  * @brief  Starts the WDT.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @retval HAL status
-  */
-HAL_StatusTypeDef HAL_WDT_Start(WDT_HandleTypeDef *hwdt)
-{
-    /* TODO: Start WDT
-     * Enable WDT by writing key value to WDT control register
-     */
-    __HAL_WDT_START(hwdt);
-
-    return HAL_OK;
-}
-
-/**
-  * @brief  Stops the WDT.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @retval HAL status
-  */
-HAL_StatusTypeDef HAL_WDT_Stop(WDT_HandleTypeDef *hwdt)
-{
-    /* TODO: Stop WDT
-     * Disable WDT
-     */
-    __HAL_WDT_DISABLE(hwdt);
-
-    return HAL_OK;
-}
-
-/**
-  * @brief  Refreshes the WDT.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @retval HAL status
-  */
-HAL_StatusTypeDef HAL_WDT_Refresh(WDT_HandleTypeDef *hwdt)
-{
-    /* TODO: Refresh (reload) WDT counter
-     * Write reload key to WDT control register
-     */
-    __HAL_WDT_RELOAD(hwdt);
-
-    return HAL_OK;
-}
-
-/**
-  * @brief  Handles WDT interrupt request.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  */
-void HAL_WDT_IRQHandler(WDT_HandleTypeDef *hwdt)
-{
-    /* TODO: Handle WDT interrupt
-     * 1. Check for WDT timeout flag
-     * 2. Clear flag
-     * 3. Call timeout callback
-     */
-}
-
-/**
-  * @brief  WDT timeout callback.
-  * @param  hwdt: pointer to a WDT_HandleTypeDef structure.
-  * @note   This is a weak implementation that can be overridden by the user.
-  */
-__weak void HAL_WDT_TimeoutCallback(WDT_HandleTypeDef *hwdt)
-{
-    /* NOTE: This function should be implemented in the user file.
-     * TODO: Implement WDT timeout callback
-     */
-}
-
-#endif /* HAL_WDT_ENABLE */

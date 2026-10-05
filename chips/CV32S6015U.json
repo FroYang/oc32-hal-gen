@@ -1,10 +1,12 @@
 {
     "name": "CV32S6015U",
-    "ihosc_freq": 24,
-    "sclk_freq": 99,
+    "ihosc_freq": 24000000,
+    "ilosc_freq": 4000,
+    "sclk_freq": 99000000,
     "flash_size": 256,
     "zone0_size": 30,
     "zone1_size": 98,
+    "int_priority": 4,
     "dma_channels": 4,
     "dma_map0": "SPI0",
     "dma_map1": "SPI1",
@@ -30,27 +32,30 @@
             "always": true
         },
         {
-            "key": "FLASH",
-            "description": "Read/Write flash",
+            "key": "CRC",
+            "description": "CRC Calculator",
             "always": false
         },
         {
+            "key": "FLASH",
+            "description": "Read/Write Flash",
+            "always": false,
+            "dependencies": [
+                "CRC"
+            ]
+        },
+        {
             "key": "FLASH_VERIFY",
-            "description": "Verify code in flash",
+            "description": "Verify Flash Code",
             "always": false,
             "macro_name": "FLASH_VERIFY",
             "dependencies": [
-                "FLASH"
+                "FLASH", "CRC"
             ]
         },
         {
             "key": "LVD",
-            "description": "Low Voltage Detection",
-            "always": false
-        },
-        {
-            "key": "WDT",
-            "description": "Watchdog Timer",
+            "description": "Low Voltage Detector",
             "always": false
         },
         {
@@ -70,12 +75,12 @@
         },
         {
             "key": "USB",
-            "description": "USB fullspeed",
+            "description": "Fullspeed USB",
             "always": false
         },
         {
             "key": "RCM_CDR",
-            "description": "USB CDR for RCM clock config",
+            "description": "RCM Use USB CDR",
             "always": false,
             "macro_name": "RCM_CDR",
             "dependencies": [
@@ -84,8 +89,11 @@
         },
         {
             "key": "DEBUG",
-            "description": "Debug Printf",
-            "always": false
+            "description": "Debug Printf Via UART",
+            "always": false,
+            "dependencies": [
+                "UART"
+            ]
         }
     ]
 }

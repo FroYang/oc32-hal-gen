@@ -9,13 +9,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "oc32_hal.h"
 
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -67,20 +65,21 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
     VTSCON = WRITE_SR(HAL_GetREGTRIM0w2());
     LVDCON = WRITE_SR(HAL_GetREGTRIM0w3());
 
-    SystemClock = OC32_IHOSC_FREQ * 1000000U;
+    SystemClock = OC32_IHOSC_FREQ;
 
     /* update flash clock setting base on new system clock */
     HAL_FLASH_ClkUpdate();
+
     return HAL_OK;
 }
 
 /**
  * @brief  Initializes the RCM clock according to the specified parameters.
- * @param  Init: pointer to an HAL_RCMClkInitTypeDef structure that contains
+ * @param  Init: pointer to an HAL_RCMInitTypeDef structure that contains
  *         the configuration information for the RCM clock.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMClkInitTypeDef *Init)
+__sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
 {
     /* Check Null pointer */
     if (Init == NULL)
@@ -149,10 +148,10 @@ __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMClkInitTypeDef *Init)
 
         /* Calculate PLL output frequency and validate against max system clock */
         uint32_t pll_input_freq = (CLKCON->XHOSCE)
-            ? (OC32_XHOSC_FREQ * 1000000U)
-            : (OC32_IHOSC_FREQ * 1000000U);
-        uint32_t pll_out_freq   = (pll_input_freq >> Init->PllFD) * Init->PllFM;
-        if (pll_out_freq > (OC32_SCLK_FREQ * 1000000U))
+                                      ? OC32_XHOSC_FREQ
+                                      : OC32_IHOSC_FREQ;
+        uint32_t pll_out_freq = (pll_input_freq >> Init->PllFD) * Init->PllFM;
+        if (pll_out_freq > OC32_SCLK_FREQ)
         {
             return HAL_ERROR;
         }
@@ -185,15 +184,12 @@ __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMClkInitTypeDef *Init)
     }
 
     /* update system clock */
-    SystemClock = CLKCON->PLLE ? pll_out_freq : 
-                                 ((CLKCON->XHOSCE ? OC32_XHOSC_FREQ : 
-                                                    OC32_IHOSC_FREQ) * 1000000U);
+    SystemClock = CLKCON->PLLE ? pll_out_freq : (CLKCON->XHOSCE ? OC32_XHOSC_FREQ : OC32_IHOSC_FREQ);
 
     /* update flash clock setting base on new system clock */
     HAL_FLASH_ClkUpdate();
     return HAL_OK;
 }
-
 
 #ifdef HAL_USB_ENABLE
 /**
@@ -202,15 +198,15 @@ __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMClkInitTypeDef *Init)
  */
 HAL_StatusTypeDef HAL_RCM_TrimLockOn(void)
 {
-  if (CLKCON->IOSCUTL == 0)
-  {
-    CLKCON->IOSCUTL = 1u;
-    return HAL_OK;
-  }
-  else
-  {
-    return HAL_ERROR;
-  }
+    if (CLKCON->IOSCUTL == 0)
+    {
+        CLKCON->IOSCUTL = 1u;
+        return HAL_OK;
+    }
+    else
+    {
+        return HAL_ERROR;
+    }
 }
 
 /**
@@ -219,15 +215,15 @@ HAL_StatusTypeDef HAL_RCM_TrimLockOn(void)
  */
 HAL_StatusTypeDef HAL_RCM_TrimLockOff(void)
 {
-  if (CLKCON->IOSCUTL == 1)
-  {
-    CLKCON->IOSCUTL = 0;
-    return HAL_OK;
-  }
-  else
-  {
-    return HAL_ERROR;
-  }
+    if (CLKCON->IOSCUTL == 1)
+    {
+        CLKCON->IOSCUTL = 0;
+        return HAL_OK;
+    }
+    else
+    {
+        return HAL_ERROR;
+    }
 }
 #endif
 
@@ -238,4 +234,17 @@ HAL_StatusTypeDef HAL_RCM_TrimLockOff(void)
 uint32_t HAL_RCM_GetSysClockFreq(void)
 {
     return SystemClock;
+}
+
+/**
+ * @brief  Handles PLL interrupt request.
+ * @note   This is a weak implementation that can be overridden by the user.
+ */
+__weak__ void HAL_PLL_IRQHandler()
+{
+    /* switchback to default clock */
+    HAL_RCM_DeInit();
+
+    /* clear flag */
+    PLLCON->PFOCLR = 1U;
 }

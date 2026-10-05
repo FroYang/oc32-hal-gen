@@ -14,14 +14,17 @@ extern "C"
 {
 #endif
 
+#include "CV32S6015MSR.h"
+
 /* Exported constants ----------------------------------------------------*/
 
 /** @defgroup HAL_Clocks HAL Clocks
  * @{
  */
-#define OC32_XHOSC_FREQ ((uint32_t)4)  /* External oscillator frequency in MHz */
-#define OC32_IHOSC_FREQ ((uint32_t)24) /* Internal oscillator frequency in MHz */
-#define OC32_SCLK_FREQ ((uint32_t)99)  /* System clock frequency in MHz */
+#define OC32_XHOSC_FREQ ((uint32_t)4000000U)  /* External oscillator frequency in Hz */
+#define OC32_IHOSC_FREQ ((uint32_t)24000000U) /* Internal oscillator high frequency in Hz */
+#define OC32_ILOSC_FREQ ((uint32_t)4000U) /* Internal oscillator low frequency in Hz */
+#define OC32_SCLK_FREQ ((uint32_t)99000000U)  /* System clock frequency in Hz */
 /**
  * @}
  */
@@ -71,6 +74,21 @@ extern "C"
  * @}
  */
 
+   /** @defgroup HAL_INT_Priority Int Configuration
+    * @{
+    */
+   typedef enum
+   {
+      OC32_INT_PRI0 = 0U,
+      OC32_INT_PRI1 = 1U,
+      OC32_INT_PRI2 = 2U,
+      OC32_INT_PRI3 = 3U
+   } HAL_INTPriTypedef;
+
+/**
+ * @}
+ */
+
 /* ########################### System Configuration ######################### */
 /**
  * @brief This is the HAL system configuration section
@@ -96,7 +114,6 @@ typedef enum
 } HAL_TickFreqTypeDef;
 
 extern volatile uint32_t uwTick;
-extern uint32_t uwTickPrio;
 extern HAL_TickFreqTypeDef uwTickFreq;
 
 /** @defgroup HAL_ENABLE Module Enable
@@ -105,6 +122,7 @@ extern HAL_TickFreqTypeDef uwTickFreq;
 
 /* use defined enable modules */
 #define HAL_FLASH_ENABLE
+#define HAL_CRC_ENABLE
 #define HAL_LVD_ENABLE
 
    /* enable depends on model list:

@@ -32,7 +32,6 @@
  * @{
  */
 volatile uint32_t uwTick;
-uint32_t uwTickPrio = 0;                                /* Lowest PRIO */
 HAL_TickFreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT; /* 1KHz */
 
 /* Syscall request buffer: filled by __syscall_handler via SYSC instruction */
@@ -56,7 +55,7 @@ extern const uint32_t __FUSE_REGTRIM2[4];
 /**
  * @brief  Minimal memcpy for bare-metal (-nostdlib) environments.
  */
-static void *memcpy(void *dest, const void *src, uint32_t n)
+void *memcpy(void *dest, const void *src, uint32_t n)
 {
     uint8_t *d = (uint8_t *)dest;
     const uint8_t *s = (const uint8_t *)src;
@@ -410,61 +409,14 @@ static void request_REGTRIM2(void)
  */
 HAL_StatusTypeDef HAL_SYS_InitTick(uint32_t TickPriority)
 {
-    /* Configure the SysTick (used WDT1 as tick timer) to generate interrupt at 1ms
-       WDT0/1 are using Internal High-speed OSC clock/4 as clock source always.
-       Clock = OC32_IHOSC_FREQ (MHz) / 4, period = 1000 / (OC32_IHOSC_FREQ/4) ns. */
-    uint32_t wdtclkperiod = 1000u / (OC32_IHOSC_FREQ / 4u); // unit: ns
-    uint32_t wdtovperiod = 1000000u * uwTickFreq;           // target period in ns
+    HAL_WDTInitTypeDef Init = {
+        .WDTCON = WDT1CON,
+        .Mode = WDT_MODE_INT,
+        .IntPri = TickPriority,
+        .Period = HAL_TICK_FREQ_DEFAULT * 1000U
+    };
 
-    /* WDT prescaler options (WDTCD bits [5:3]):
-       /32   /256  /2048  /16384  /32768  /65536  /131072  /262144 */
-
-    /* WDT reload counter width: 8-bit (WDTRLV = 0x00~0xFF, max count = 256) */
-    static const uint32_t prescalers[] = {32u, 256u, 2048u, 16384u, 32768u, 65536u, 131072u, 262144u};
-    uint8_t wdtprescal = 0; /* WDTCD index, default /32 */
-    uint32_t wdtcount = 0;  /* reload count = WDTRLV + 1 */
-    uint32_t reloadval = 0; /* WDTRLV value to write */
-    uint32_t prescaler_hz = 0;
-    uint32_t count_per_tick = 0;
-
-    /* Select the smallest prescaler that yields a valid 8-bit reload value
-       (i.e. count_per_tick <= 256, so WDTRLV <= 0xFF).
-       Iterate from fastest (smallest prescaler) to slowest. */
-    for (wdtprescal = 0; wdtprescal < sizeof(prescalers) / sizeof(prescalers[0]); wdtprescal++)
-    {
-        prescaler_hz = (OC32_IHOSC_FREQ / 4u) / prescalers[wdtprescal];
-        count_per_tick = (uint64_t)wdtovperiod * prescaler_hz / 1000000000ULL;
-        if (count_per_tick <= 256u)
-        {
-            break;
-        }
-    }
-
-    /* Error check: if count_per_tick > 256 for all prescalers, WDT cannot achieve the target period */
-    if (count_per_tick > 256u)
-    {
-        return HAL_ERROR;
-    }
-
-    /* WDTRLV = count_per_tick - 1
-       WDT counts from 0 up to and including WDTRLV, so total cycles = WDTRLV + 1. */
-    wdtcount = count_per_tick;
-    reloadval = wdtcount - 1u;
-
-    /* Write reloadval to WDT1CON.WDTRLV (bits [23:16]) and wdtprescal to WDT1CON.WDTCD (bits [5:3]) */
-    WDT1CON->WDTCD = wdtprescal;
-    WDT1CON->WDTRLV = (uint8_t)reloadval;
-
-    /* Enable WDT1 interrupt and WDTE bit */
-    WDT1CON->WDTIE = 1u;
-    WDT1CON->WDTE = 1u;
-
-    /* Configure WDT high-priority interrupt: enable interrupt, set priority bits */
-    HIE->WDTHIE = 1u;                             /* Enable WDT interrupt */
-    HIPL0->WDTHIPL0 = (TickPriority & 1u);        /* Bit 0 of priority */
-    HIPL1->WDTHIPL1 = ((TickPriority >> 1) & 1u); /* Bit 1 of priority */
-
-    uwTickPrio = TickPriority;
+    HAL_WDT_Init(Init);
 
     return HAL_OK;
 }
@@ -499,24 +451,6 @@ void HAL_Delay(uint32_t Delay)
     while ((HAL_SYS_GetTick() - tickstart) < Delay)
     {
     }
-}
-
-/**
- * @brief  Suspends Tick increment.
- */
-void HAL_SYS_SuspendTick(void)
-{
-    /* Disable WDT1 timer to stop tick increment */
-    WDT1CON->WDTE = 0u;
-}
-
-/**
- * @brief  Resumes Tick increment.
- */
-void HAL_SYS_ResumeTick(void)
-{
-    /* Enable WDT1 timer to resume tick increment */
-    WDT1CON->WDTE = 1u;
 }
 
 /**
@@ -626,4 +560,24 @@ uint32_t HAL_GetREGTRIM0w3(void)
 {
     request_REGTRIM0();
     return requestbuf[3];
+}
+
+/**
+ * @brief  Handles POR interrupt request.
+ * @note   This is a weak implementation that can be overridden by the user.
+ */
+__weak__ void HAL_POR_IRQHandler()
+{
+    /* clear flag */
+    HRF->PORFCLR = 1U;
+}
+
+/**
+ * @brief  Handles Debug interrupt request.
+ * @note   This is a weak implementation that can be overridden by the user.
+ */
+__weak__ void HAL_DBGR_IRQHandler()
+{
+    /* clear flag */
+    HRF->DBGRFCLR = 1U;
 }

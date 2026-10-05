@@ -1,90 +1,89 @@
 /**
-  ******************************************************************************
-  * @file    oc32_hal_wdt.h
-  * @author
-  * @brief   Header file of WDT HAL module.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    oc32_hal_wdt.h
+ * @author
+ * @brief   Header file of WDT HAL module.
+ ******************************************************************************
+ */
 
 #ifndef __OC32_HAL_WDT_H
 #define __OC32_HAL_WDT_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
+/* Includes ------------------------------------------------------------*/
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
-#include "CV32S6015MSR.h"
 
-#ifdef HAL_WDT_ENABLE
+  /** @addtogroup OC32_HAL_Driver
+   * @{
+   */
 
-/** @addtogroup OC32_HAL_Driver
-  * @{
-  */
+  /** @addtogroup WDT
+   * @{
+   */
 
-/** @addtogroup WDT
-  * @{
-  */
+  /* Exported types ------------------------------------------------------*/
 
-/* Exported types ------------------------------------------------------*/
+  /** @defgroup WDT_Mode
+   * @{
+   */
+
+  typedef enum
+  {
+    WDT_MODE_NONE = 0x0U,
+    WDT_MODE_RST = 0x1U,
+    WDT_MODE_WAKE = 0x2U,
+    WDT_MODE_INT = 0x3U,
+    WDT_MODE_INT_AND_WAKE = 0x4U
+  } HAL_WDTModeTypedef;
+
+  /**
+   * @brief  WDT Init Structure definition
+   */
+  typedef struct
+  {
+    WDTCON_TypeDef *WDTCON;   /*!< Specifies which WDTCON */
+    HAL_WDTModeTypedef Mode;  /*!< Specifies the Mode */
+    uint32_t Period;          /*!< Specifies the overflow period (us) */
+    HAL_INTPriTypedef IntPri; /*!< Specifies the interrupt priority */
+  } HAL_WDTInitTypeDef;
 
 /**
-  * @brief  WDT Init Structure definition
-  */
-typedef struct {
-    uint32_t Prescaler;   /*!< Watchdog prescaler */
-    uint32_t ReloadValue; /*!< Watchdog reload value */
-    uint32_t Window;      /*!< Watchdog window value */
-} WDT_InitTypeDef;
-
-/**
-  * @brief  WDT Handle Structure definition
-  */
-typedef struct __WDT_HandleTypeDef {
-    WDT_TypeDef *Instance;
-    WDT_InitTypeDef Init;
-    HAL_LockTypeDef Lock;
-    __IO HAL_StateTypeDef State;
-    __IO uint32_t ErrorCode;
-    void (* MspInitCallback)(struct __WDT_HandleTypeDef *hw) __weak;
-    void (* MspDeInitCallback)(struct __WDT_HandleTypeDef *hw) __weak;
-} WDT_HandleTypeDef;
-
-/**
-  * @}
-  */
+ * @}
+ */
 
 /* Exported constants --------------------------------------------------*/
-#define WDT_TIMEOUT_VALUE  ((uint32_t)50000U)
 
 /**
-  * @}
-  */
+ * @brief This is the HAL system configuration section
+ */
+#define WDT_H_PERIOD_MIN (1000000U / (OC32_IHOSC_FREQ / (4U * 32U)))     /*!< WDT min period at high clock in us*/
+#define WDT_H_PERIOD_MAX (1000000U / (OC32_IHOSC_FREQ / (4U * 262144U))) /*!< WDT max period at high clock in us*/
+#define WDT_L_PERIOD_MIN (1000000U / (OC32_ILOSC_FREQ / (4U * 32U)))     /*!< WDT min period at low clock in us*/
+#define WDT_L_PERIOD_MAX (1000000U / (OC32_IHOSC_FREQ / (4U * 262144U))) /*!< WDT max period at low clock in us*/
 
-/* Exported macros -------------------------------------------------------*/
-#define __HAL_WDT_START()     (WDT->CR = WDT_CR_START)
-#define __HAL_WDT_RELOAD()    (WDT->CR = WDT_CR_RELOAD)
-#define __HAL_WDT_ENABLE()    (WDT->CR |= WDT_CR_EN)
-#define __HAL_WDT_DISABLE()   (WDT->CR &= ~WDT_CR_EN)
-#define __HAL_WDT_GET_FLAG()  (WDT->SR & WDT_SR_RF)
+#define WDT_CLR_KEY 0xA5U /*!< WDT clear/refresh key vaule */
 
-/* Exported functions ----------------------------------------------------*/
-HAL_StatusTypeDef HAL_WDT_Init(WDT_HandleTypeDef *hwdt);
-HAL_StatusTypeDef HAL_WDT_DeInit(WDT_HandleTypeDef *hwdt);
-void HAL_WDT_MspInit(WDT_HandleTypeDef *hwdt) __weak;
-void HAL_WDT_MspDeInit(WDT_HandleTypeDef *hwdt) __weak;
-HAL_StatusTypeDef HAL_WDT_Start(WDT_HandleTypeDef *hwdt);
-HAL_StatusTypeDef HAL_WDT_Stop(WDT_HandleTypeDef *hwdt);
-HAL_StatusTypeDef HAL_WDT_Refresh(WDT_HandleTypeDef *hwdt);
-void HAL_WDT_IRQHandler(WDT_HandleTypeDef *hwdt);
-void HAL_WDT_TimeoutCallback(WDT_HandleTypeDef *hwdt) __weak;
+  /**
+   * @}
+   */
 
-/**
-  * @}
-  */
+  /* Exported macros -------------------------------------------------------*/
 
-#endif /* HAL_WDT_ENABLE */
+  /* Exported functions ----------------------------------------------------*/
+
+  HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_WDT_DeInit(void);
+  HAL_StatusTypeDef HAL_WDT_Clear(HAL_WDTInitTypeDef *Clear);
+      __weak__ void HAL_WDT_IRQHandler();
+
+  /**
+   * @}
+   */
 
 #ifdef __cplusplus
 }

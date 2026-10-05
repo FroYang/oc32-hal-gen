@@ -28,7 +28,7 @@ HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *I
 
     if (Init->Mode == GPIO_OUTPUT)
     {
-        if (Init->State == GPIO_HI)
+        if (Init->State == HI)
         {
             Port->D = Port->D | Init->Pin;
         }
@@ -141,7 +141,7 @@ HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin)
  */
 HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
 {
-    return ((Port->D & Pin) != 0u) ? GPIO_HI : GPIO_LO;
+    return ((Port->D & Pin) != 0u) ? HI : LO;
 }
 
 /**
@@ -154,7 +154,7 @@ HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
  */
 void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State)
 {
-    if (State == GPIO_HI)
+    if (State == HI)
     {
         Port->D = Port->D | Pin;
     }

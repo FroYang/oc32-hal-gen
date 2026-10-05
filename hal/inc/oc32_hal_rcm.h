@@ -16,9 +16,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------*/
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
-#include "CV32S6015MSR.h"
 
-#ifdef HAL_RCM_ENABLE
 
 /** @addtogroup OC32_HAL_Driver
  * @{
@@ -45,7 +43,7 @@ typedef struct {
     uint32_t PllRef;  /*!< OSC / USB CDR */
     uint32_t CdrTrim; /*!< On / Off */
 #endif
-} HAL_RCMClkInitTypeDef;
+} HAL_RCMInitTypeDef;
 
 
 
@@ -196,12 +194,9 @@ typedef struct {
  * @{
  */
 
-/* System clock frequency */
-extern uint32_t SystemClock;
-
 /* Initialization and de-initialization functions */
 HAL_StatusTypeDef HAL_RCM_DeInit(void);
-__sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMClkInitTypeDef *Init);
+__sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init);
 
 #ifdef HAL_USB_ENABLE
 HAL_StatusTypeDef HAL_RCM_TrimLockOn(void);
@@ -233,8 +228,6 @@ uint32_t HAL_RCM_GetSysClockFreq(void);
 /**
  * @}
  */
-
-#endif /* HAL_RCM_ENABLE */
 
 #ifdef __cplusplus
 }

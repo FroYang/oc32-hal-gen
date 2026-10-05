@@ -14,7 +14,8 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_def.h"
+#include "oc32_hal_conf.h"
 
 /** @addtogroup OC32_HAL_Driver
  * @{
@@ -78,8 +79,8 @@ typedef struct {
  * @{
  */
 typedef enum {
-    GPIO_LO = 0u,
-    GPIO_HI = 1u
+    LO = 0u,
+    HI = 1u
 } HAL_GPIO_State;
 
 /**
@@ -186,9 +187,9 @@ HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *I
 HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin);
 
 /* IO operation functions *************************************************/
-HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t GPIO_Pin);
-void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t GPIO_Pin, HAL_GPIO_State PinState);
-void HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t GPIO_Pin);
+HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin);
+void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State);
+void HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t Pin);
 
 /**
  * @}
