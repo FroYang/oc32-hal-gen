@@ -74,9 +74,8 @@ __weak__ void HAL_DBGR_IRQHandler(void);
 
 /**
  * Current system clock frequency, in Hz.
- * Initialized to OC32_IHOSC_FREQ; call SystemClockUpdate() to refresh.
  */
-uint32_t SystemClock = OC32_IHOSC_FREQ;
+extern uint32_t SystemClock;
 
 
 #ifdef __cplusplus
