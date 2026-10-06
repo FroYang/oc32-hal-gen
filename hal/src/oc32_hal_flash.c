@@ -431,9 +431,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
         /* exclude the word of crc32 data */
         if (i == (Size - 1))
         {
-            crc_packet = {
-                .Length = 1020U,
-            };
+            crc_packet.Length = 1020U;
         }
 
         if (HAL_CRC_Packet(&crc_packet) != HAL_OK)
@@ -502,7 +500,7 @@ __sram__ static HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
 
         /* 1k per kick, overwrite the data every kick */
         HAL_FlashPacketTypeDef pkt = {
-            .Data = &flashbuf,
+            .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 256U,
             .DMA = OC32_DMA_CH0,
@@ -566,7 +564,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
     {
         /* read a page, then program a page */
         HAL_FlashPacketTypeDef read_pkt = {
-            .Data = &flashbuf,
+            .Data = flashbuf,
             .Address = saddr,
             .Length = FLASH_PAGE_SIZE >> 2,
             .DMA = OC32_DMA_CH0,
@@ -575,7 +573,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
             return HAL_ERROR;
 
         HAL_FlashPacketTypeDef prog_pkt = {
-            .Data = &flashbuf,
+            .Data = flashbuf,
             .Address = daddr,
             .Length = FLASH_PAGE_SIZE >> 2,
             .DMA = OC32_DMA_CH0,

@@ -24,6 +24,7 @@ extern "C"
 #define OC32_XHOSC_FREQ ((uint32_t)4000000U)  /* External oscillator frequency in Hz */
 #define OC32_IHOSC_FREQ ((uint32_t)24000000U) /* Internal oscillator high frequency in Hz */
 #define OC32_ILOSC_FREQ ((uint32_t)4000U) /* Internal oscillator low frequency in Hz */
+#define OC32_CDR_FREQ ((uint32_t)12000000U) /* USB CDR output frequency in Hz */
 #define OC32_SCLK_FREQ ((uint32_t)99000000U)  /* System clock frequency in Hz */
 /**
  * @}
@@ -96,7 +97,6 @@ extern "C"
 #define HAL_VDD_VALUE 5000U      /*!< Value of VDD in mv */
 #define HAL_TICK_INT_PRIORITY 0U /*!< tick interrupt priority: small num -> low priority */
 #define HAL_FLASH_VERIFY_ENABLE
-#define HAL_FLASH_VERIFY_RETRY 3U
 #define HAL_UART_DEBUG_ENABLE
 
 #ifdef HAL_UART_DEBUG_ENABLE
@@ -107,10 +107,10 @@ extern "C"
 
 typedef enum
 {
-  HAL_TICK_FREQ_10HZ         = 100U,
-  HAL_TICK_FREQ_100HZ        = 10U,
-  HAL_TICK_FREQ_1KHZ         = 1U,
-  HAL_TICK_FREQ_DEFAULT      = HAL_TICK_FREQ_1KHZ
+  HAL_TICK_FREQ_10Hz         = 100U,
+  HAL_TICK_FREQ_100Hz        = 10U,
+  HAL_TICK_FREQ_1KHz         = 1U,
+  HAL_TICK_FREQ_DEFAULT      = HAL_TICK_FREQ_1KHz
 } HAL_TickFreqTypeDef;
 
 extern volatile uint32_t uwTick;
@@ -124,6 +124,7 @@ extern HAL_TickFreqTypeDef uwTickFreq;
 #define HAL_FLASH_ENABLE
 #define HAL_CRC_ENABLE
 #define HAL_LVD_ENABLE
+#define HAL_WDT_ENABLE
 
    /* enable depends on model list:
       #define HAL_PORT_B_ENABLE

@@ -36,7 +36,7 @@ static inline uint32_t hal_int_get_eia(void)
  * RETE fetches its return address from EIA. */
 static inline void hal_int_set_eia(uint32_t val)
 {
-    __asm__ __volatile__("OR R1, R0, %0" : : "r"(val) : "r1");
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(val));
 }
 
 /**
@@ -99,8 +99,10 @@ __sram__ int __int0()
         HAL_DBGR_IRQHandler();
 
     /* lvd reset flag or lvd event */
+#ifdef HAL_LVD_ENABLE
     if (HRF->LVDRF || LVDCON->LVDEF)
         HAL_LVD_IRQHandler();
+#endif /* HAL_LVD_ENABLE */
 
     /* pll frequency over */
     if (PLLCON->PFO)
@@ -244,18 +246,17 @@ __sram__ int __int17()
 {
     HAL_IntPreemptOn(17);
 
+#ifdef HAL_WDT_ENABLE
     if (WDT0CON->WDTE && WDT0CON->WDTIE && WDT0CON->WDTTO)
     {
         HAL_WDT_IRQHandler();
     }
+#endif /* HAL_WDT_ENABLE */
 
     /* reload the counter and inc tick */
     if (WDT1CON->WDTE && WDT1CON->WDTIE && WDT1CON->WDTTO)
     {
-        HAL_WDTInitTypeDef clear = {
-            .WDTCON = WDT1CON
-        };
-        HAL_WDT_Clear(clear);
+        HAL_WDT_Clear(WDT1CON);
         HAL_SYS_IncTick();
     }
 
@@ -358,8 +359,10 @@ __sram__ int __int29()
 {
     HAL_IntPreemptOn(29);
 
+#ifdef HAL_CRC_ENABLE
     if (CRCCON->CRCCF)
         HAL_CRC_IRQHandler();
+#endif /* HAL_CRC_ENABLE */
 
     HAL_IntPreemptOff(29);
     return 0;

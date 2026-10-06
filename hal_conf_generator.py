@@ -70,6 +70,7 @@ def render_conf_template(chip_config, user_settings):
 
     ihosc = chip_config.get("ihosc_freq", 24000000)
     ilosc = chip_config.get("ilosc_freq", 4000)
+    cdr = chip_config.get("cdr_freq", 12000000)
     sclk = chip_config.get("sclk_freq", 99000000)
     tick = user_settings["tick_priority"]
     debug_uart = user_settings["debug_uart"]
@@ -86,6 +87,7 @@ def render_conf_template(chip_config, user_settings):
     content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(xhosc * 1000000))
     content = content.replace("__HAL_CONFIG_IHOSC_FREQ__", str(ihosc))
     content = content.replace("__HAL_CONFIG_ILOSC_FREQ__", str(ilosc))
+    content = content.replace("__HAL_CONFIG_CDR_FREQ__", str(cdr))
     content = content.replace("__HAL_CONFIG_SCLK_FREQ__", str(sclk))
 
     # FLASH definitions — match reference output format (hex, with comments)

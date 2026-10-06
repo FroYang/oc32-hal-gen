@@ -52,9 +52,9 @@ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
  */
 HAL_StatusTypeDef HAL_CRC_DeInit()
 {
-  CRCPOLY = 0;
-  CRCREG = 0;
-  CRCCON = 0;
+  WRITE_SR(CRCPOLY, 0);
+  WRITE_SR(CRCREG, 0);
+  WRITE_SR(CRCCON, 0);
   HIE->FLCRCHIE = 0;
   HIPL0->FLCRCHIPL0 = 0;
   HIPL1->FLCRCHIPL1 = 0;
@@ -165,7 +165,7 @@ HAL_StatusTypeDef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet)
     }
 
     /* setup DMA address */
-    WRITE_SR(CRCDA, &(Packet->Data));
+    WRITE_SR(CRCDA, (uint32_t)Packet->Data);
 
   }
   else

@@ -61,7 +61,7 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
     if (counter <= 256)
     {
 
-      Init->WDTCON->WDT1E = 0;
+      Init->WDTCON->WDTE = 0;
       Init->WDTCON->WDTCD = i;
       Init->WDTCON->WDTRLV = counter - 1U;
 
@@ -99,16 +99,16 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
 
 /**
  * @brief  Refreshes the WDT.
- * @param  clear: pointer to a HAL_WDTInitTypeDef structure.
+ * @param  WDTCON: pointer to a HAL_WDTInitTypeDef structure.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_WDT_Clear(HAL_WDTInitTypeDef *Clear)
+HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON)
 {
-  if (Init == NULL || Init->WDTCON == NULL)
+  if (WDTCON == NULL)
     return HAL_ERROR;
 
-  Clear->WDTCON->WDTCLR = WDT_CLR_KEY;
-  while (Clear->WDTCON->WDTO)
+  WDTCON->WDTCLR = WDT_CLR_KEY;
+  while (WDTCON->WDTTO)
     ;
   return HAL_OK;
 }
@@ -129,7 +129,7 @@ HAL_StatusTypeDef HAL_WDT_DeInit(HAL_WDTInitTypeDef *Init)
   HIE->WDTHIE = 0;
   HIPL0->WDTHIPL0 = 0;
   HIPL1->WDTHIPL1 = 0;
-  HAL_WDT_Clear(Init);
+  HAL_WDT_Clear(Init->WDTCON);
   Init->WDTCON->WDTE = 0;
   return HAL_OK;
 }
@@ -140,7 +140,5 @@ HAL_StatusTypeDef HAL_WDT_DeInit(HAL_WDTInitTypeDef *Init)
  */
 __weak__ void HAL_WDT_IRQHandler(void)
 {
-  HAL_WDTInitTypeDef clear = {
-      .WDTCON = WDT0CON};
-  HAL_WDT_Clear(clear);
+  HAL_WDT_Clear(WDT0CON);
 }

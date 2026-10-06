@@ -86,7 +86,7 @@ extern "C"
 #ifdef HAL_CRC_ENABLE
   HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init);
   HAL_StatusTypeDef HAL_CRC_DeInit(void);
-  __weak__ void HAL_CRC_IRQHandler();
+  __weak__ void HAL_CRC_IRQHandler(void);
   uint32_t HAL_CRC_OneByte(uint32_t Data);
   uint32_t HAL_CRC_OneWord(uint32_t Data);
   HAL_StatusTypeDef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet);

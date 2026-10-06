@@ -130,6 +130,7 @@ extern "C"
  * @{
  */
 #define FLASH_TIMEOUT_VALUE ((uint32_t)500000U)
+#define HAL_FLASH_VERIFY_RETRY 3U
     /**
      * @}
      */

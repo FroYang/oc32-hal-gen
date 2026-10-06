@@ -308,6 +308,17 @@ int printf(const char *format, ...)
 #endif
 
 /**
+ * @brief  System trap handler invoked by crtihw.S when SYSC instruction is executed.
+ *         Reads fused data from the appropriate source into requestbuf[4].
+ * @retval 0 on success, -1 on invalid number
+ */
+int __systrap_handler(void)
+{
+
+	return 0;
+}
+
+/**
  * @brief  System call handler invoked by crtihw.S when SYSC instruction is executed.
  *         Reads fused data from the appropriate source into requestbuf[4].
  * @param  number: syscall number (0=PID, 1=LID, 2=TSN, 3=REGTRIM0, 4=REGTRIM1, 5=REGTRIM2)
@@ -416,7 +427,7 @@ HAL_StatusTypeDef HAL_SYS_InitTick(uint32_t TickPriority)
         .Period = HAL_TICK_FREQ_DEFAULT * 1000U
     };
 
-    HAL_WDT_Init(Init);
+    HAL_WDT_Init(&Init);
 
     return HAL_OK;
 }
@@ -566,7 +577,7 @@ uint32_t HAL_GetREGTRIM0w3(void)
  * @brief  Handles POR interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_POR_IRQHandler()
+__weak__ void HAL_POR_IRQHandler(void)
 {
     /* clear flag */
     HRF->PORFCLR = 1U;
@@ -576,7 +587,7 @@ __weak__ void HAL_POR_IRQHandler()
  * @brief  Handles Debug interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_DBGR_IRQHandler()
+__weak__ void HAL_DBGR_IRQHandler(void)
 {
     /* clear flag */
     HRF->DBGRFCLR = 1U;

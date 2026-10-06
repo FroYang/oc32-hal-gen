@@ -27,7 +27,7 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
     /* config wait timer(biggest number) for clock switching */
     CLKCON->CSWT = 0x7FU;
 
-    /* if PLL, switch from PLL to IHOSC */
+    /* if PLL, switch from PLL to OSC */
     if (CLKCON->PLLE)
     {
         CLKCON->PLLE = 0;
@@ -58,12 +58,12 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
     }
 
     /* default value */
-    CLKCON = WRITE_SR(0x00001F01U);
-    PLLCON = WRITE_SR(0x00000028U);
-    BPCON = WRITE_SR(HAL_GetREGTRIM0w0());
-    IOSCCON = WRITE_SR(HAL_GetREGTRIM0w1());
-    VTSCON = WRITE_SR(HAL_GetREGTRIM0w2());
-    LVDCON = WRITE_SR(HAL_GetREGTRIM0w3());
+    WRITE_SR(CLKCON, 0x00001F01U);
+    WRITE_SR(PLLCON, 0x00000028U);
+    WRITE_SR(BPCON, HAL_GetREGTRIM0w0());
+    WRITE_SR(IOSCCON, HAL_GetREGTRIM0w1());
+    WRITE_SR(VTSCON, HAL_GetREGTRIM0w2());
+    WRITE_SR(LVDCON, HAL_GetREGTRIM0w3());
 
     SystemClock = OC32_IHOSC_FREQ;
 
@@ -77,12 +77,13 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
  * @brief  Initializes the RCM clock according to the specified parameters.
  * @param  Init: pointer to an HAL_RCMInitTypeDef structure that contains
  *         the configuration information for the RCM clock.
+ * @note   DeInit should be used before re-Initialize
  * @retval HAL status
  */
 __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
 {
     /* Check Null pointer */
-    if (Init == NULL)
+    if ((Init == NULL) || (Init->OutFreq > OC32_SCLK_FREQ))
     {
         return HAL_ERROR;
     }
@@ -95,9 +96,18 @@ __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
     /* config wait timer(biggest number) for clock switching */
     CLKCON->CSWT = 0x7FU;
     uint32_t tickstart;
+    uint32_t reffreq = 0;
 
+#ifdef HAL_RCM_CDR_ENABLE
+    CLKCON->UXCDRE = 1U;
+    reffreq = OC32_CDR_FREQ;
+    /* skip osc cfg, cdr always need ihosc(default) */
+    goto pll_cfg;
+#endif
+
+osc_cfg:
     /* XHOSC config */
-    if ((Init->OscType == RCM_OSCTYPE_XHOSC) && !CLKCON->XHOSCE)
+    if (Init->OscType == RCM_OSC_XHOSC)
     {
         CLKCON->XHOSCE = 1u;
         /* Wait till clock switch is ready */
@@ -109,83 +119,83 @@ __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
                 return HAL_TIMEOUT;
             }
         }
+        reffreq = OC32_XHOSC_FREQ;
     }
     /* IOSC config */
-    else if ((Init->OscType == RCM_OSCTYPE_IOSC) && CLKCON->XHOSCE)
+    else if (Init->OscType == RCM_OSC_ILOSC)
     {
-        CLKCON->IOSCH = RCM_IOSCSPEED_HIGH & Init->IoscHigh;
-        CLKCON->XHOSCE = 0;
-        /* Wait till clock switch is ready */
-        tickstart = HAL_SYS_GetTick();
-        while (CLKCON->CSF == 0)
-        {
-            if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-            {
-                return HAL_TIMEOUT;
-            }
-        }
+        /* output should be same as low freq clock */
+        if (Init->OutFreq != OC32_ILOSC_FREQ)
+            return HAL_ERROR;
+
+        CLKCON->IOSCH = 0;
+        reffreq = OC32_ILOSC_FREQ;
+    }
+    else if (Init->OscType == RCM_OSC_IHOSC)
+    {
+        CLKCON->IOSCH = 1U;
+        reffreq = OC32_ILOSC_FREQ;
     }
     else
     {
         return HAL_ERROR;
     }
 
-    /* PLL config */
-    if ((Init->PllState == RCM_PLL_ON) && !CLKCON->PLLE)
+    /* return if system uses osc clock directly */
+    if (reffreq == Init->OutFreq)
     {
-#ifdef HAL_RCM_CDR_ENABLE
-        CLKCON->UXCDRE = Init->PllRef & RCM_PLLREF_CDR;
-#endif
+        SystemClock = Init->OutFreq;
+        goto exit_ok;
+    }
 
-#ifdef HAL_USB_ENABLE
-        CLKCON->IOSCUTE = Init->CdrTrim & RCM_USBTRIM_ON;
-#endif
+    /* system use pll clock */
+pll_cfg:
+    /* Pll div factor */
+    static const uint32_t plldf[] = {1u, 2u, 4u, 8u, 16u, 32u, 63u, 128u};
+    uint32_t pllfreq;
 
-        if ((Init->PllFD > 7u) || (Init->PllFM > 255u))
+    /* Find optimal plldf and pllmf (closest to OutFreq) */
+    uint32_t best_plldf_idx = 0;
+    uint32_t best_pllmf = 1;
+    uint32_t best_error = UINT32_MAX;
+    for (uint32_t i = 0; i < sizeof(plldf) / sizeof(plldf[0]); i++)
+    {
+        uint32_t div_freq = reffreq / plldf[i];
+        if (div_freq == 0)
+            continue;
+        uint32_t pllmf = (Init->OutFreq + div_freq - 1) / div_freq; /* ceil */
+        if (pllmf > 255U)
+            continue;
+        uint32_t pllfreq = div_freq * pllmf;
+        uint32_t error = (pllfreq > Init->OutFreq) ? (pllfreq - Init->OutFreq) : (Init->OutFreq - pllfreq);
+        if (error < best_error)
         {
-            return HAL_ERROR;
-        }
-
-        /* Calculate PLL output frequency and validate against max system clock */
-        uint32_t pll_input_freq = (CLKCON->XHOSCE)
-                                      ? OC32_XHOSC_FREQ
-                                      : OC32_IHOSC_FREQ;
-        uint32_t pll_out_freq = (pll_input_freq >> Init->PllFD) * Init->PllFM;
-        if (pll_out_freq > OC32_SCLK_FREQ)
-        {
-            return HAL_ERROR;
-        }
-        CLKCON->PLLM = Init->PllMode & RCM_PLLMODE_FASTLOCK;
-        CLKCON->PFD = Init->PllFD;
-        CLKCON->PFM = Init->PllFM;
-        CLKCON->PLLE = 1u;
-        /* Wait till clock switch is ready */
-        tickstart = HAL_SYS_GetTick();
-        while (CLKCON->CSF == 0)
-        {
-            if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-            {
-                return HAL_TIMEOUT;
-            }
+            best_error = error;
+            best_plldf_idx = i;
+            best_pllmf = pllmf;
         }
     }
-    else if ((Init->PllState == RCM_PLL_OFF) && CLKCON->PLLE)
+    if (best_error == UINT32_MAX)
+        return HAL_ERROR;
+
+    CLKCON->PLLM = 0U;
+    PLLCON->PFD = best_plldf_idx;
+    PLLCON->PFM = best_pllmf;
+    CLKCON->PLLE = 1u;
+    /* Wait till clock switch is ready */
+    tickstart = HAL_SYS_GetTick();
+    while (CLKCON->CSF == 0)
     {
-        CLKCON->PLLE = 0;
-        /* Wait till clock switch is ready */
-        tickstart = HAL_SYS_GetTick();
-        while (CLKCON->CSF == 0)
+        if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
         {
-            if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-            {
-                return HAL_TIMEOUT;
-            }
+            return HAL_TIMEOUT;
         }
     }
 
     /* update system clock */
-    SystemClock = CLKCON->PLLE ? pll_out_freq : (CLKCON->XHOSCE ? OC32_XHOSC_FREQ : OC32_IHOSC_FREQ);
+    SystemClock = pllfreq;
 
+exit_ok:
     /* update flash clock setting base on new system clock */
     HAL_FLASH_ClkUpdate();
     return HAL_OK;
@@ -193,37 +203,24 @@ __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
 
 #ifdef HAL_USB_ENABLE
 /**
- * @brief  Enable IOSC trim value lock
+ * @brief  Enable IOSC trim by usb
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_RCM_TrimLockOn(void)
+HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCMOscTrimTypedef Trim)
 {
-    if (CLKCON->IOSCUTL == 0)
-    {
-        CLKCON->IOSCUTL = 1u;
-        return HAL_OK;
-    }
-    else
-    {
-        return HAL_ERROR;
-    }
+    CLKCON->IOSCUTE = Trim;
+    return HAL_OK;
 }
 
 /**
- * @brief  Disable IOSC trim value lock
+ * @brief  Enable IOSC trim value lock
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_RCM_TrimLockOff(void)
+HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCMOscTrimLockTypedef Lock)
 {
-    if (CLKCON->IOSCUTL == 1)
-    {
-        CLKCON->IOSCUTL = 0;
-        return HAL_OK;
-    }
-    else
-    {
-        return HAL_ERROR;
-    }
+
+    CLKCON->IOSCUTL = Lock;
+    return HAL_OK;
 }
 #endif
 
@@ -240,7 +237,7 @@ uint32_t HAL_RCM_GetSysClockFreq(void)
  * @brief  Handles PLL interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_PLL_IRQHandler()
+__weak__ void HAL_PLL_IRQHandler(void)
 {
     /* switchback to default clock */
     HAL_RCM_DeInit();

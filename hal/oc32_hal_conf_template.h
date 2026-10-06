@@ -24,6 +24,7 @@ extern "C"
 #define OC32_XHOSC_FREQ ((uint32_t)__HAL_CONFIG_XHOSC_FREQ__) /* External oscillator frequency in Hz */
 #define OC32_IHOSC_FREQ ((uint32_t)__HAL_CONFIG_IHOSC_FREQ__) /* Internal oscillator frequency in Hz */
 #define OC32_ILOSC_FREQ ((uint32_t)__HAL_CONFIG_ILOSC_FREQ__) /* Internal oscillator frequency in Hz */
+#define OC32_CDR_FREQ ((uint32_t)__HAL_CONFIG_CDR_FREQ__)     /* USB CDR output frequency in Hz */
 #define OC32_SCLK_FREQ ((uint32_t)__HAL_CONFIG_SCLK_FREQ__)   /* System clock frequency in MHz */
 /**
  * @}
@@ -74,9 +75,9 @@ extern "C"
 
   typedef enum
   {
-    HAL_TICK_FREQ_10HZ = 100U,
-    HAL_TICK_FREQ_100HZ = 10U,
-    HAL_TICK_FREQ_1KHZ = 1U,
+    HAL_TICK_FREQ_10Hz = 100U,
+    HAL_TICK_FREQ_100Hz = 10U,
+    HAL_TICK_FREQ_1KHz = 1U,
     HAL_TICK_FREQ_DEFAULT = __HAL_CONFIG_TICK_FREQ__
   } HAL_TickFreqTypeDef;
 

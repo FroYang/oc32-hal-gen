@@ -77,8 +77,8 @@ extern "C"
   /* Exported functions ----------------------------------------------------*/
 
   HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init);
-  HAL_StatusTypeDef HAL_WDT_DeInit(void);
-  HAL_StatusTypeDef HAL_WDT_Clear(HAL_WDTInitTypeDef *Clear);
+  HAL_StatusTypeDef HAL_WDT_DeInit(HAL_WDTInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON);
       __weak__ void HAL_WDT_IRQHandler();
 
   /**

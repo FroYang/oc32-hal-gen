@@ -46,6 +46,8 @@ uint32_t HAL_SYS_GetTick(void);
 uint32_t HAL_SYS_GetTickPrio(void);
 void HAL_SYS_IncTick(void);
 void HAL_Delay(uint32_t Delay);
+int __syscall_handler(uint32_t number);
+int __systrap_handler(void);
 uint32_t HAL_GetHalVersion(void);
 uint32_t HAL_GetRevid(void);
 uint32_t HAL_GetDevid(void);
@@ -53,9 +55,13 @@ uint32_t HAL_GetUIDw0(void);
 uint32_t HAL_GetUIDw1(void);
 uint32_t HAL_GetUIDw2(void);
 uint32_t HAL_GetUIDw3(void);
+uint32_t HAL_GetREGTRIM0w0(void);
+uint32_t HAL_GetREGTRIM0w1(void);
+uint32_t HAL_GetREGTRIM0w2(void);
+uint32_t HAL_GetREGTRIM0w3(void);
 
-__weak__ void HAL_POR_IRQHandler();
-__weak__ void HAL_DBGR_IRQHandler();
+__weak__ void HAL_POR_IRQHandler(void);
+__weak__ void HAL_DBGR_IRQHandler(void);
 
 /* Syscall numbers for fused data access via SYSC instruction */
 #define SYSC_PID      0u /* fused Product ID (DEVID/REVID) */
