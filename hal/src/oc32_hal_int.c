@@ -91,16 +91,11 @@ __sram__ int __int0()
 {
 
     /* power-on reset flag */
-    if (HRF->PORF)
-        HAL_POR_IRQHandler();
+    if (READ_SR(HRF))
+        HAL_HRF_IRQHandler();
 
-    /* debug reset flag */
-    if (HRF->DBGRF)
-        HAL_DBGR_IRQHandler();
-
-    /* lvd reset flag or lvd event */
 #ifdef HAL_LVD_ENABLE
-    if (HRF->LVDRF || LVDCON->LVDEF)
+    if (LVDCON->LVDIE && LVDCON->LVDEF)
         HAL_LVD_IRQHandler();
 #endif /* HAL_LVD_ENABLE */
 
@@ -257,7 +252,7 @@ __sram__ int __int17()
     if (WDT1CON->WDTE && WDT1CON->WDTIE && WDT1CON->WDTTO)
     {
         HAL_WDT_Clear(WDT1CON);
-        HAL_SYS_IncTick();
+        HAL_TICK_Inc();
     }
 
     HAL_IntPreemptOff(17);
@@ -284,6 +279,8 @@ __sram__ int __int20()
 {
     HAL_IntPreemptOn(20);
 
+    HAL_UART_IRQHandler(UT0CON);
+
     HAL_IntPreemptOff(20);
     return 0;
 }
@@ -291,6 +288,8 @@ __sram__ int __int20()
 __sram__ int __int21()
 {
     HAL_IntPreemptOn(21);
+
+    HAL_UART_IRQHandler(UT1CON);
 
     HAL_IntPreemptOff(21);
     return 0;

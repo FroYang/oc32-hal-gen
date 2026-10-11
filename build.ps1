@@ -31,9 +31,10 @@ python -m PyInstaller --onefile --windowed `
     --add-data "hal;hal" `
     hal_conf_generator.py --noconfirm
 
+copy ./dist/OC32_HAL_Config_Generator.exe D:\nsis\oc32\bin
+
 Write-Host ""
 Write-Host "============================================"
 Write-Host "Build complete!"
 Write-Host "Executable: dist\OC32_HAL_Config_Generator.exe"
 Write-Host "============================================"
-pause

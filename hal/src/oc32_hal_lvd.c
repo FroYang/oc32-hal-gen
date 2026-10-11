@@ -48,11 +48,6 @@ HAL_StatusTypeDef HAL_LVD_Init(HAL_LVDInitTypeDef *Init)
     if ((Init->Mode == LVD_MODE_INT) || (Init->Mode == LVD_MODE_INT_AND_WAKE))
     {
       LVDCON->LVDIE = 1U;
-      HIE->SYSHIE = 1U;
-
-      /* highest interrupt priority always */
-      HIPL0->SYSHIPL0 = 1U; /* Bit 0 of priority */
-      HIPL1->SYSHIPL1 = 1U; /* Bit 1 of priority */
     }
 
     if ((Init->Mode == LVD_MODE_WAKE) || (Init->Mode == LVD_MODE_INT_AND_WAKE))
@@ -71,9 +66,6 @@ HAL_StatusTypeDef HAL_LVD_DeInit(void)
   LVDCON->LVDRE = 0U;
   LVDCON->LVDWE = 0U;
   LVDCON->LVDIE = 0U;
-  HIE->SYSHIE = 0U;
-  HIPL0->SYSHIPL0 = 0U;
-  HIPL1->SYSHIPL1 = 0U;
   LVDCON->LVDE = 0U;
   LVDCON->LVDECLR = 1U;
   return HAL_OK;
@@ -85,11 +77,16 @@ HAL_StatusTypeDef HAL_LVD_DeInit(void)
  * @brief  Handles LVD interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_LVD_IRQHandler()
+__sram__ __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void)
 {
-  if (HRF->LVDRF)
-    HRF->LVDRFCLR = 1U;
+  return HAL_OK;
+}
 
-  if (LVDCON->LVDEF)
-    LVDCON->LVDECLR = 1U;
+/**
+ * @brief  Handles LVD interrupt request.
+ */
+__sram__ HAL_StatusTypeDef HAL_LVD_IRQHandler(void)
+{
+  HAL_LVD_DeInit();
+  return HAL_LVD_UserIRQ();
 }

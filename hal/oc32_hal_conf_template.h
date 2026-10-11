@@ -46,10 +46,34 @@ extern "C"
    */
   typedef enum
   {
-    __HAL_CONFIG_DMA_CH_ENUM__
+    __HAL_CONFIG_DMA_CH__ 
+    OC32_DMA_CH_TOTAL
   } HAL_DMAChTypedef;
 
-  __HAL_CONFIG_DMA_CH_MAP__
+  typedef enum
+  {
+    OC32_DMA_IDLE = 0U,
+    OC32_DMA_BUSY = 1U
+  } HAL_DMAStateTypedef;
+
+  typedef enum
+  {
+    __HAL_CONFIG_DMA_MAP__ 
+    OC32_DMA_NONE
+  } HAL_DMAMapTypedef;
+
+  typedef enum
+  {
+    __HAL_CONFIG_HIC_CH__ 
+    OC32_HIC_CH_TOTAL
+  } HAL_HICChTypedef;
+
+  typedef enum
+  {
+    __HAL_CONFIG_HIC_MAP__ 
+    OC32_HIC_NONE
+  } HAL_HICMapTypedef;
+
   /**
    * @}
    */
@@ -71,7 +95,6 @@ extern "C"
  * @brief This is the HAL system configuration section
  */
 #define HAL_VDD_VALUE __HAL_CONFIG_VDD_VALUE__             /*!< Value of VDD in mv */
-#define HAL_TICK_INT_PRIORITY __HAL_CONFIG_TICK_PRIORITY__ /*!< tick interrupt priority: small num -> low priority */
 
   typedef enum
   {

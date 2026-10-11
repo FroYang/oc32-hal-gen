@@ -14,6 +14,8 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+static int CrcDmaCh;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -22,7 +24,7 @@
  * @param  Init: pointer to a HAL_CRCInitTypeDef structure.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
+__sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -34,15 +36,7 @@ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
   CRCCON->CRCREFO = Init->RefOut;
   CRCCON->CRCCPLO = Init->CplOut;
   CRCCON->CRCRVB = Init->Rvb;
-
-  if (Init->Mode == CRC_MODE_INT)
-  {
-    CRCCON->CRCIE = 1U;
-    HIE->FLCRCHIE = 1U;
-    HIPL0->FLCRCHIPL0 = (Init->IntPri & 1u);        /* Bit 0 of priority */
-    HIPL1->FLCRCHIPL1 = ((Init->IntPri >> 1) & 1u); /* Bit 1 of priority */
-  }
-
+  CrcDmaCh = Init->DmaCh;
   return HAL_OK;
 }
 
@@ -50,35 +44,36 @@ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
  * @brief  DeInitializes the CRC peripheral.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_CRC_DeInit()
+__sram__ HAL_StatusTypeDef HAL_CRC_DeInit(void)
 {
   WRITE_SR(CRCPOLY, 0);
   WRITE_SR(CRCREG, 0);
   WRITE_SR(CRCCON, 0);
-  HIE->FLCRCHIE = 0;
-  HIPL0->FLCRCHIPL0 = 0;
-  HIPL1->FLCRCHIPL1 = 0;
+  CrcDmaCh = 0;
 
   return HAL_OK;
 }
 
 /**
- * @brief  Handles CRC interrupt request.
- * @note   This is a weak implementation that can be overridden by the user.
- */
-__weak__ void HAL_CRC_IRQHandler(void)
-{
-  CRCCON->CRCCCLR = 1U;
-}
-
-
-
-/**
- * @brief  Get CRC result
+ * @brief  Get CRC result (not interrupt mode)
  * @retval CRC result
  */
-uint32_t HAL_CRC_GetResult(void)
+__sram__ uint32_t HAL_CRC_GetResult(void)
 {
+  return READ_SR(CRCOUT);
+}
+
+/**
+ * @brief  Caculates once
+ * @param  Data: data to be caculate
+ * @retval CRC result
+ */
+__sram__ uint32_t CrcOnce(uint32_t Data)
+{
+  CRCCON->CRCIDM = CRC_IDM_WRITE_CRCIN;
+  CRCIN = Data;
+  /* kick start */
+  CRCCON->CRCKS = 1U;
   /* wait caculating */
   while (!CRCCON->CRCCF)
     ;
@@ -86,101 +81,114 @@ uint32_t HAL_CRC_GetResult(void)
   return READ_SR(CRCOUT);
 }
 
-
 /**
- * @brief  Caculates 1 byte of data
+ * @brief  Caculates 1 byte of data (LSB first default)
  * @param  Data: data to be caculate
  * @retval CRC result
  */
-uint32_t CRCOnce(uint32_t Data)
+__sram__ uint32_t HAL_CRC_OneByte(uint32_t Data)
 {
-  CRCCON->CRCIDM = CRC_IDM_WRITE_CRCIN;
-  CRCIN = Data;
-  /* kick start */
-  CRCCON->CRCKS = 1U;
-  return HAL_CRC_GetResult();
-}
+  /* wait previous packet ends */
+  while (CRCCON->CRCIE)
+    ;
 
-
-/**
- * @brief  Caculates 1 byte of data
- * @param  Data: data to be caculate
- * @retval CRC result
- */
-uint32_t HAL_CRC_OneByte(uint32_t Data)
-{
   WRITE_SR(CRCBC, 1U);
-  return CRCOnce(Data);
+  return CrcOnce(Data);
 }
 
-
-
 /**
- * @brief  Caculates 1 word of data
+ * @brief  Caculates 1 word of data (LSB first default)
  * @param  Data: data to be caculate
  * @retval CRC result
  */
-uint32_t HAL_CRC_OneWord(uint32_t Data)
+__sram__ uint32_t HAL_CRC_OneWord(uint32_t Data)
 {
+  /* wait previous packet ends */
+  while (CRCCON->CRCIE)
+    ;
+
   WRITE_SR(CRCBC, 4U);
-  return CRCOnce(Data);
+  return CrcOnce(Data);
 }
 
-
 /**
- * @brief  Caculates 1 packet
+ * @brief  Caculates 1 packet (LSB first default)
  * @param  Packet: pointer to a HAL_CRCPacketTypedef structure.
- * @retval HAL status
+ * @retval CRC result
  */
-HAL_StatusTypeDef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet)
+__sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet)
 {
-  if (Packet == NULL || Packet->Data == NULL)
-    return HAL_ERROR;
+  HAL_ResultTypedef Result = {0};
 
-  if (Packet->Mode == CRC_IDM_WRITE_CRCIN)
+  Result.Error = HAL_ERROR;
+  if (Packet == NULL || Packet->Data == NULL || Packet->IDM == CRC_IDM_WRITE_CRCIN)
+    return Result;
+
+  /* wait previous packet ends */
+  while (CRCCON->CRCIE)
+    ;
+
+  /* setup interrupt */
+  if (Packet->Mode == CRC_MODE_INT)
   {
-    return HAL_ERROR;
+    CRCCON->CRCIE = 1U;
   }
 
-  if (Packet->Mode == CRC_IDM_READ_DMA)
+  if (Packet->IDM == CRC_IDM_READ_DMA)
   {
-    
-    /* setup DMA Channel */
-    switch (Packet->DMA)
-    {
-    case OC32_DMA_CH0:
-        DMACON->DMACH0 = OC32_DMA_FLASH;
-        break;
-    case OC32_DMA_CH1:
-        DMACON->DMACH1 = OC32_DMA_FLASH;
-        break;
-    case OC32_DMA_CH2:
-        DMACON->DMACH2 = OC32_DMA_FLASH;
-        break;
-    case OC32_DMA_CH3:
-        DMACON->DMACH3 = OC32_DMA_FLASH;
-        break;
-    default:
-        return HAL_ERROR;
-    }
+
+    if (HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_BUSY) != HAL_OK)
+      return Result;
 
     /* setup DMA address */
     WRITE_SR(CRCDA, (uint32_t)Packet->Data);
-
   }
   else
   {
-    CRCCON->CRCPDC = Packet->DMA;
+    CRCCON->CRCPDC = CrcDmaCh;
   }
 
-  CRCCON->CRCIDM = Packet->Mode;
+  CRCCON->CRCIDM = Packet->IDM;
   WRITE_SR(CRCBC, Packet->Length);
 
   /* kickstart */
   CRCCON->CRCKS = 1U;
 
+  /* if interrupt mode, return value is not the correct result, user should get it in IRQ
+   * if normal mode, return value is the crc result */
+  if (CRCCON->CRCIE)
+  {
+    Result.Error = HAL_OK;
+    return Result;
+  }
+    
+  /* wait caculating */
+  while (!CRCCON->CRCCF)
+    ;
+  CRCCON->CRCCCLR = 1U;
+  Result.Error = HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  Result.Data = HAL_CRC_GetResult();
+  return Result;
+}
+
+/**
+ * @brief  Handles CRC interrupt request.
+ * @note   This is a weak implementation that can be overridden by the user.
+ */
+__sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
+{
   return HAL_OK;
 }
 
+/**
+ * @brief  Handles CRC interrupt request.
+ */
+__sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void)
+{
+  CRCCON->CRCCCLR = 1U;
+  CRCCON->CRCIE = 0;
+  HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  return HAL_CRC_UserIRQ();
+}
 
 #endif /* HAL_CRC_ENABLE */

@@ -50,7 +50,7 @@ __asm_int0:
 /* int0 is the interrupt for LVD, HRF(hardware reset flags) and PLL, 
    always means some kind of (power/clock) error occurred */
 
-/* if PLL is enable, disable PLL & switch to default clock for safe */
+/* if PLL is enable, disable PLL & switch to osc clock for safe */
 	TBSR	CLKCON,  PLLE
 	/* bit = 0 --> R3 = 1 */
 	JNZ		.L1,  R3
@@ -60,8 +60,6 @@ __asm_int0:
 	TBSR	CLKCON,  CSF
 	/* bit = 0 --> R3 = 1 */
 	JNZ		.L0,  R3
-	CBSR	CLKCON,  UXCDRE
-	CBSR	CLKCON,  XHOSCE
 /* return and let the C handler(__int0) handles it */
 .L1:
 	J   	[R7]

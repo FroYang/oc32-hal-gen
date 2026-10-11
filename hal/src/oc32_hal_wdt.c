@@ -23,21 +23,21 @@
  */
 HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
 {
-  if (Init == NULL || Init->WDTCON == NULL)
+  if (Init == NULL || (Init->WDTCON != WDT0CON && Init->WDTCON != WDT1CON))
     return HAL_ERROR;
 
   uint32_t wdtclkperiod;
   if (CLKCON->IOSCH)
   {
-    /* 6MHz clock */
-    wdtclkperiod = 1000000000U / (OC32_IHOSC_FREQ / 6);
+    /* 24M / 4 = 6MHz clock */
+    wdtclkperiod = 1000000000U / (OC32_IHOSC_FREQ / 4);
     if ((Init->Period < WDT_H_PERIOD_MIN) || (Init->Period > WDT_H_PERIOD_MAX))
       return HAL_ERROR;
   }
   else
   {
-    wdtclkperiod = 1000000000U / (OC32_ILOSC_FREQ / 6);
-    /* 1K clock */
+    /* 4K / 4 = 1KHz clock */
+    wdtclkperiod = 1000000000U / (OC32_ILOSC_FREQ / 4);
     if ((Init->Period < WDT_L_PERIOD_MIN) || (Init->Period > WDT_L_PERIOD_MAX))
       return HAL_ERROR;
   }
@@ -68,6 +68,9 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
       break;
     }
   }
+  
+  if (counter > 256 ) 
+    return HAL_ERROR;
 
   if (Init->Mode == WDT_MODE_RST)
   {
@@ -78,11 +81,7 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
   {
     if ((Init->Mode == WDT_MODE_INT) || (Init->Mode == WDT_MODE_INT_AND_WAKE))
     {
-
       Init->WDTCON->WDTIE = 1U;
-      HIE->WDTHIE = 1u;
-      HIPL0->WDTHIPL0 = (Init->IntPri & 1u);        /* Bit 0 of priority */
-      HIPL1->WDTHIPL1 = ((Init->IntPri >> 1) & 1u); /* Bit 1 of priority */
     }
 
     if ((Init->Mode == WDT_MODE_WAKE) || (Init->Mode == WDT_MODE_INT_AND_WAKE))
@@ -102,9 +101,9 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init)
  * @param  WDTCON: pointer to a HAL_WDTInitTypeDef structure.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON)
+__sram__ HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON)
 {
-  if (WDTCON == NULL)
+  if (WDTCON != WDT0CON && WDTCON != WDT1CON)
     return HAL_ERROR;
 
   WDTCON->WDTCLR = WDT_CLR_KEY;
@@ -115,30 +114,36 @@ HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON)
 
 /**
  * @brief  DeInitializes the WDT peripheral.
- * @param  Init: pointer to a HAL_WDTInitTypeDef structure.
+ * @param  WDTCON: pointer to a HAL_WDTInitTypeDef structure.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_WDT_DeInit(HAL_WDTInitTypeDef *Init)
+HAL_StatusTypeDef HAL_WDT_DeInit(WDTCON_TypeDef *WDTCON)
 {
-  if (Init == NULL || Init->WDTCON == NULL)
+  if (WDTCON != WDT0CON && WDTCON != WDT1CON)
     return HAL_ERROR;
 
-  Init->WDTCON->WDTRE = 0;
-  Init->WDTCON->WDTWE = 0;
-  Init->WDTCON->WDTIE = 0;
-  HIE->WDTHIE = 0;
-  HIPL0->WDTHIPL0 = 0;
-  HIPL1->WDTHIPL1 = 0;
-  HAL_WDT_Clear(Init->WDTCON);
-  Init->WDTCON->WDTE = 0;
+  WDTCON->WDTRE = 0;
+  WDTCON->WDTWE = 0;
+  WDTCON->WDTIE = 0;
+  HAL_WDT_Clear(WDTCON);
+  WDTCON->WDTE = 0;
   return HAL_OK;
 }
 
 /**
- * @brief  Handles LVD interrupt request.
+ * @brief  Handles WDT interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_WDT_IRQHandler(void)
+__sram__ __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void)
+{
+  return HAL_OK;
+}
+
+/**
+ * @brief  Handles WDT interrupt request.
+ */
+__sram__ HAL_StatusTypeDef HAL_WDT_IRQHandler(void)
 {
   HAL_WDT_Clear(WDT0CON);
+  return HAL_WDT_UserIRQ();
 }

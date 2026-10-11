@@ -33,10 +33,10 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
     {
         CLKCON->PLLE = 0;
         /* Wait till clock switch is ready */
-        uint32_t tickstart = HAL_SYS_GetTick();
+        uint32_t tickstart = HAL_TICK_GetVal();
         while (CLKCON->CSF == 0)
         {
-            if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
+            if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
             {
                 return HAL_TIMEOUT;
             }
@@ -48,10 +48,10 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
     {
         CLKCON->XHOSCE = 0;
         /* Wait till clock switch is ready */
-        uint32_t tickstart = HAL_SYS_GetTick();
+        uint32_t tickstart = HAL_TICK_GetVal();
         while (CLKCON->CSF == 0)
         {
-            if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
+            if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
             {
                 return HAL_TIMEOUT;
             }
@@ -61,10 +61,10 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
     /* default value */
     WRITE_SR(CLKCON, 0x00001F01U);
     WRITE_SR(PLLCON, 0x00000028U);
-    WRITE_SR(BPCON, HAL_GetREGTRIM0w0());
-    WRITE_SR(IOSCCON, HAL_GetREGTRIM0w1());
-    WRITE_SR(VTSCON, HAL_GetREGTRIM0w2());
-    WRITE_SR(LVDCON, HAL_GetREGTRIM0w3());
+    WRITE_SR(BPCON, HAL_GetRegTrim0w0());
+    WRITE_SR(IOSCCON, HAL_GetRegTrim0w1());
+    WRITE_SR(VTSCON, HAL_GetRegTrim0w2());
+    WRITE_SR(LVDCON, HAL_GetRegTrim0w3());
 
     SystemClock = OC32_IHOSC_FREQ;
 
@@ -112,10 +112,10 @@ osc_cfg:
     {
         CLKCON->XHOSCE = 1u;
         /* Wait till clock switch is ready */
-        tickstart = HAL_SYS_GetTick();
+        tickstart = HAL_TICK_GetVal();
         while (CLKCON->CSF == 0)
         {
-            if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
+            if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
             {
                 return HAL_TIMEOUT;
             }
@@ -184,10 +184,10 @@ pll_cfg:
     PLLCON->PFM = best_pllmf;
     CLKCON->PLLE = 1u;
     /* Wait till clock switch is ready */
-    tickstart = HAL_SYS_GetTick();
+    tickstart = HAL_TICK_GetVal();
     while (CLKCON->CSF == 0)
     {
-        if ((HAL_SYS_GetTick() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
+        if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
         {
             return HAL_TIMEOUT;
         }
@@ -234,15 +234,26 @@ uint32_t HAL_RCM_GetSysClockFreq(void)
     return SystemClock;
 }
 
+
 /**
  * @brief  Handles PLL interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_PLL_IRQHandler(void)
+__weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
+{
+  return HAL_OK;
+}
+
+
+/**
+ * @brief  Handles PLL interrupt request.
+ */
+HAL_StatusTypeDef HAL_PLL_IRQHandler(void)
 {
     /* switchback to default clock */
     HAL_RCM_DeInit();
 
     /* clear flag */
     PLLCON->PFOCLR = 1U;
+    return HAL_PLL_UserIRQ();
 }

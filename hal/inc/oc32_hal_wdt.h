@@ -47,9 +47,8 @@ extern "C"
   typedef struct
   {
     WDTCON_TypeDef *WDTCON;   /*!< Specifies which WDTCON */
-    HAL_WDTModeTypedef Mode;  /*!< Specifies the Mode */
+    HAL_WDTModeTypedef Mode;  /*!< Specifies the Mode: INT or None */
     uint32_t Period;          /*!< Specifies the overflow period (us) */
-    HAL_INTPriTypedef IntPri; /*!< Specifies the interrupt priority */
   } HAL_WDTInitTypeDef;
 
 /**
@@ -61,10 +60,10 @@ extern "C"
 /**
  * @brief This is the HAL system configuration section
  */
-#define WDT_H_PERIOD_MIN (1000000U / (OC32_IHOSC_FREQ / (4U * 32U)))     /*!< WDT min period at high clock in us*/
-#define WDT_H_PERIOD_MAX (1000000U / (OC32_IHOSC_FREQ / (4U * 262144U))) /*!< WDT max period at high clock in us*/
-#define WDT_L_PERIOD_MIN (1000000U / (OC32_ILOSC_FREQ / (4U * 32U)))     /*!< WDT min period at low clock in us*/
-#define WDT_L_PERIOD_MAX (1000000U / (OC32_IHOSC_FREQ / (4U * 262144U))) /*!< WDT max period at low clock in us*/
+#define WDT_H_PERIOD_MIN ((4U * 32U * 1000000U) / OC32_IHOSC_FREQ)     /*!< WDT min period at high clock in us*/
+#define WDT_H_PERIOD_MAX ((4U * 262144U * 1000000U) / OC32_IHOSC_FREQ) /*!< WDT max period at high clock in us*/
+#define WDT_L_PERIOD_MIN ((4U * 32U * 1000000U) / OC32_ILOSC_FREQ)     /*!< WDT min period at low clock in us*/
+#define WDT_L_PERIOD_MAX ((4U * 262144U * 1000000U) / OC32_ILOSC_FREQ) /*!< WDT max period at low clock in us*/
 
 #define WDT_CLR_KEY 0xA5U /*!< WDT clear/refresh key vaule */
 
@@ -77,9 +76,10 @@ extern "C"
   /* Exported functions ----------------------------------------------------*/
 
   HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init);
-  HAL_StatusTypeDef HAL_WDT_DeInit(HAL_WDTInitTypeDef *Init);
-  HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON);
-      __weak__ void HAL_WDT_IRQHandler();
+  HAL_StatusTypeDef HAL_WDT_DeInit(WDTCON_TypeDef *WDTCON);
+  __sram__ HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON);
+  __sram__ HAL_StatusTypeDef HAL_WDT_IRQHandler(void);
+  __sram__ __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void);
 
   /**
    * @}

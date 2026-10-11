@@ -148,7 +148,8 @@ extern "C"
     /* Initialization and de-initialization functions */
     HAL_StatusTypeDef HAL_RCM_DeInit(void);
     __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init);
-    __weak__ void HAL_PLL_IRQHandler(void);
+    HAL_StatusTypeDef HAL_PLL_IRQHandler(void);
+    __weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void);
 
 #ifdef HAL_USB_ENABLE
     HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCMOscTrimTypedef Trim);

@@ -28,7 +28,7 @@ HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *I
 
     if (Init->Mode == GPIO_OUTPUT)
     {
-        if (Init->State == HI)
+        if (Init->State == OC32_GPIO_HI)
         {
             Port->D = Port->D | Init->Pin;
         }
@@ -118,9 +118,12 @@ HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *I
  */
 HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin)
 {
+    if (Port != GROUP_PA && Port != GROUP_PB)
+        return HAL_ERROR;
+
     Port->OE = Port->OE & ~Pin;
     Port->D = Port->D & ~Pin;
-    
+
     Port->IE = Port->IE & ~Pin;
     Port->PU = Port->PU & ~Pin;
     Port->LS = Port->LS & ~Pin;
@@ -139,9 +142,9 @@ HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin)
  *         This parameter can be Pin_x where x can be (0..15).
  * @retval The input port pin value.
  */
-HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
+__sram__ HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
 {
-    return ((Port->D & Pin) != 0u) ? HI : LO;
+    return ((Port->D & Pin) != 0u) ? OC32_GPIO_HI : OC32_GPIO_LO;
 }
 
 /**
@@ -152,9 +155,12 @@ HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
  *         This parameter can be one of the State enum values.
  * @retval None
  */
-void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State)
+__sram__ HAL_StatusTypeDef HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State)
 {
-    if (State == HI)
+    if (Port != GROUP_PA && Port != GROUP_PB)
+        return HAL_ERROR;
+
+    if (State == OC32_GPIO_HI)
     {
         Port->D = Port->D | Pin;
     }
@@ -162,6 +168,8 @@ void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State St
     {
         Port->D = Port->D & ~Pin;
     }
+
+    return HAL_OK;
 }
 
 /**
@@ -170,7 +178,12 @@ void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State St
  * @param  Pin: specifies the pin(s) to be toggled.
  * @retval None
  */
-void HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
+__sram__ HAL_StatusTypeDef HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
 {
+    if (Port != GROUP_PA && Port != GROUP_PB)
+        return HAL_ERROR;
+
     Port->D ^= Pin;
+
+    return HAL_OK;
 }

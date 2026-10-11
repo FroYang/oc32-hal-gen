@@ -10,39 +10,41 @@
 #define __OC32_HAL_GPIO_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------*/
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
-/** @addtogroup OC32_HAL_Driver
- * @{
- */
+    /** @addtogroup OC32_HAL_Driver
+     * @{
+     */
 
-/** @addtogroup GPIO
- * @{
- */
+    /** @addtogroup GPIO
+     * @{
+     */
 
-/* Exported types ------------------------------------------------------*/
+    /* Exported types ------------------------------------------------------*/
 
-/**
- * @brief  GPIO Init structure definition
- */
-typedef struct {
-    uint32_t Pin;  /*!< Specifies the GPIO pins to be configured */
-    uint32_t Mode; /*!< Specifies the operating mode for the selected pins */
+    /**
+     * @brief  GPIO Init structure definition
+     */
+    typedef struct
+    {
+        uint32_t Pin;  /*!< Specifies the GPIO pins to be configured */
+        uint32_t Mode; /*!< Specifies the operating mode for the selected pins */
 
-    /* output config */
-    uint32_t State; /*!< Specifies the GPIO pins output state */
-    uint32_t Slew;  /*!< Specifies the Slewrate control */
+        /* output config */
+        uint32_t State; /*!< Specifies the GPIO pins output state */
+        uint32_t Slew;  /*!< Specifies the Slewrate control */
 
-    /* input config */
-    uint32_t Pull;   /*!< Specifies the Pull-up activation */
-    uint32_t ExInt;  /*!< Specifies the External Interrupt control */
-    uint32_t Filter; /*!< Specifies the Filter control */
-} HAL_GPIOInitTypeDef;
+        /* input config */
+        uint32_t Pull;   /*!< Specifies the Pull-up activation */
+        uint32_t ExInt;  /*!< Specifies the External Interrupt control */
+        uint32_t Filter; /*!< Specifies the Filter control */
+    } HAL_GPIOInitTypeDef;
 
 /**
  * @}
@@ -71,17 +73,18 @@ typedef struct {
 #define GPIO_PORT_D 0x00000003u /*!< PORT D */
 #endif
 
-/**
- * @}
- */
+    /**
+     * @}
+     */
 
-/** @defgroup HAL_GPIO_State_define GPIO state define
- * @{
- */
-typedef enum {
-    LO = 0u,
-    HI = 1u
-} HAL_GPIO_State;
+    /** @defgroup HAL_GPIO_State_define GPIO state define
+     * @{
+     */
+    typedef enum
+    {
+        OC32_GPIO_LO = 0u,
+        OC32_GPIO_HI = 1u
+    } HAL_GPIO_State;
 
 /**
  * @}
@@ -90,7 +93,7 @@ typedef enum {
 /** @defgroup GPIO_mode_define GPIO mode define
  * @{
  */
-#define GPIO_INPUT  0x00000000u /*!< Input Floating Mode */
+#define GPIO_INPUT 0x00000000u  /*!< Input Floating Mode */
 #define GPIO_OUTPUT 0x00000001u /*!< Output Push-pull */
 /**
  * @}
@@ -111,7 +114,7 @@ typedef enum {
  * @{
  */
 #define GPIO_PULL_OFF 0x00000000u /*!< No Pull-up or Pull-down activation */
-#define GPIO_PULL_UP  0x00000001u /*!< Pull-up activation */
+#define GPIO_PULL_UP 0x00000001u  /*!< Pull-up activation */
 /**
  * @}
  */
@@ -131,21 +134,21 @@ typedef enum {
  * @{
  */
 #define GPIO_LOWSLEW_OFF 0x00000000u /*!< Low Slewrate control off */
-#define GPIO_LOWSLEW_ON  0x00000001u /*!< Low Slewrate control on  */
-/**
- * @}
- */
+#define GPIO_LOWSLEW_ON 0x00000001u  /*!< Low Slewrate control on  */
+    /**
+     * @}
+     */
 
-#define PIN0  ((uint32_t)0x00000001)
-#define PIN1  ((uint32_t)0x00000002)
-#define PIN2  ((uint32_t)0x00000004)
-#define PIN3  ((uint32_t)0x00000008)
-#define PIN4  ((uint32_t)0x00000010)
-#define PIN5  ((uint32_t)0x00000020)
-#define PIN6  ((uint32_t)0x00000040)
-#define PIN7  ((uint32_t)0x00000080)
-#define PIN8  ((uint32_t)0x00000100)
-#define PIN9  ((uint32_t)0x00000200)
+#define PIN0 ((uint32_t)0x00000001)
+#define PIN1 ((uint32_t)0x00000002)
+#define PIN2 ((uint32_t)0x00000004)
+#define PIN3 ((uint32_t)0x00000008)
+#define PIN4 ((uint32_t)0x00000010)
+#define PIN5 ((uint32_t)0x00000020)
+#define PIN6 ((uint32_t)0x00000040)
+#define PIN7 ((uint32_t)0x00000080)
+#define PIN8 ((uint32_t)0x00000100)
+#define PIN9 ((uint32_t)0x00000200)
 #define PIN10 ((uint32_t)0x00000400)
 #define PIN11 ((uint32_t)0x00000800)
 #define PIN12 ((uint32_t)0x00001000)
@@ -168,34 +171,34 @@ typedef enum {
 #define PIN29 ((uint32_t)0x20000000)
 #define PIN30 ((uint32_t)0x40000000)
 #define PIN31 ((uint32_t)0x80000000)
-/**
- * @}
- */
+    /**
+     * @}
+     */
 
-/**
- * @}
- */
+    /**
+     * @}
+     */
 
-/* Exported functions ----------------------------------------------------*/
+    /* Exported functions ----------------------------------------------------*/
 
-/** @addtogroup GPIO_Exported_Functions
- * @{
- */
+    /** @addtogroup GPIO_Exported_Functions
+     * @{
+     */
 
-/* Initialization and de-initialization functions *************************/
-HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *Init);
-HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin);
+    /* Initialization and de-initialization functions *************************/
+    HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *Init);
+    HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin);
 
-/* IO operation functions *************************************************/
-HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin);
-void HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State);
-void HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t Pin);
+    /* IO operation functions *************************************************/
+    __sram__ HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin);
+    __sram__ HAL_StatusTypeDef HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State);
+    __sram__ HAL_StatusTypeDef HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t Pin);
 
-/**
- * @}
- */
+    /**
+     * @}
+     */
 
-/* Private macros --------------------------------------------------------*/
+    /* Private macros --------------------------------------------------------*/
 
 #ifdef __cplusplus
 }

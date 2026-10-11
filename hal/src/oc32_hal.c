@@ -37,6 +37,9 @@ HAL_TickFreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT; /* 1KHz */
 /* Syscall request buffer: filled by __syscall_handler via SYSC instruction */
 static uint32_t requestbuf[4];
 
+/* DMA Channel State */
+uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+
 /* Fuse data symbols defined in crti-hw.S (.boot section), linked by compiler */
 extern const uint32_t __FUSE_PID[4];
 extern const uint32_t __FUSE_LID[4];
@@ -88,23 +91,11 @@ void *memset(void *dest, int c, uint32_t n)
 void uart_tx_char(char c)
 {
 #ifdef HAL_UART0_DEBUG
-    while (UT0CON->UTTBV == 0)
-        ;
-    /* clear done flag */
-    UT0CON->UTTCLR = 1;
-    UT0TBUF = c;
-    /* kcik start tx */
-    UT0CON->UTTKS = 1;
+    HAL_UART_TX_OneByte(UT0CON, c);
 #endif
 
 #ifdef HAL_UART1_DEBUG
-    while (UT1CON->UTTBV == 0)
-        ;
-    /* clear done flag */
-    UT1CON->UTTCLR = 1;
-    UT1TBUF = c;
-    /* kcik start tx */
-    UT1CON->UTTKS = 1;
+    HAL_UART_TX_OneByte(UT1CON, c);
 #endif
 }
 
@@ -121,12 +112,7 @@ int puts(const char *s)
     return 1;
 }
 
-typedef __builtin_va_list va_list;
 
-#define va_start(v, l) __builtin_va_start(v, l)
-#define va_end(v) __builtin_va_end(v)
-#define va_arg(v, l) __builtin_va_arg(v, l)
-#define va_copy(d, s) __builtin_va_copy(d, s)
 
 static int txchar(char c)
 {
@@ -308,6 +294,38 @@ int printf(const char *format, ...)
 #endif
 
 /**
+ * @brief  update DMA channel state
+ * @retval HAL status
+ */
+__sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMAChTypedef DmaCh, HAL_DMAMapTypedef Module, HAL_DMAStateTypedef State)
+{
+    /* error if try to set the busy channel */
+    if (State && DMAChState[DmaCh])
+        return HAL_ERROR;
+
+    switch (DmaCh)
+    {
+    case OC32_DMA_CH0:
+        DMACON->DMACH0 = Module;
+        break;
+    case OC32_DMA_CH1:
+        DMACON->DMACH1 = Module;
+        break;
+    case OC32_DMA_CH2:
+        DMACON->DMACH2 = Module;
+        break;
+    case OC32_DMA_CH3:
+        DMACON->DMACH3 = Module;
+        break;
+    default:
+        return HAL_ERROR;
+    }
+
+    DMAChState[DmaCh] = State;
+    return HAL_OK;
+}
+
+/**
  * @brief  System trap handler invoked by crtihw.S when SYSC instruction is executed.
  *         Reads fused data from the appropriate source into requestbuf[4].
  * @retval 0 on success, -1 on invalid number
@@ -315,20 +333,20 @@ int printf(const char *format, ...)
 int __systrap_handler(void)
 {
 
-	return 0;
+    return 0;
 }
 
 /**
  * @brief  System call handler invoked by crtihw.S when SYSC instruction is executed.
  *         Reads fused data from the appropriate source into requestbuf[4].
- * @param  number: syscall number (0=PID, 1=LID, 2=TSN, 3=REGTRIM0, 4=REGTRIM1, 5=REGTRIM2)
+ * @param  Num: syscall number (0=PID, 1=LID, 2=TSN, 3=REGTRIM0, 4=REGTRIM1, 5=REGTRIM2)
  * @retval 0 on success, -1 on invalid number
  */
-int __syscall_handler(uint32_t number)
+int __syscall_handler(uint32_t Num)
 {
     const uint32_t *fuseptr;
 
-    switch (number)
+    switch (Num)
     {
     case SYSC_PID:
         fuseptr = __FUSE_PID;
@@ -415,17 +433,14 @@ static void request_REGTRIM2(void)
  *       than the peripheral interrupt. Otherwise the caller ISR process will be blocked.
  *       The function is declared as __weak  to be overwritten  in case of other
  *       implementation  in user file.
- * @param TickPriority Tick interrupt priority.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_SYS_InitTick(uint32_t TickPriority)
+HAL_StatusTypeDef HAL_TICK_Init(void)
 {
     HAL_WDTInitTypeDef Init = {
         .WDTCON = WDT1CON,
         .Mode = WDT_MODE_INT,
-        .IntPri = TickPriority,
-        .Period = HAL_TICK_FREQ_DEFAULT * 1000U
-    };
+        .Period = HAL_TICK_FREQ_DEFAULT * 1000U};
 
     HAL_WDT_Init(&Init);
 
@@ -433,22 +448,34 @@ HAL_StatusTypeDef HAL_SYS_InitTick(uint32_t TickPriority)
 }
 
 /**
- * @brief  This function is called to increment a global variable 'uwTick'
- *         used as time reference.
- * @note   This function is intended to be used within an interrupt service routine.
+ * @brief  This function is called to setup global HIC(hardware interrupt controller)
+ * @param  Init: pointer to a HAL_HICInitTypeDef structure.
  */
-void HAL_SYS_IncTick(void)
+HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
 {
-    uwTick++;
+    if (Init == NULL)
+        return HAL_ERROR;
+
+    /* e.g: ChEnable = OC32_HIC_SERR | OC32_HIC_CCP0 | OC32_HIC_TIMER6 .... */
+    WRITE_SR(HIE, Init->ChEnable);
+
+    /* e.g: ChPriorityBit0 = HPL_Bit0(OC32_INT_PRI1, OC32_HIC_CH_SERR) | HPL_Bit0(OC32_INT_PRI0, OC32_HIC_CH_UART1) | .... */
+    /* e.g: ChPriorityBit1 = HPL_Bit1(OC32_INT_PRI1, OC32_HIC_CH_SERR) | HPL_Bit1(OC32_INT_PRI0, OC32_HIC_CH_UART1) | .... */
+    WRITE_SR(HIPL0, Init->ChPriorityBit0);
+    WRITE_SR(HIPL1, Init->ChPriorityBit1);
+
+    return HAL_OK;
 }
 
 /**
- * @brief  Provides a tick value in ms.
- * @retval Tick value
+ * @brief  This function is called to setup global HIC(hardware interrupt controller)
  */
-uint32_t HAL_SYS_GetTick(void)
+void HAL_HIC_DeInit(void)
 {
-    return (uint32_t)uwTick;
+    WRITE_SR(HIE, 0);
+    WRITE_SR(HIPRM, 0);
+    WRITE_SR(HIPL0, 0);
+    WRITE_SR(HIPL1, 0);
 }
 
 /**
@@ -457,27 +484,20 @@ uint32_t HAL_SYS_GetTick(void)
  */
 void HAL_Delay(uint32_t Delay)
 {
-    uint32_t tickstart = HAL_SYS_GetTick();
+    uint32_t tickstart = HAL_TICK_GetVal();
 
-    while ((HAL_SYS_GetTick() - tickstart) < Delay)
+    while ((HAL_TICK_GetVal() - tickstart) < Delay)
     {
     }
 }
 
-/**
- * @brief  Returns the current HAL library version.
- * @retval Current HAL library version in the format: x.y.z (Decimal x.major.minor)
- */
-uint32_t HAL_GetHalVersion(void)
-{
-    return __OC32_HAL_VERSION;
-}
 
 /**
  * @brief  Returns the device revision identifier.
  * @retval Revision ID (from fused __FUSE_PID[1])
+ * @note   This function should not be used in an interrupt service routine.
  */
-uint32_t HAL_GetRevid(void)
+uint32_t HAL_GetRevID(void)
 {
     request_PID();
     return requestbuf[1];
@@ -486,8 +506,9 @@ uint32_t HAL_GetRevid(void)
 /**
  * @brief  Returns the device identifier.
  * @retval Device ID (from fused __FUSE_PID[0])
+ * @note   This function should not be used in an interrupt service routine.
  */
-uint32_t HAL_GetDevid(void)
+uint32_t HAL_GetDevID(void)
 {
     request_PID();
     return requestbuf[0];
@@ -496,6 +517,7 @@ uint32_t HAL_GetDevid(void)
 /**
  * @brief  Returns the first word of the 128-bit unique device ID.
  * @retval Unique Device ID word 0 (from fused __FUSE_TSN[0])
+ * @note   This function should not be used in an interrupt service routine.
  */
 uint32_t HAL_GetUIDw0(void)
 {
@@ -506,6 +528,7 @@ uint32_t HAL_GetUIDw0(void)
 /**
  * @brief  Returns the second word of the 128-bit unique device ID.
  * @retval Unique Device ID word 1 (from fused __FUSE_TSN[1])
+ * @note   This function should not be used in an interrupt service routine.
  */
 uint32_t HAL_GetUIDw1(void)
 {
@@ -516,6 +539,7 @@ uint32_t HAL_GetUIDw1(void)
 /**
  * @brief  Returns the third word of the 128-bit unique device ID.
  * @retval Unique Device ID word 2 (from fused __FUSE_TSN[2])
+ * @note   This function should not be used in an interrupt service routine.
  */
 uint32_t HAL_GetUIDw2(void)
 {
@@ -526,6 +550,7 @@ uint32_t HAL_GetUIDw2(void)
 /**
  * @brief  Returns the fourth word of the 128-bit unique device ID.
  * @retval Unique Device ID word 3 (from fused __FUSE_TSN[3])
+ * @note   This function should not be used in an interrupt service routine.
  */
 uint32_t HAL_GetUIDw3(void)
 {
@@ -536,8 +561,9 @@ uint32_t HAL_GetUIDw3(void)
 /**
  * @brief  Returns the first word of reg trim value 0
  * @retval Register Trim Value word 0 (from fused __FUSE_REGTRIM0[0])
+ * @note   This function should not be used in an interrupt service routine.
  */
-uint32_t HAL_GetREGTRIM0w0(void)
+uint32_t HAL_GetRegTrim0w0(void)
 {
     request_REGTRIM0();
     return requestbuf[0];
@@ -546,8 +572,9 @@ uint32_t HAL_GetREGTRIM0w0(void)
 /**
  * @brief  Returns the first word of reg trim value 1
  * @retval Register Trim Value word 1 (from fused __FUSE_REGTRIM0[1])
+ * @note   This function should not be used in an interrupt service routine.
  */
-uint32_t HAL_GetREGTRIM0w1(void)
+uint32_t HAL_GetRegTrim0w1(void)
 {
     request_REGTRIM0();
     return requestbuf[1];
@@ -556,8 +583,9 @@ uint32_t HAL_GetREGTRIM0w1(void)
 /**
  * @brief  Returns the first word of reg trim value 2
  * @retval Register Trim Value word 0 (from fused __FUSE_REGTRIM0[2])
+ * @note   This function should not be used in an interrupt service routine.
  */
-uint32_t HAL_GetREGTRIM0w2(void)
+uint32_t HAL_GetRegTrim0w2(void)
 {
     request_REGTRIM0();
     return requestbuf[2];
@@ -566,8 +594,9 @@ uint32_t HAL_GetREGTRIM0w2(void)
 /**
  * @brief  Returns the first word of reg trim value 3
  * @retval Register Trim Value word 0 (from fused __FUSE_REGTRIM0[3])
+ * @note   This function should not be used in an interrupt service routine.
  */
-uint32_t HAL_GetREGTRIM0w3(void)
+uint32_t HAL_GetRegTrim0w3(void)
 {
     request_REGTRIM0();
     return requestbuf[3];
@@ -577,18 +606,55 @@ uint32_t HAL_GetREGTRIM0w3(void)
  * @brief  Handles POR interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_POR_IRQHandler(void)
+__sram__ __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
 {
-    /* clear flag */
-    HRF->PORFCLR = 1U;
+    return HAL_OK;
 }
 
 /**
- * @brief  Handles Debug interrupt request.
+ * @brief  Handles Debug Reset interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ void HAL_DBGR_IRQHandler(void)
+__sram__ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
+{
+    return HAL_OK;
+}
+
+/**
+ * @brief  Handles POR interrupt request.
+ */
+__sram__ HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
 {
     /* clear flag */
-    HRF->DBGRFCLR = 1U;
+    if (HRF->PORF)
+    {
+        HRF->PORFCLR = 1U;
+        return HAL_POR_UserIRQ();
+    }
+
+    if (HRF->DBGRF)
+    {
+        HRF->DBGRFCLR = 1U;
+        return HAL_DBGR_UserIRQ();
+    }
+
+    /* lvd reset flag or lvd event */
+#ifdef HAL_LVD_ENABLE
+    if (HRF->LVDRF)
+        return HAL_LVD_IRQHandler();
+#endif /* HAL_LVD_ENABLE */
+
+#ifdef HAL_WDT_ENABLE
+    if (HRF->WDT0RF)
+        return HAL_WDT_IRQHandler();
+    /* WDT1 is tick timer, reset disable */
+#endif /* HAL_WDT_ENABLE */
+
+#ifdef HAL_VTS_ENABLE
+    if (HRF->VTSAF)
+        return HAL_VTS_IRQHandler();
+#endif /* HAL_VTS_ENABLE */
+
+    return HAL_ERROR;
+
 }

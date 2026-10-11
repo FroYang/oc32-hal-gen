@@ -89,24 +89,8 @@ __sram__ HAL_StatusTypeDef FlashReadLines(HAL_FlashPacketTypeDef *Packet)
     /* using core-accessing config, no need to config at user side*/
     FLUCON->FLURUCS = 1;
 
-    /* setup DMA Channel */
-    switch (Packet->DMA)
-    {
-    case OC32_DMA_CH0:
-        DMACON->DMACH0 = OC32_DMA_FLASH;
-        break;
-    case OC32_DMA_CH1:
-        DMACON->DMACH1 = OC32_DMA_FLASH;
-        break;
-    case OC32_DMA_CH2:
-        DMACON->DMACH2 = OC32_DMA_FLASH;
-        break;
-    case OC32_DMA_CH3:
-        DMACON->DMACH3 = OC32_DMA_FLASH;
-        break;
-    default:
-        goto error;
-    }
+    HAL_DMA_Update(Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_BUSY);
+
     /* DMA mode */
     FLUCON->FLURRE = 1;
     /* setup lines */
@@ -119,11 +103,13 @@ __sram__ HAL_StatusTypeDef FlashReadLines(HAL_FlashPacketTypeDef *Packet)
 
     FLUCON->FLURUCS = 0;
     FLUCON->FLURRE = 0;
+    HAL_DMA_Update(Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
     return HAL_OK;
 
 error:
     FLUCON->FLURUCS = 0;
     FLUCON->FLURRE = 0;
+    HAL_DMA_Update(Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
     return HAL_ERROR;
 }
 
@@ -169,6 +155,8 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_CPUQuadRead(void)
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void)
 {
+    /* disable interrupt at first */
+    HAL_HIC_DeInit();
 
     /* standard read command */
     FLCCON->FLCI = FLASH_READ;
@@ -385,8 +373,7 @@ void FlashCrcInit(void)
         .RefOut = 1U,
         .CplOut = 1U,
         .Rvb = 0,
-        .Mode = CRC_MODE_NONE,
-        .IntPri = 0,
+        .DmaCh = OC32_DMA_CH0,
     };
     HAL_CRC_Init(&crc_init);
 }
@@ -421,8 +408,8 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
     HAL_CRCPacketTypedef crc_packet = {
         .Data = flashbuf,
         .Length = 1024U,
-        .Mode = CRC_IDM_CAPTURE_DMAIN,
-        .DMA = OC32_DMA_CH0,
+        .Mode = CRC_MODE_NONE,
+        .IDM = CRC_IDM_CAPTURE_DMAIN,
     };
 
     uint32_t crc32;
@@ -434,7 +421,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
             crc_packet.Length = 1020U;
         }
 
-        if (HAL_CRC_Packet(&crc_packet) != HAL_OK)
+        if (HAL_CRC_Packet(&crc_packet).Error == HAL_ERROR)
         {
             HAL_CRC_DeInit();
             return HAL_ERROR;
@@ -445,7 +432,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
             .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 256U,
-            .DMA = OC32_DMA_CH0,
+            .DmaCh = OC32_DMA_CH0,
         };
         if (FlashReadLines(&pkt) != HAL_OK)
         {
@@ -458,12 +445,11 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
 
     HAL_CRC_DeInit();
     /* program crc */
-    Address = Address + 1020U;
     HAL_FlashPacketTypeDef crc_pkt = {
         .Data = &crc32,
         .Address = Address + 1020U,
         .Length = 1U,
-        .DMA = OC32_DMA_CH0,
+        .DmaCh = OC32_DMA_CH0,
     };
     if (HAL_FLASH_Program(&crc_pkt) != HAL_OK)
         return HAL_ERROR;
@@ -489,13 +475,13 @@ __sram__ static HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
     HAL_CRCPacketTypedef crc_packet = {
         .Data = flashbuf,
         .Length = 1024U,
-        .Mode = CRC_IDM_CAPTURE_DMAIN,
-        .DMA = OC32_DMA_CH0,
+        .Mode = CRC_MODE_NONE,
+        .IDM = CRC_IDM_CAPTURE_DMAIN,
     };
 
     for (i = 0; i < (Size >> 10U); i++)
     {
-        if (HAL_CRC_Packet(&crc_packet) != HAL_OK)
+        if (HAL_CRC_Packet(&crc_packet).Error == HAL_ERROR)
             return HAL_ERROR;
 
         /* 1k per kick, overwrite the data every kick */
@@ -503,7 +489,7 @@ __sram__ static HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
             .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 256U,
-            .DMA = OC32_DMA_CH0,
+            .DmaCh = OC32_DMA_CH0,
         };
         if (FlashReadLines(&pkt) != HAL_OK)
         {
@@ -555,7 +541,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
         .Data = NULL,
         .Address = daddr,
         .Length = Size,
-        .DMA = OC32_DMA_CH0,
+        .DmaCh = OC32_DMA_CH0,
     };
     if (HAL_FLASH_Erase(&erase_pkt) != HAL_OK)
         return HAL_ERROR;
@@ -567,7 +553,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
             .Data = flashbuf,
             .Address = saddr,
             .Length = FLASH_PAGE_SIZE >> 2,
-            .DMA = OC32_DMA_CH0,
+            .DmaCh = OC32_DMA_CH0,
         };
         if (HAL_FLASH_Read(&read_pkt) != HAL_OK)
             return HAL_ERROR;
@@ -576,7 +562,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
             .Data = flashbuf,
             .Address = daddr,
             .Length = FLASH_PAGE_SIZE >> 2,
-            .DMA = OC32_DMA_CH0,
+            .DmaCh = OC32_DMA_CH0,
         };
         if (HAL_FLASH_Program(&prog_pkt) != HAL_OK)
             return HAL_ERROR;

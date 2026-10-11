@@ -72,7 +72,6 @@ def render_conf_template(chip_config, user_settings):
     ilosc = chip_config.get("ilosc_freq", 4000)
     cdr = chip_config.get("cdr_freq", 12000000)
     sclk = chip_config.get("sclk_freq", 99000000)
-    tick = user_settings["tick_priority"]
     debug_uart = user_settings["debug_uart"]
     int_priority = chip_config["int_priority"]
     dma_channels = chip_config["dma_channels"]
@@ -104,7 +103,6 @@ def render_conf_template(chip_config, user_settings):
 
     # VDD / Tick
     content = content.replace("__HAL_CONFIG_VDD_VALUE__", f'{chip_config["vdd_value"]}U')
-    content = content.replace("__HAL_CONFIG_TICK_PRIORITY__", f'{tick}U')
     content = content.replace("__HAL_CONFIG_TICK_FREQ__", f'HAL_TICK_FREQ_{user_settings["tick_freq"]}')
     content = content.replace("__HAL_CONFIG_UART_DEBUG_SUB__", _gen_uart_debug_sub(debug_uart))
 
@@ -116,31 +114,31 @@ def render_conf_template(chip_config, user_settings):
         int_enum_lines.append(f"OC32_INT_PRI{suffix}       = {i}U{comma}")
     content = content.replace("__HAL_CONFIG_INT_PRI_ENUM__", "\n".join(int_enum_lines))    
 
-    # DMA enum — generate CH0..CH(n-1) entries
-    dma_enum_lines = []
+    # DMA ch enum — generate CH0..CH(n-1) entries
+    dma_ch_lines = []
     for i in range(dma_channels):
         suffix = f"{i:02d}" if i >= 10 else str(i)
-        comma = "," if i < dma_channels - 1 else ""
-        dma_enum_lines.append(f"OC32_DMA_CH{suffix}       = {i}U{comma}")
-    content = content.replace("__HAL_CONFIG_DMA_CH_ENUM__", "\n".join(dma_enum_lines))
+        dma_ch_lines.append(f"OC32_DMA_CH{suffix}       = {i}U,")
+    content = content.replace("__HAL_CONFIG_DMA_CH__", "\n".join(dma_ch_lines))
 
-    # DMA channel map — build from dma_map{N} fields in chip config (0..15)
-    max_channels = 16
-    dma_map = {}  # channel_index -> peripheral_name
-    for i in range(max_channels):
-        key = f"dma_map{i}"
-        if key in chip_config:
-            dma_map[i] = chip_config[key]
+    # DMA channel map — build from dma_map array in chip config
+    dma_map = chip_config.get("dma_map", [])
     dma_map_lines = []
-    for i in range(max_channels):
-        periph = dma_map.get(i, f"reserved{i-10 if i >= 10 else i}")
-        # normalize reserved name
-        if periph.startswith("reserved"):
-            label = periph
-        else:
-            label = periph
-        dma_map_lines.append(f"#define OC32_DMA_{label:<16}((uint32_t){i}U)")
-    content = content.replace("__HAL_CONFIG_DMA_CH_MAP__", "\n".join(dma_map_lines))
+    for i, periph in enumerate(dma_map):
+        label = periph
+        dma_map_lines.append(f"OC32_DMA_{label:<16} = {i}U,")
+    content = content.replace("__HAL_CONFIG_DMA_MAP__", "\n".join(dma_map_lines))
+
+    # HIC channel map — build from hic_map array in chip config
+    hic_map = chip_config.get("hic_map", [])
+    hic_ch_lines = []
+    hic_map_lines = []
+    for i, periph in enumerate(hic_map):
+        label = periph
+        hic_ch_lines.append(f"OC32_HIC_CH_{label:<16} = {i}U,")
+        hic_map_lines.append(f"OC32_HIC_{label:<16} = 1U << {i},")
+    content = content.replace("__HAL_CONFIG_HIC_CH__", "\n".join(hic_ch_lines))
+    content = content.replace("__HAL_CONFIG_HIC_MAP__", "\n".join(hic_map_lines))
 
     # UART debug section
     uart_feature = next((m for m in features if m["key"] == "UART"), None)
@@ -224,15 +222,6 @@ class App:
         self.xhosc_combo = ttk.Combobox(xhosc_frame, textvariable=self.var_xhosc,
                                        values=list(range(1, 25)), state="readonly", width=8)
         self.xhosc_combo.pack(side=RIGHT, padx=(4, 0))
-
-        # Tick priority
-        tick_int_frame = Frame(sys_frame)
-        tick_int_frame.pack(fill=X, pady=2)
-        Label(tick_int_frame, text="Tick Interrupt Priority (0: Lowest):").pack(side=LEFT, anchor=W)
-        self.var_tick = IntVar(value=0)
-        self.tick_combo = ttk.Combobox(tick_int_frame, textvariable=self.var_tick,
-                                       values=["0", "1", "2", "3"], state="readonly", width=8)
-        self.tick_combo.pack(side=RIGHT, padx=(4, 0))
 
         # Tick frequency
         tick_freq_frame = Frame(sys_frame)
@@ -348,7 +337,6 @@ class App:
         if not self.chip_config:
             return {
                 "xhosc_freq": self.var_xhosc.get(),
-                "tick_priority": self.var_tick.get(),
                 "tick_freq": self.var_tick_freq.get(),
                 "debug_uart": self.var_debug.get(),
                 "features": features,
@@ -366,7 +354,6 @@ class App:
                         features[dep] = True
         return {
             "xhosc_freq": self.var_xhosc.get(),
-            "tick_priority": self.var_tick.get(),
             "tick_freq": self.var_tick_freq.get(),
             "debug_uart": self.var_debug.get(),
             "baud_rate": self.var_baud.get(),

@@ -9,22 +9,17 @@
     "zone1_size": 98,
     "int_priority": 4,
     "dma_channels": 4,
-    "dma_map0": "SPI0",
-    "dma_map1": "SPI1",
-    "dma_map2": "IIC",
-    "dma_map3": "UART0",
-    "dma_map4": "UART1",
-    "dma_map5": "ADC0",
-    "dma_map6": "MPWM0",
-    "dma_map7": "MPWM1",
-    "dma_map8": "MPWM2",
-    "dma_map9": "FLASH",
-    "dma_map10": "DAC0",
-    "dma_map11": "ADC1",
-    "dma_map12": "DAC1",
-    "dma_map13": "reserved0",
-    "dma_map14": "reserved1",
-    "dma_map15": "CRC",
+    "dma_map": [
+        "SPI0", "SPI1", "IIC", "UART0", "UART1", "ADC0",
+        "MPWM0", "MPWM1", "MPWM2", "FLASH", "DAC0", "ADC1",
+        "DAC1", "reserved0", "reserved1", "CRC"
+    ],
+    "hic_map": [
+        "SERR", "CMP0", "CMP1", "CCP0", "CCP1", "CCP2", "CCP3", "CCP4", 
+        "CCP5", "TIMER0", "TIMER1", "TIMER2", "TIMER3",  "TIMER4", "TIMER5", "TIMER6",
+        "TIMER7", "WDT", "ADC0", "ADC1", "UART0", "UART1", "SPI0", "SPI1",
+        "IIC", "MPWM0", "MPWM1", "MPWM2", "DAC", "CRC", "PORTA", "PORTB"
+    ],
     "vdd_value": 5000,
     "features": [
         {
@@ -57,11 +52,6 @@
         {
             "key": "LVD",
             "description": "Low Voltage Detector",
-            "always": false
-        },
-        {
-            "key": "VTS",
-            "description": "Voltage Temperature Sensor",
             "always": false
         },
         {

@@ -36,7 +36,7 @@ extern "C"
         uint32_t *Data;       /*!< Specifies Data buffer */
         uint32_t Address;     /*!< Specifies Data Address */
         uint32_t Length;      /*!< Specifies Data Length */
-        HAL_DMAChTypedef DMA; /*!< Specifies DMA channel for transfer */
+        HAL_DMAChTypedef DmaCh; /*!< Specifies DMA channel for transfer */
     } HAL_FlashPacketTypeDef;
 
     /**
