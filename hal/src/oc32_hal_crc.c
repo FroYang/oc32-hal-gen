@@ -24,7 +24,7 @@ static int CrcDmaCh;
  * @param  Init: pointer to a HAL_CRCInitTypeDef structure.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
+HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -44,7 +44,7 @@ __sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
  * @brief  DeInitializes the CRC peripheral.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_CRC_DeInit(void)
+HAL_StatusTypeDef HAL_CRC_DeInit(void)
 {
   WRITE_SR(CRCPOLY, 0);
   WRITE_SR(CRCREG, 0);
@@ -52,15 +52,6 @@ __sram__ HAL_StatusTypeDef HAL_CRC_DeInit(void)
   CrcDmaCh = 0;
 
   return HAL_OK;
-}
-
-/**
- * @brief  Get CRC result (not interrupt mode)
- * @retval CRC result
- */
-__sram__ uint32_t HAL_CRC_GetResult(void)
-{
-  return READ_SR(CRCOUT);
 }
 
 /**

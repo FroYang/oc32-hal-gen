@@ -134,7 +134,7 @@ HAL_StatusTypeDef HAL_WDT_DeInit(WDTCON_TypeDef *WDTCON)
  * @brief  Handles WDT interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void)
+__weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void)
 {
   return HAL_OK;
 }
@@ -142,7 +142,7 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void)
 /**
  * @brief  Handles WDT interrupt request.
  */
-__sram__ HAL_StatusTypeDef HAL_WDT_IRQHandler(void)
+HAL_StatusTypeDef HAL_WDT_IRQHandler(void)
 {
   HAL_WDT_Clear(WDT0CON);
   return HAL_WDT_UserIRQ();

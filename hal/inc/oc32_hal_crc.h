@@ -93,16 +93,16 @@ extern "C"
 #define CRC_GOOD_DEFAULT 0x2144DF1CU
 
   /* Exported macros -------------------------------------------------------*/
+#define HAL_CRC_GetResult()  (READ_SR(CRCOUT))
 
   /* Exported functions ----------------------------------------------------*/
 
 #ifdef HAL_CRC_ENABLE
-  __sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init);
-  __sram__ HAL_StatusTypeDef HAL_CRC_DeInit(void);
+  HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CRC_DeInit(void);
   __sram__ uint32_t HAL_CRC_OneByte(uint32_t Data);
   __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data);
   __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet);
-  __sram__ uint32_t HAL_CRC_GetResult(void);
   __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void);
   __sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void);
 #endif /* HAL_CRC_ENABLE */

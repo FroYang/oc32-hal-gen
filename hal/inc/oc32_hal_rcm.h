@@ -147,7 +147,7 @@ extern "C"
 
     /* Initialization and de-initialization functions */
     HAL_StatusTypeDef HAL_RCM_DeInit(void);
-    __sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init);
+    HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init);
     HAL_StatusTypeDef HAL_PLL_IRQHandler(void);
     __weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void);
 

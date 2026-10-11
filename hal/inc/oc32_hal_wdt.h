@@ -78,8 +78,8 @@ extern "C"
   HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init);
   HAL_StatusTypeDef HAL_WDT_DeInit(WDTCON_TypeDef *WDTCON);
   __sram__ HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON);
-  __sram__ HAL_StatusTypeDef HAL_WDT_IRQHandler(void);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void);
+  HAL_StatusTypeDef HAL_WDT_IRQHandler(void);
+  __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void);
 
   /**
    * @}

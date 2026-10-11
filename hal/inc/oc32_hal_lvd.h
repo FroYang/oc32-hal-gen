@@ -88,8 +88,8 @@ typedef struct {
 
 HAL_StatusTypeDef HAL_LVD_Init(HAL_LVDInitTypeDef *Init);
 HAL_StatusTypeDef HAL_LVD_DeInit(void);
-__sram__ __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void);
-__sram__ HAL_StatusTypeDef HAL_LVD_IRQHandler(void);
+__weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void);
+HAL_StatusTypeDef HAL_LVD_IRQHandler(void);
 
 /**
  * @}

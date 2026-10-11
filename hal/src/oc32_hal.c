@@ -606,7 +606,7 @@ uint32_t HAL_GetRegTrim0w3(void)
  * @brief  Handles POR interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
+__weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
 {
     return HAL_OK;
 }
@@ -615,7 +615,7 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
  * @brief  Handles Debug Reset interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
+__weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
 {
     return HAL_OK;
 }
@@ -623,7 +623,7 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
 /**
  * @brief  Handles POR interrupt request.
  */
-__sram__ HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
+HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
 {
     /* clear flag */
     if (HRF->PORF)

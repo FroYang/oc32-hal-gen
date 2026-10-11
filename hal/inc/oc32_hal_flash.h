@@ -167,7 +167,7 @@ extern "C"
     __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_FlashPacketTypeDef *Packet);
 
     /* Update CRC of a zone **************************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone);
+    HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone);
 
 #endif /* HAL_FLASH_ENABLE */
 

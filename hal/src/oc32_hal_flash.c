@@ -384,7 +384,7 @@ void FlashCrcInit(void)
  *         the configuration information for zone.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
+HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
 {
     if (Zone == NULL)
         return HAL_ERROR;
@@ -465,7 +465,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
  * @param  Size: Zone size
  * @retval HAL status
  */
-__sram__ static HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
+HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
 {
     uint32_t i;
 

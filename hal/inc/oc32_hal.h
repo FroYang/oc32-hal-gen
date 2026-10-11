@@ -58,11 +58,7 @@ extern "C"
   HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init);
   void HAL_HIC_DeInit(void);
 
-#define HAL_TICK_Inc() \
-  do                   \
-  {                    \
-    uwTick++;          \
-  } while (0)
+#define HAL_TICK_Inc() do { uwTick++; } while (0)
 #define HAL_TICK_GetVal() (uwTick)
 #define HAL_GetHalVer() (__OC32_HAL_VERSION)
 
@@ -80,9 +76,9 @@ extern "C"
   uint32_t HAL_GetRegTrim0w1(void);
   uint32_t HAL_GetRegTrim0w2(void);
   uint32_t HAL_GetRegTrim0w3(void);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void);
-  __sram__ HAL_StatusTypeDef HAL_HRF_IRQHandler(void);
+  __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void);
+  __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void);
+  HAL_StatusTypeDef HAL_HRF_IRQHandler(void);
 
 /* Syscall numbers for fused data access via SYSC instruction */
 #define SYSC_PID 0u      /* fused Product ID (DEVID/REVID) */

@@ -18,93 +18,94 @@
 
 /**
  * @brief  Initializes the GPIO peripheral.
- * @param  Port: GROUP_PA/GROUP_PB/.. select the Group port register.
  * @param  Init: pointer to a HAL_GPIOInitTypeDef structure that contains
  *         the configuration information for the specified GPIO peripheral.
- * @retval None
+ * @retval HAL status
  */
-HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *Init)
+HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIOInitTypeDef *Init)
 {
+    if (Init->Port != PORT_A && Init->Port != PORT_B)
+        return HAL_ERROR;
 
     if (Init->Mode == GPIO_OUTPUT)
     {
-        if (Init->State == OC32_GPIO_HI)
+        if (Init->State == GPIO_STATE_HI)
         {
-            Port->D = Port->D | Init->Pin;
+            Init->Port->D = Init->Port->D | Init->Pin;
         }
         else
         {
-            Port->D = Port->D & ~Init->Pin;
+            Init->Port->D = Init->Port->D & ~(Init->Pin);
         }
 
-        if (Init->Slew == GPIO_LOWSLEW_ON)
+        if (Init->Slew == GPIO_SLEW_LO)
         {
-            Port->LS = Port->LS | Init->Pin;
+            Init->Port->LS = Init->Port->LS | Init->Pin;
         }
         else
         {
-            Port->LS = Port->LS & ~Init->Pin;
+            Init->Port->LS = Init->Port->LS & ~(Init->Pin);
         }
 
-        Port->PU = Port->PU & ~Init->Pin;
-        Port->IE = Port->IE & ~Init->Pin;
-        Port->OE = Port->OE | Init->Pin;
+        Init->Port->PU = Init->Port->PU & ~(Init->Pin);
+        Init->Port->IE = Init->Port->IE & ~(Init->Pin);
+        Init->Port->OE = Init->Port->OE | Init->Pin;
     }
     else /* GPIO_INPUT */
     {
-        Port->OE = Port->OE & ~Init->Pin;
+        Init->Port->OE = Init->Port->OE & ~(Init->Pin);
 
         if (Init->Pull == GPIO_PULL_UP)
         {
-            Port->PU = Port->PU | Init->Pin;
+            Init->Port->PU = Init->Port->PU | Init->Pin;
         }
         else
         {
-            Port->PU = Port->PU & ~Init->Pin;
+            Init->Port->PU = Init->Port->PU & ~(Init->Pin);
         }
 
         /* Configure noise filter (PAFS0 = LSB, PAFS1 = bit 1) */
         if ((Init->Filter == GPIO_FILTER_LV0) || (Init->Filter == GPIO_FILTER_LV2))
         {
-            Port->FS0 = Port->FS0 | Init->Pin;
+            Init->Port->FS0 = Init->Port->FS0 | Init->Pin;
         }
         else
         {
-            Port->FS0 = Port->FS0 & ~Init->Pin;
+            Init->Port->FS0 = Init->Port->FS0 & ~(Init->Pin);
         }
 
         if ((Init->Filter == GPIO_FILTER_LV1) || (Init->Filter == GPIO_FILTER_LV2))
         {
-            Port->FS1 = Port->FS1 | Init->Pin;
+            Init->Port->FS1 = Init->Port->FS1 | Init->Pin;
         }
         else
         {
-            Port->FS1 = Port->FS1 & ~Init->Pin;
+            Init->Port->FS1 = Init->Port->FS1 & ~(Init->Pin);
         }
 
-        Port->IE = Port->IE | Init->Pin;
+        Init->Port->IE = Init->Port->IE | Init->Pin;
 
         /* Configure interrupt edge detection */
         if ((Init->ExInt == GPIO_EI_RISE) || (Init->ExInt == GPIO_EI_BOTH))
         {
-            Port->RIE = Port->RIE | Init->Pin;
+            Init->Port->RIE = Init->Port->RIE | Init->Pin;
         }
         else
         {
-            Port->RIE = Port->RIE & ~Init->Pin;
+            Init->Port->RIE = Init->Port->RIE & ~(Init->Pin);
         }
 
         if ((Init->ExInt == GPIO_EI_FALL) || (Init->ExInt == GPIO_EI_BOTH))
         {
-            Port->FIE = Port->FIE | Init->Pin;
+            Init->Port->FIE = Init->Port->FIE | Init->Pin;
         }
         else
         {
-            Port->FIE = Port->FIE & ~Init->Pin;
+            Init->Port->FIE = Init->Port->FIE & ~(Init->Pin);
         }
 
         /* clear stale flags for clean start up */
-        Port->IFC = Init->Pin;
+        Init->Port->IFC = Init->Pin;
     }
 
     return HAL_OK;
@@ -112,78 +113,25 @@ HAL_StatusTypeDef HAL_GPIO_Init(GROUP_PORT_TypeDef *Port, HAL_GPIOInitTypeDef *I
 
 /**
  * @brief  DeInitializes the GPIO peripheral.
- * @param  Port: GROUP_PA/GROUP_PB/.. select the Group port register.
- * @param  Pin: specifies the port pins to deinitialize.
- * @retval None
+ * @param  Init: pointer to a HAL_GPIOInitTypeDef structure that contains
+ *         the configuration information for the specified GPIO peripheral.
+ * @retval HAL status
  */
-HAL_StatusTypeDef HAL_GPIO_DeInit(GROUP_PORT_TypeDef *Port, uint32_t Pin)
+HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIOInitTypeDef *Init)
 {
-    if (Port != GROUP_PA && Port != GROUP_PB)
+    if (Init->Port != PORT_A && Init->Port != PORT_B)
         return HAL_ERROR;
 
-    Port->OE = Port->OE & ~Pin;
-    Port->D = Port->D & ~Pin;
+    Init->Port->OE = Init->Port->OE & ~(Init->Pin);
+    Init->Port->D = Init->Port->D & ~(Init->Pin);
 
-    Port->IE = Port->IE & ~Pin;
-    Port->PU = Port->PU & ~Pin;
-    Port->LS = Port->LS & ~Pin;
-    Port->RIE = Port->RIE & ~Pin;
-    Port->FIE = Port->FIE & ~Pin;
-    Port->FS0 = Port->FS0 & ~Pin;
-    Port->FS1 = Port->FS1 & ~Pin;
-    Port->IFC = Pin;
-    return HAL_OK;
-}
-
-/**
- * @brief  Reads the specified input port pin.
- * @param  Port: GROUP_PA/GROUP_PB/.. select the Group port register.
- * @param  Pin: specifies the port bit to read.
- *         This parameter can be Pin_x where x can be (0..15).
- * @retval The input port pin value.
- */
-__sram__ HAL_GPIO_State HAL_GPIO_ReadPin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
-{
-    return ((Port->D & Pin) != 0u) ? OC32_GPIO_HI : OC32_GPIO_LO;
-}
-
-/**
- * @brief  Sets or clears the selected data port bit.
- * @param  Port: GROUP_PA/GROUP_PB/.. select the Group port register.
- * @param  Pin: specifies the port bit to be written.
- * @param  State: specifies the value to be written to the selected bit.
- *         This parameter can be one of the State enum values.
- * @retval None
- */
-__sram__ HAL_StatusTypeDef HAL_GPIO_WritePin(GROUP_PORT_TypeDef *Port, uint32_t Pin, HAL_GPIO_State State)
-{
-    if (Port != GROUP_PA && Port != GROUP_PB)
-        return HAL_ERROR;
-
-    if (State == OC32_GPIO_HI)
-    {
-        Port->D = Port->D | Pin;
-    }
-    else
-    {
-        Port->D = Port->D & ~Pin;
-    }
-
-    return HAL_OK;
-}
-
-/**
- * @brief  Toggles the specified GPIO pin.
- * @param  Port: GROUP_PA/GROUP_PB/.. select the Group port register.
- * @param  Pin: specifies the pin(s) to be toggled.
- * @retval None
- */
-__sram__ HAL_StatusTypeDef HAL_GPIO_TogglePin(GROUP_PORT_TypeDef *Port, uint32_t Pin)
-{
-    if (Port != GROUP_PA && Port != GROUP_PB)
-        return HAL_ERROR;
-
-    Port->D ^= Pin;
-
+    Init->Port->IE = Init->Port->IE & ~(Init->Pin);
+    Init->Port->PU = Init->Port->PU & ~(Init->Pin);
+    Init->Port->LS = Init->Port->LS & ~(Init->Pin);
+    Init->Port->RIE = Init->Port->RIE & ~(Init->Pin);
+    Init->Port->FIE = Init->Port->FIE & ~(Init->Pin);
+    Init->Port->FS0 = Init->Port->FS0 & ~(Init->Pin);
+    Init->Port->FS1 = Init->Port->FS1 & ~(Init->Pin);
+    Init->Port->IFC = Init->Pin;
     return HAL_OK;
 }

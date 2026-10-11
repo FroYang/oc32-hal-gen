@@ -18,57 +18,6 @@
  * crti-hw.S) is handled outside of these handlers.
  * ===========================================================================*/
 
-/* EIA backup, one slot per interrupt vector (0~31).
- * A given vector can only be active once at a time (HIC only allows a higher
- * priority source to preempt), so per-vector storage is safe. */
-static volatile uint32_t g_hal_int_eia[32];
-
-/* Read EIA (Exception Instruction Address = shadow PC / return address).
- * EIA is a special register; only accessible via the MOV special-reg form. */
-static inline uint32_t hal_int_get_eia(void)
-{
-    uint32_t eia;
-    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    return eia;
-}
-
-/* Write EIA through R1 (R1 is the alias of EIA).
- * RETE fetches its return address from EIA. */
-static inline void hal_int_set_eia(uint32_t val)
-{
-    __asm__ __volatile__("OR R1, R0, %0" : : "r"(val));
-}
-
-/**
- * @brief  Enable interrupt preemption for the given vector.
- *         Saves EIA and sets the corresponding HIPRM bit.
- * @param  irq  Interrupt vector number (0~31). HIPRM bit N maps to vector N.
- */
-void HAL_IntPreemptOn(uint32_t irq)
-{
-    if (irq < 32U)
-    {
-        g_hal_int_eia[irq] = hal_int_get_eia();
-        WRITE_SR(HIPRM, READ_SR(HIPRM) | (1UL << irq));
-    }
-}
-
-/**
- * @brief  Disable interrupt preemption for the given vector.
- *         Clears the corresponding HIPRM bit and restores EIA.
- *         This must be the last action before the handler returns, so that
- *         EIA holds the correct return address when RETE executes.
- * @param  irq  Interrupt vector number (0~31).
- */
-void HAL_IntPreemptOff(uint32_t irq)
-{
-    if (irq < 32U)
-    {
-        WRITE_SR(HIPRM, READ_SR(HIPRM) & ~(1UL << irq));
-        hal_int_set_eia(g_hal_int_eia[irq]);
-    }
-}
-
 /* =============================================================================
  * C form interrupt handlers
  * ".stext" section means that the code locates in SRAM part
@@ -87,7 +36,7 @@ void HAL_IntPreemptOff(uint32_t irq)
  * @note   These interrupts mean that some kind of error occurs, thus it
  *         should not be preempted.
  */
-__sram__ int __int0()
+int __int0()
 {
 
     /* power-on reset flag */
@@ -106,279 +55,511 @@ __sram__ int __int0()
     return 0;
 }
 
-__sram__ int __int1()
+__sram__ __weak__ int __int1()
 {
-    HAL_IntPreemptOn(1);
+#ifdef HAL_CMP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V1 = 1U;
 
-    HAL_IntPreemptOff(1);
+    /* handler function */
+
+    HIPRM->V1 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CMP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int2()
+__sram__ __weak__ int __int2()
 {
-    HAL_IntPreemptOn(2);
+#ifdef HAL_CMP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V2 = 1U;
 
-    HAL_IntPreemptOff(2);
+    /* handler function */
+
+    HIPRM->V2 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CMP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int3()
+__sram__ __weak__ int __int3()
 {
-    HAL_IntPreemptOn(3);
+#ifdef HAL_CCP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V3 = 1U;
 
-    HAL_IntPreemptOff(3);
+    /* handler function */
+
+    HIPRM->V3 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CCP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int4()
+__sram__ __weak__ int __int4()
 {
-    HAL_IntPreemptOn(4);
+#ifdef HAL_CCP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V4 = 1U;
 
-    HAL_IntPreemptOff(4);
+    /* handler function */
+
+    HIPRM->V4 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CCP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int5()
+__sram__ __weak__ int __int5()
 {
-    HAL_IntPreemptOn(5);
+#ifdef HAL_CCP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V5 = 1U;
 
-    HAL_IntPreemptOff(5);
+    /* handler function */
+
+    HIPRM->V5 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CCP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int6()
+__sram__ __weak__ int __int6()
 {
-    HAL_IntPreemptOn(6);
+#ifdef HAL_CCP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V6 = 1U;
 
-    HAL_IntPreemptOff(6);
+    /* handler function */
+
+    HIPRM->V6 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CCP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int7()
+__sram__ __weak__ int __int7()
 {
-    HAL_IntPreemptOn(7);
+#ifdef HAL_CCP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V7 = 1U;
 
-    HAL_IntPreemptOff(7);
+    /* handler function */
+
+    HIPRM->V7 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CCP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int8()
+__sram__ __weak__ int __int8()
 {
-    HAL_IntPreemptOn(8);
+#ifdef HAL_CCP_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V8 = 1U;
 
-    HAL_IntPreemptOff(8);
+    /* handler function */
+
+    HIPRM->V8 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_CCP_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int9()
+__sram__ __weak__ int __int9()
 {
-    HAL_IntPreemptOn(9);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V9 = 1U;
 
-    HAL_IntPreemptOff(9);
+    /* handler function */
+
+    HIPRM->V9 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int10()
+__sram__ __weak__ int __int10()
 {
-    HAL_IntPreemptOn(10);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V10 = 1U;
 
-    HAL_IntPreemptOff(10);
+    /* handler function */
+
+    HIPRM->V10 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int11()
+__sram__ __weak__ int __int11()
 {
-    HAL_IntPreemptOn(11);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V11 = 1U;
 
-    HAL_IntPreemptOff(11);
+    /* handler function */
+
+    HIPRM->V11 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int12()
+__sram__ __weak__ int __int12()
 {
-    HAL_IntPreemptOn(12);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V12 = 1U;
 
-    HAL_IntPreemptOff(12);
+    /* handler function */
+
+    HIPRM->V12 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int13()
+__sram__ __weak__ int __int13()
 {
-    HAL_IntPreemptOn(13);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V13 = 1U;
 
-    HAL_IntPreemptOff(13);
+    /* handler function */
+
+    HIPRM->V13 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int14()
+__sram__ __weak__ int __int14()
 {
-    HAL_IntPreemptOn(14);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V14 = 1U;
 
-    HAL_IntPreemptOff(14);
+    /* handler function */
+
+    HIPRM->V14 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int15()
+__sram__ __weak__ int __int15()
 {
-    HAL_IntPreemptOn(15);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V15 = 1U;
 
-    HAL_IntPreemptOff(15);
+    /* handler function */
+
+    HIPRM->V15 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int16()
+__sram__ __weak__ int __int16()
 {
-    HAL_IntPreemptOn(16);
+#ifdef HAL_TIMER_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V16 = 1U;
 
-    HAL_IntPreemptOff(16);
+    /* handler function */
+
+    HIPRM->V16 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_TIMER_ENABLE */
+
     return 0;
 }
 
 /**
  * @brief  Handles WDT interrupt request.
  */
-__sram__ int __int17()
+__sram__ __weak__ int __int17()
 {
-    HAL_IntPreemptOn(17);
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V17 = 1U;
+
+    /* handler function */
 
 #ifdef HAL_WDT_ENABLE
-    if (WDT0CON->WDTE && WDT0CON->WDTIE && WDT0CON->WDTTO)
+    if (WDT0CON->WDTTO)
     {
         HAL_WDT_IRQHandler();
     }
 #endif /* HAL_WDT_ENABLE */
 
     /* reload the counter and inc tick */
-    if (WDT1CON->WDTE && WDT1CON->WDTIE && WDT1CON->WDTTO)
+    if (WDT1CON->WDTTO)
     {
         HAL_WDT_Clear(WDT1CON);
         HAL_TICK_Inc();
     }
 
-    HAL_IntPreemptOff(17);
+    HIPRM->V17 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
     return 0;
 }
 
-__sram__ int __int18()
+__sram__ __weak__ int __int18()
 {
-    HAL_IntPreemptOn(18);
+#ifdef HAL_ADC_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V18 = 1U;
 
-    HAL_IntPreemptOff(18);
+    /* handler function */
+
+    HIPRM->V18 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_ADC_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int19()
+__sram__ __weak__ int __int19()
 {
-    HAL_IntPreemptOn(19);
+#ifdef HAL_ADC_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V19 = 1U;
 
-    HAL_IntPreemptOff(19);
+    /* handler function */
+
+    HIPRM->V19 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_ADC_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int20()
+__sram__ __weak__ int __int20()
 {
-    HAL_IntPreemptOn(20);
+#ifdef HAL_UART_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V20 = 1U;
 
+    /* handler function */
     HAL_UART_IRQHandler(UT0CON);
 
-    HAL_IntPreemptOff(20);
+    HIPRM->V20 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_UART_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int21()
+__sram__ __weak__ int __int21()
 {
-    HAL_IntPreemptOn(21);
+#ifdef HAL_UART_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V21 = 1U;
 
+    /* handler function */
     HAL_UART_IRQHandler(UT1CON);
 
-    HAL_IntPreemptOff(21);
+    HIPRM->V21 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_UART_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int22()
+__sram__ __weak__ int __int22()
 {
-    HAL_IntPreemptOn(22);
+#ifdef HAL_SPI_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V22 = 1U;
 
-    HAL_IntPreemptOff(22);
+    /* handler function */
+
+    HIPRM->V22 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_SPI_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int23()
+__sram__ __weak__ int __int23()
 {
-    HAL_IntPreemptOn(23);
+#ifdef HAL_SPI_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V23 = 1U;
 
-    HAL_IntPreemptOff(23);
+    /* handler function */
+
+    HIPRM->V23 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_SPI_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int24()
+__sram__ __weak__ int __int24()
 {
-    HAL_IntPreemptOn(24);
+#ifdef HAL_IIC_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V24 = 1U;
 
-    HAL_IntPreemptOff(24);
+    /* handler function */
+
+    HIPRM->V24 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_IIC_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int25()
+__sram__ __weak__ int __int25()
 {
-    HAL_IntPreemptOn(25);
+#ifdef HAL_MPWM_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V25 = 1U;
 
-    HAL_IntPreemptOff(25);
+    /* handler function */
+
+    HIPRM->V25 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_MPWM_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int26()
+__sram__ __weak__ int __int26()
 {
-    HAL_IntPreemptOn(26);
+#ifdef HAL_MPWM_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V26 = 1U;
 
-    HAL_IntPreemptOff(26);
+    /* handler function */
+
+    HIPRM->V26 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_MPWM_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int27()
+__sram__ __weak__ int __int27()
 {
-    HAL_IntPreemptOn(27);
+#ifdef HAL_MPWM_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V27 = 1U;
 
-    HAL_IntPreemptOff(27);
+    /* handler function */
+
+    HIPRM->V27 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_MPWM_ENABLE */
+
     return 0;
 }
 
-__sram__ int __int28()
+__sram__ __weak__ int __int28()
 {
-    HAL_IntPreemptOn(28);
+#ifdef HAL_DAC_ENABLE
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V28 = 1U;
 
-    HAL_IntPreemptOff(28);
+    /* handler function */
+
+    HIPRM->V28 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_DAC_ENABLE */
+
     return 0;
 }
 
 /**
  * @brief  Handles Flash(always off in HAL) and CRC interrupt request.
  */
-__sram__ int __int29()
+__sram__ __weak__ int __int29()
 {
-    HAL_IntPreemptOn(29);
-
 #ifdef HAL_CRC_ENABLE
-    if (CRCCON->CRCCF)
-        HAL_CRC_IRQHandler();
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V29 = 1U;
+
+    /* handler function */
+    HAL_CRC_IRQHandler();
+
+    HIPRM->V29 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CRC_ENABLE */
-
-    HAL_IntPreemptOff(29);
     return 0;
 }
 
-__sram__ int __int30()
+__sram__ __weak__ int __int30()
 {
-    HAL_IntPreemptOn(30);
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V30 = 1U;
 
-    HAL_IntPreemptOff(30);
+    /* handler function */
+
+    HIPRM->V30 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
     return 0;
 }
 
-__sram__ int __int31()
+__sram__ __weak__ int __int31()
 {
-    HAL_IntPreemptOn(31);
+    uint32_t eia;
+    __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
+    HIPRM->V31 = 1U;
 
-    HAL_IntPreemptOff(31);
+    /* handler function */
+
+    HIPRM->V31 = 0U;
+    __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
     return 0;
 }

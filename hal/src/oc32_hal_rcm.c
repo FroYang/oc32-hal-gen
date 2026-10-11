@@ -81,7 +81,7 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
  * @note   DeInit should be used before re-Initialize
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
+HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
 {
     /* Check Null pointer */
     if ((Init == NULL) || (Init->OutFreq > OC32_SCLK_FREQ))
@@ -239,7 +239,7 @@ uint32_t HAL_RCM_GetSysClockFreq(void)
  * @brief  Handles PLL interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
+HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
 {
   return HAL_OK;
 }

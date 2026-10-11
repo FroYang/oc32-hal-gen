@@ -77,7 +77,7 @@ HAL_StatusTypeDef HAL_LVD_DeInit(void)
  * @brief  Handles LVD interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void)
+__weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void)
 {
   return HAL_OK;
 }
@@ -85,7 +85,7 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void)
 /**
  * @brief  Handles LVD interrupt request.
  */
-__sram__ HAL_StatusTypeDef HAL_LVD_IRQHandler(void)
+HAL_StatusTypeDef HAL_LVD_IRQHandler(void)
 {
   HAL_LVD_DeInit();
   return HAL_LVD_UserIRQ();
