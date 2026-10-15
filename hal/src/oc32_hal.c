@@ -464,6 +464,9 @@ HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
     WRITE_SR(HIPL0, Init->ChPriorityBit0);
     WRITE_SR(HIPL1, Init->ChPriorityBit1);
 
+    /* always set WDT HIE (Vector 17) for system tick timer */
+    HIE->V17 = 1U;
+
     return HAL_OK;
 }
 

@@ -18,19 +18,6 @@
  * crti-hw.S) is handled outside of these handlers.
  * ===========================================================================*/
 
-/* =============================================================================
- * C form interrupt handlers
- * ".stext" section means that the code locates in SRAM part
- *
- * Each handler follows the preemption pattern:
- *   HAL_IntPreemptOn(N);   // save EIA, set HIPRM bit N
- *   ... user interrupt code ...
- *   HAL_IntPreemptOff(N);  // clear HIPRM bit N, restore EIA
- *   return 0;
- *
- * Comment out the calling if you dont want the preemption feature
- * ===========================================================================*/
-
 /**
  * @brief  Handles HRF(Hardware Reset Flags), LVD and PLL interrupt request.
  * @note   These interrupts mean that some kind of error occurs, thus it

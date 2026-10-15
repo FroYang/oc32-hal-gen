@@ -590,7 +590,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void)
     FlashCrcInit();
 
     uint32_t tries;
-    do
+    while (++tries < HAL_FLASH_VERIFY_RETRY)
     {
         /* Bank0 Boot: 30K */
         FlashReadZone(0, OC32_CODE_ZONE0_SIZE);
@@ -639,7 +639,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void)
 
         /* go verify again after recovery */
 
-    } while (++tries < HAL_FLASH_VERIFY_RETRY);
+    }
 
     HAL_CRC_DeInit();
     return HAL_ERROR;
