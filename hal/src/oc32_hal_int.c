@@ -325,14 +325,14 @@ __sram__ __weak__ int __int17()
 #ifdef HAL_WDT_ENABLE
     if (WDT0CON->WDTTO)
     {
-        HAL_WDT_IRQHandler();
+        HAL_WDT_IRQHandler(WDT_0);
     }
 #endif /* HAL_WDT_ENABLE */
 
     /* reload the counter and inc tick */
     if (WDT1CON->WDTTO)
     {
-        HAL_WDT_Clear(WDT1CON);
+        HAL_WDT_Clear(WDT_1);
         HAL_TICK_Inc();
     }
 
@@ -381,7 +381,7 @@ __sram__ __weak__ int __int20()
     HIPRM->V20 = 1U;
 
     /* handler function */
-    HAL_UART_IRQHandler(UT0CON);
+    HAL_UART_IRQHandler(UART_0);
 
     HIPRM->V20 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -398,7 +398,7 @@ __sram__ __weak__ int __int21()
     HIPRM->V21 = 1U;
 
     /* handler function */
-    HAL_UART_IRQHandler(UT1CON);
+    HAL_UART_IRQHandler(UART_1);
 
     HIPRM->V21 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -535,6 +535,7 @@ __sram__ __weak__ int __int29()
     HIPRM->V29 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CRC_ENABLE */
+
     return 0;
 }
 
@@ -553,6 +554,7 @@ __sram__ __weak__ int __int30()
 
 __sram__ __weak__ int __int31()
 {
+#ifdef HAL_PORTB_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
     HIPRM->V31 = 1U;
@@ -561,5 +563,7 @@ __sram__ __weak__ int __int31()
 
     HIPRM->V31 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
+#endif /* HAL_PORTB_ENABLE */
+
     return 0;
 }

@@ -20,11 +20,11 @@
 
 /**
  * @brief  Initializes the LVD peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_LVDInitTypeDef structure that contains
+ * @param  Init: pointer to a HAL_LVD_InitTypeDef structure that contains
  *         the configuration information for the specified LVD peripheral.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_LVD_Init(HAL_LVDInitTypeDef *Init)
+HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init)
 {
   /* clear all configure */
   LVDCON->LVDRE = 0U;

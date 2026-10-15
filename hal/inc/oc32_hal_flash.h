@@ -36,8 +36,8 @@ extern "C"
         uint32_t *Data;       /*!< Specifies Data buffer */
         uint32_t Address;     /*!< Specifies Data Address */
         uint32_t Length;      /*!< Specifies Data Length */
-        HAL_DMAChTypedef DmaCh; /*!< Specifies DMA channel for transfer */
-    } HAL_FlashPacketTypeDef;
+        HAL_DMA_ChTypedef DmaCh; /*!< Specifies DMA channel for transfer */
+    } HAL_Flash_PacketTypeDef;
 
     /**
      * @brief  Flash Zone structure definition
@@ -46,7 +46,7 @@ extern "C"
     {
         uint32_t BankNum; /*!< Specifies Flash bank number */
         uint32_t ZoneNum; /*!< Specifies Zone number in a bank */
-    } HAL_FlashZoneTypeDef;
+    } HAL_Flash_ZoneTypeDef;
 
 /* Exported constants --------------------------------------------------*/
 
@@ -158,16 +158,16 @@ extern "C"
     __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void);
 
     /* Read operation functions ********************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_FlashPacketTypeDef *Packet);
+    __sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_Flash_PacketTypeDef *Packet);
 
     /* Program operation functions ********************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_FlashPacketTypeDef *Packet);
+    __sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_Flash_PacketTypeDef *Packet);
 
     /* Erase operation ***************************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_FlashPacketTypeDef *Packet);
+    __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet);
 
     /* Update CRC of a zone **************************************************/
-    HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone);
+    HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone);
 
 #endif /* HAL_FLASH_ENABLE */
 

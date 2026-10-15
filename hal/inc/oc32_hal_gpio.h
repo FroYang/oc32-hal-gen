@@ -65,7 +65,7 @@ extern "C"
         PIN29 = 0x20000000U,
         PIN30 = 0x40000000U,
         PIN31 = 0x80000000U
-    } HAL_GPIOPinTypedef;
+    } HAL_GPIO_PinTypedef;
 
     /**
      * @brief  Mode enum definition
@@ -74,7 +74,7 @@ extern "C"
     {
         GPIO_INPUT = 0U,
         GPIO_OUTPUT = 1U,
-    } HAL_GPIOModeTypedef;
+    } HAL_GPIO_DirectionTypedef;
 
     /**
      * @brief  state enum definition
@@ -83,7 +83,7 @@ extern "C"
     {
         GPIO_STATE_LO = 0u,
         GPIO_STATE_HI = 1u
-    } HAL_GPIOStateTypedef;
+    } HAL_GPIO_StateTypedef;
 
     /**
      * @brief  slew enum definition
@@ -92,7 +92,7 @@ extern "C"
     {
         GPIO_SLEW_HI = 0u,
         GPIO_SLEW_LO = 1u
-    } HAL_GPIOSlewTypedef;
+    } HAL_GPIO_SlewTypedef;
 
     /**
      * @brief  pull enum definition
@@ -102,7 +102,7 @@ extern "C"
         GPIO_PULL_NONE = 0u,
         GPIO_PULL_UP = 1u,
         GPIO_PULL_DOWN = 2u
-    } HAL_GPIOPullTypedef;
+    } HAL_GPIO_PullTypedef;
 
     /**
      * @brief  exint enum definition
@@ -113,7 +113,7 @@ extern "C"
         GPIO_EI_RISE = 1u,
         GPIO_EI_FALL = 2U,
         GPIO_EI_BOTH = 3U
-    } HAL_GPIOExIntTypedef;
+    } HAL_GPIO_ExIntTypedef;
 
     /**
      * @brief  filter enum definition
@@ -124,26 +124,26 @@ extern "C"
         GPIO_FILTER_LV0 = 1u,
         GPIO_FILTER_LV1 = 2U,
         GPIO_FILTER_LV2 = 3U
-    } HAL_GPIOFilterTypedef;
+    } HAL_GPIO_FilterTypedef;
 
     /**
      * @brief  GPIO Init structure definition
      */
     typedef struct
     {
-        GROUP_PORT_TypeDef *Port; /*!< Specifies the GPIO port to be configured */
-        HAL_GPIOPinTypedef Pin;   /*!< Specifies the GPIO pins to be configured */
-        HAL_GPIOModeTypedef Mode; /*!< Specifies the operating mode for the selected pins */
+        MODULE_PORT_TypeDef *Port; /*!< Specifies the GPIO port to be configured */
+        HAL_GPIO_PinTypedef Pin;   /*!< Specifies the GPIO pins to be configured */
+        HAL_GPIO_DirectionTypedef Direction; /*!< Specifies the operating mode for the selected pins */
 
         /* output config */
-        HAL_GPIOStateTypedef State; /*!< Specifies the GPIO pins output state */
-        HAL_GPIOSlewTypedef Slew;   /*!< Specifies the Slewrate control */
+        HAL_GPIO_StateTypedef State; /*!< Specifies the GPIO pins output state */
+        HAL_GPIO_SlewTypedef Slew;   /*!< Specifies the Slewrate control */
 
         /* input config */
-        HAL_GPIOPullTypedef Pull;     /*!< Specifies the Pull-up activation */
-        HAL_GPIOExIntTypedef ExInt;   /*!< Specifies the External Interrupt control */
-        HAL_GPIOFilterTypedef Filter; /*!< Specifies the Filter control */
-    } HAL_GPIOInitTypeDef;
+        HAL_GPIO_PullTypedef Pull;     /*!< Specifies the Pull-up activation */
+        HAL_GPIO_ExIntTypedef ExInt;   /*!< Specifies the External Interrupt control */
+        HAL_GPIO_FilterTypedef Filter; /*!< Specifies the Filter control */
+    } HAL_GPIO_InitTypeDef;
 
     /**
      * @}
@@ -162,8 +162,8 @@ extern "C"
      */
 
     /* Initialization and de-initialization functions *************************/
-    HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIOInitTypeDef *Init);
-    HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIOInitTypeDef *Init);
+    HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init);
+    HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIO_InitTypeDef *Init);
 
     /**
      * @}

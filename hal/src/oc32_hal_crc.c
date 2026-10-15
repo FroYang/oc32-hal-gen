@@ -21,10 +21,10 @@ static int CrcDmaCh;
 
 /**
  * @brief  Initializes the CRC peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_CRCInitTypeDef structure.
+ * @param  Init: pointer to a HAL_CRC_InitTypeDef structure.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_CRC_Init(HAL_CRCInitTypeDef *Init)
+HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -104,10 +104,10 @@ __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data)
 
 /**
  * @brief  Caculates 1 packet (LSB first default)
- * @param  Packet: pointer to a HAL_CRCPacketTypedef structure.
+ * @param  Packet: pointer to a HAL_CRC_PacketTypedef structure.
  * @retval CRC result
  */
-__sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet)
+__sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
 {
   HAL_ResultTypedef Result = {0};
 
@@ -120,10 +120,8 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRCPacketTypedef *Packet)
     ;
 
   /* setup interrupt */
-  if (Packet->Mode == CRC_MODE_INT)
-  {
-    CRCCON->CRCIE = 1U;
-  }
+  CRCCON->CRCIE = Packet->IntE;
+
 
   if (Packet->IDM == CRC_IDM_READ_DMA)
   {

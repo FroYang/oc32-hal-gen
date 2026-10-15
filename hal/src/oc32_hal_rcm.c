@@ -76,12 +76,12 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
 
 /**
  * @brief  Initializes the RCM clock according to the specified parameters.
- * @param  Init: pointer to an HAL_RCMInitTypeDef structure that contains
+ * @param  Init: pointer to an HAL_RCM_InitTypeDef structure that contains
  *         the configuration information for the RCM clock.
  * @note   DeInit should be used before re-Initialize
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init)
+HAL_StatusTypeDef HAL_RCM_Init(HAL_RCM_InitTypeDef *Init)
 {
     /* Check Null pointer */
     if ((Init == NULL) || (Init->OutFreq > OC32_SCLK_FREQ))
@@ -207,7 +207,7 @@ exit_ok:
  * @brief  Enable IOSC trim by usb
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCMOscTrimTypedef Trim)
+HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim)
 {
     CLKCON->IOSCUTE = Trim;
     return HAL_OK;
@@ -217,7 +217,7 @@ HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCMOscTrimTypedef Trim)
  * @brief  Enable IOSC trim value lock
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCMOscTrimLockTypedef Lock)
+HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCM_OscTrimLockTypedef Lock)
 {
 
     CLKCON->IOSCUTL = Lock;

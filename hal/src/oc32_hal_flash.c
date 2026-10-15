@@ -72,11 +72,11 @@ __sram__ HAL_StatusTypeDef FlashWREN(void)
 
 /**
  * @brief  Read lines of data(4 word per line) from the specified address.
- * @param  Packet: pointer to HAL_FlashPacketTypeDef structure that contains
+ * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
  *         the configuration information for data packet.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef FlashReadLines(HAL_FlashPacketTypeDef *Packet)
+__sram__ HAL_StatusTypeDef FlashReadLines(HAL_Flash_PacketTypeDef *Packet)
 {
     /* translate length to the configure value (power of 2) */
     uint32_t n = 0;
@@ -184,11 +184,11 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void)
 
 /**
  * @brief  Read data from the specified address.
- * @param  Packet: pointer to HAL_FlashPacketTypeDef structure that contains
+ * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
  *         the configuration information for data packet.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_FlashPacketTypeDef *Packet)
+__sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_Flash_PacketTypeDef *Packet)
 {
     if (Packet == NULL || Packet->Data == NULL)
         return HAL_ERROR;
@@ -250,11 +250,11 @@ error:
 
 /**
  * @brief  Program word at the specified address.
- * @param  Packet: pointer to HAL_FlashPacketTypeDef structure that contains
+ * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
  *         the configuration information for data packet.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_FlashPacketTypeDef *Packet)
+__sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_Flash_PacketTypeDef *Packet)
 {
     if (Packet == NULL || Packet->Data == NULL)
         return HAL_ERROR;
@@ -309,11 +309,11 @@ error:
 
 /**
  * @brief  Erase the specified address range.
- * @param  Packet: pointer to HAL_FlashPacketTypeDef structure that contains
+ * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
  *         the configuration information for data packet.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_FlashPacketTypeDef *Packet)
+__sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet)
 {
     if (Packet == NULL)
         return HAL_ERROR;
@@ -365,7 +365,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_FlashPacketTypeDef *Packet)
  */
 void FlashCrcInit(void)
 {
-    HAL_CRCInitTypeDef crc_init = {
+    HAL_CRC_InitTypeDef crc_init = {
         .Poly = CRC_POLY_DEFAULT,
         .InitVal = 0xFFFFFFFFU,
         .Bits = CRC_32_BIT,
@@ -380,11 +380,11 @@ void FlashCrcInit(void)
 
 /**
  * @brief  Read a flash zone and update the crc
- * @param  Zone: pointer to HAL_FlashZoneTypeDef structure that contains
+ * @param  Zone: pointer to HAL_Flash_ZoneTypeDef structure that contains
  *         the configuration information for zone.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
+HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
 {
     if (Zone == NULL)
         return HAL_ERROR;
@@ -405,10 +405,10 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
 
     FlashCrcInit();
 
-    HAL_CRCPacketTypedef crc_packet = {
+    HAL_CRC_PacketTypedef crc_packet = {
         .Data = flashbuf,
         .Length = 1024U,
-        .Mode = CRC_MODE_NONE,
+        .IntE = MODULE_INT_OFF,
         .IDM = CRC_IDM_CAPTURE_DMAIN,
     };
 
@@ -428,7 +428,7 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
         }
 
         /* 1k per kick, overwrite the buffer every kick */
-        HAL_FlashPacketTypeDef pkt = {
+        HAL_Flash_PacketTypeDef pkt = {
             .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 256U,
@@ -445,7 +445,7 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_FlashZoneTypeDef *Zone)
 
     HAL_CRC_DeInit();
     /* program crc */
-    HAL_FlashPacketTypeDef crc_pkt = {
+    HAL_Flash_PacketTypeDef crc_pkt = {
         .Data = &crc32,
         .Address = Address + 1020U,
         .Length = 1U,
@@ -472,10 +472,10 @@ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
     /* DMA buffer for flash reads */
     static uint32_t flashbuf[256] __attribute__((aligned(4)));
 
-    HAL_CRCPacketTypedef crc_packet = {
+    HAL_CRC_PacketTypedef crc_packet = {
         .Data = flashbuf,
         .Length = 1024U,
-        .Mode = CRC_MODE_NONE,
+        .IntE = MODULE_INT_OFF,
         .IDM = CRC_IDM_CAPTURE_DMAIN,
     };
 
@@ -485,7 +485,7 @@ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
             return HAL_ERROR;
 
         /* 1k per kick, overwrite the data every kick */
-        HAL_FlashPacketTypeDef pkt = {
+        HAL_Flash_PacketTypeDef pkt = {
             .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 256U,
@@ -537,7 +537,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
     }
 
     /* erase error zone */
-    HAL_FlashPacketTypeDef erase_pkt = {
+    HAL_Flash_PacketTypeDef erase_pkt = {
         .Data = NULL,
         .Address = daddr,
         .Length = Size,
@@ -549,7 +549,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
     for (uint32_t page = 0; page < (Size / FLASH_PAGE_SIZE); page++)
     {
         /* read a page, then program a page */
-        HAL_FlashPacketTypeDef read_pkt = {
+        HAL_Flash_PacketTypeDef read_pkt = {
             .Data = flashbuf,
             .Address = saddr,
             .Length = FLASH_PAGE_SIZE >> 2,
@@ -558,7 +558,7 @@ __sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank
         if (HAL_FLASH_Read(&read_pkt) != HAL_OK)
             return HAL_ERROR;
 
-        HAL_FlashPacketTypeDef prog_pkt = {
+        HAL_Flash_PacketTypeDef prog_pkt = {
             .Data = flashbuf,
             .Address = daddr,
             .Length = FLASH_PAGE_SIZE >> 2,

@@ -18,16 +18,16 @@
 
 /**
  * @brief  Initializes the GPIO peripheral.
- * @param  Init: pointer to a HAL_GPIOInitTypeDef structure that contains
+ * @param  Init: pointer to a HAL_GPIO_InitTypeDef structure that contains
  *         the configuration information for the specified GPIO peripheral.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIOInitTypeDef *Init)
+HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init)
 {
     if (Init->Port != PORT_A && Init->Port != PORT_B)
         return HAL_ERROR;
 
-    if (Init->Mode == GPIO_OUTPUT)
+    if (Init->Direction == GPIO_OUTPUT)
     {
         if (Init->State == GPIO_STATE_HI)
         {
@@ -113,11 +113,11 @@ HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIOInitTypeDef *Init)
 
 /**
  * @brief  DeInitializes the GPIO peripheral.
- * @param  Init: pointer to a HAL_GPIOInitTypeDef structure that contains
+ * @param  Init: pointer to a HAL_GPIO_InitTypeDef structure that contains
  *         the configuration information for the specified GPIO peripheral.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIOInitTypeDef *Init)
+HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIO_InitTypeDef *Init)
 {
     if (Init->Port != PORT_A && Init->Port != PORT_B)
         return HAL_ERROR;

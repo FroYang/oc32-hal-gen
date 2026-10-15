@@ -14,44 +14,47 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static int Ut0DmaCh = 0;
-static int Ut1DmaCh = 0;
+static HAL_DMA_ChTypedef Ut0DmaCh = 0U;
+static HAL_DMA_ChTypedef Ut1DmaCh = 0U;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
 /**
  * @brief  Initializes the UART peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_UARTInitTypeDef structure.
+ * @param  Init: pointer to a HAL_UART_InitTypeDef structure.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_UART_Init(HAL_UARTInitTypeDef *Init)
+HAL_StatusTypeDef HAL_UART_Init(HAL_UART_InitTypeDef *Init)
 {
-  if (Init == NULL || (Init->UTCON != UT0CON && Init->UTCON != UT1CON))
+  if (Init == NULL)
     return HAL_ERROR;
 
   /* setup interrupt priority */
-  if (Init->UTCON == UT0CON)
+  if (Init->Uart == UART_0)
   {
     Ut0DmaCh = Init->DmaCh;
   }
-
-  if (Init->UTCON == UT1CON)
+  else if (Init->Uart == UART_1)
   {
     Ut1DmaCh = Init->DmaCh;
   }
+  else
+  {
+    return HAL_ERROR;
+  }
 
   /* setup parity mode */
-  Init->UTCON->UTPAR = Init->Parity;
+  Init->Uart->UTCON.UTPAR = Init->Parity;
 
   /* setup bits */
-  Init->UTCON->UTM = Init->Bits;
+  Init->Uart->UTCON.UTM = Init->Bits;
 
   /* setup duplex */
-  Init->UTCON->UTHD = Init->Duplex;
+  Init->Uart->UTCON.UTHD = Init->Duplex;
 
   /* setup pins */
-  Init->UTCON->UTPORTS = Init->Pins;
+  Init->Uart->UTCON.UTPORTS = Init->Pins;
 
   /* calculates cycles per bit */
   uint32_t bitcycles = SystemClock / Init->Baud;
@@ -60,215 +63,179 @@ HAL_StatusTypeDef HAL_UART_Init(HAL_UARTInitTypeDef *Init)
     bitcycles++;
 
   /* setup baudrate */
-  Init->UTCON->UTBR = bitcycles / 8;
-  Init->UTCON->UTBRA = bitcycles % 8;
+  Init->Uart->UTCON.UTBR = bitcycles / 8;
+  Init->Uart->UTCON.UTBRA = bitcycles % 8;
 
   return HAL_OK;
 }
 
 /**
  * @brief  DeInitializes the UART peripheral.
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_UART_DeInit(UTCON_TypeDef *UTCON)
+HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart)
 {
-  if (UTCON != UT0CON && UTCON != UT1CON)
-    return HAL_ERROR;
+  if (Uart != UART_0 && Uart != UART_1)
+    return HAL_ERROR; 
 
-  WRITE_SR(UTCON, 0);
-
-  UTCON->UTTCLR = 1U;
-  UTCON->UTRCLR = 1U;
+  *(volatile uint32_t *)&Uart->UTCON = 0U;
+  Uart->UTCON.UTTCLR = 1U;
+  Uart->UTCON.UTRCLR = 1U;
   return HAL_OK;
 }
 
 /**
  * @brief  UART TX Setup
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @param  Length: length of data
  * @param  Data: data to be sent
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef UartTxSetup(UTCON_TypeDef *UTCON, uint32_t Length, uint32_t *Data)
+__sram__ HAL_StatusTypeDef UartTxSetup(MODULE_UART_TypeDef *Uart, uint32_t Length, uint32_t *Data)
 {
-  if (UTCON == UT0CON)
-  {
-    while (UTCON->UTIE)
-      ;
-    WRITE_SR(UT0TBC, Length);
-    WRITE_SR(UT0TBUF, *Data);
-    WRITE_SR(UT0TDA, (uint32_t)Data);
-  }
-  else if (UTCON == UT1CON)
-  {
-    while (UTCON->UTIE)
-      ;
-    WRITE_SR(UT1TBC, Length);
-    WRITE_SR(UT1TBUF, *Data);
-    WRITE_SR(UT1TDA, (uint32_t)Data);
-  }
-  else
-  {
+
+  if (Uart != UART_0 && Uart != UART_1)
     return HAL_ERROR;
-  }
+
+  while (Uart->UTCON.UTIE)
+    ;
+  Uart->UTTBC = Length;
+  Uart->UTTBUF = *Data;
+  Uart->UTTDA = (uint32_t)Data;
 
   return HAL_OK;
 }
 
 /**
  * @brief  UART RX Setup
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @param  Length: length of data
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef UartRxSetup(UTCON_TypeDef *UTCON, uint32_t Length, uint32_t *Data)
+__sram__ HAL_StatusTypeDef UartRxSetup(MODULE_UART_TypeDef *Uart, uint32_t Length, uint32_t *Data)
 {
-  if (UTCON == UT0CON)
-  {
-    while (UTCON->UTIE)
-      ;
-    WRITE_SR(UT0RBC, Length);
-    WRITE_SR(UT0RDA, (uint32_t)Data);
-  }
-  else if (UTCON == UT1CON)
-  {
-    while (UTCON->UTIE)
-      ;
-    WRITE_SR(UT1RBC, Length);
-    WRITE_SR(UT1RDA, (uint32_t)Data);
-  }
-  else
-  {
+  if (Uart != UART_0 && Uart != UART_1)
     return HAL_ERROR;
-  }
+
+  while (Uart->UTCON.UTIE)
+    ;
+  Uart->UTRBC = Length;
+  Uart->UTRDA = (uint32_t)Data;
 
   return HAL_OK;
 }
 
 /**
  * @brief  UART TX once
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  */
-__sram__ void UartTxOnce(UTCON_TypeDef *UTCON)
+__sram__ void UartTxOnce(MODULE_UART_TypeDef *Uart)
 {
   /* kcik start tx */
-  UTCON->UTTKS = 1;
-  while (UTCON->UTTBV == 0)
+  Uart->UTCON.UTTKS = 1;
+  while (Uart->UTCON.UTTBV == 0)
     ;
   /* clear done flag */
-  UTCON->UTTCLR = 1;
+  Uart->UTCON.UTTCLR = 1;
 }
 
 /**
  * @brief  UART RX once
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @retval Rx data
  */
-__sram__ HAL_ResultTypedef UartRxOnce(UTCON_TypeDef *UTCON)
+__sram__ HAL_ResultTypedef UartRxOnce(MODULE_UART_TypeDef *Uart)
 {
-  HAL_ResultTypedef Result = {0};
+  HAL_ResultTypedef Result;
 
-  UTCON->UTRE = 1U;
+  Uart->UTCON.UTRE = 1U;
 
-  while (UTCON->UTRBV == 0)
+  while (Uart->UTCON.UTRBV == 0)
     ;
-  UTCON->UTRCLR = 1U;
-  UTCON->UTRE = 0;
+  Uart->UTCON.UTRCLR = 1U;
+  Uart->UTCON.UTRE = 0U;
 
   Result.Error = HAL_OK;
-
-  if (UTCON == UT0CON)
-  {
-    Result.Data = UT0RBUF;
-  }
-  else if (UTCON == UT1CON)
-  {
-    Result.Data = UT1RBUF;
-  }
-  else
-  {
-    Result.Error = HAL_ERROR;
-  }
-
+  Result.Data = Uart->UTRBUF;
   return Result;
 }
 
 /**
  * @brief  Tx one byte
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @param  Data: data to be sent
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_UART_TX_OneByte(UTCON_TypeDef *UTCON, uint32_t Data)
+__sram__ HAL_StatusTypeDef HAL_UART_TX_OneByte(MODULE_UART_TypeDef *Uart, uint32_t Data)
 {
-  if (UartTxSetup(UTCON, 1U, &Data) != HAL_OK)
+  if (UartTxSetup(Uart, 1U, &Data) != HAL_OK)
     return HAL_ERROR;
 
-  UartTxOnce(UTCON);
+  UartTxOnce(Uart);
   return HAL_OK;
 }
 
 /**
  * @brief  Rx one byte
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @retval Rx data
  */
-__sram__ HAL_ResultTypedef HAL_UART_RX_OneByte(UTCON_TypeDef *UTCON)
+__sram__ HAL_ResultTypedef HAL_UART_RX_OneByte(MODULE_UART_TypeDef *Uart)
 {
   HAL_ResultTypedef Result = {0};
   /* dont care the address pointer */
-  if (UartRxSetup(UTCON, 1U, NULL) != HAL_OK)
+  if (UartRxSetup(Uart, 1U, NULL) != HAL_OK)
   {
     Result.Error = HAL_ERROR;
     return Result;
   }
 
-  return UartRxOnce(UTCON);
+  return UartRxOnce(Uart);
 }
 
 /**
  * @brief  Tx one word
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @param  Data: data to be sent
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_UART_TX_OneWord(UTCON_TypeDef *UTCON, uint32_t Data)
+__sram__ HAL_StatusTypeDef HAL_UART_TX_OneWord(MODULE_UART_TypeDef *Uart, uint32_t Data)
 {
-  if (UartTxSetup(UTCON, 4U, &Data) != HAL_OK)
+  if (UartTxSetup(Uart, 4U, &Data) != HAL_OK)
     return HAL_ERROR;
 
-  UartTxOnce(UTCON);
+  UartTxOnce(Uart);
   return HAL_OK;
 }
 
 /**
  * @brief  Rx one word
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
  * @retval Rx data
  */
-__sram__ HAL_ResultTypedef HAL_UART_RX_OneWord(UTCON_TypeDef *UTCON)
+__sram__ HAL_ResultTypedef HAL_UART_RX_OneWord(MODULE_UART_TypeDef *Uart)
 {
   HAL_ResultTypedef Result = {0};
   /* dont care the address pointer */
-  if (UartRxSetup(UTCON, 4U, NULL) != HAL_OK)
+  if (UartRxSetup(Uart, 4U, NULL) != HAL_OK)
   {
     Result.Error = HAL_ERROR;
     return Result;
   }
 
-  return UartRxOnce(UTCON);
+  return UartRxOnce(Uart);
 }
 
 /**
  * @brief  update DMA channel state
  * @param  DMAE: specifies whether dma is enable
- * @param  DmaCh: pointer to a HAL_DMAChTypedef structure, specifies the dma channel
- * @param  Module: pointer to a HAL_DMAMapTypedef structure, specifies the dma module
- * @param  State: pointer to a HAL_DMAStateTypedef structure, specifies the dma state to be set
+ * @param  DmaCh: pointer to a HAL_DMA_ChTypedef structure, specifies the dma channel
+ * @param  Module: pointer to a HAL_DMA_MapTypedef structure, specifies the dma module
+ * @param  State: pointer to a HAL_DMA_StateTypedef structure, specifies the dma state to be set
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef UartDMAUpdate(uint32_t DMAE, HAL_DMAChTypedef DmaCh, HAL_DMAMapTypedef Module, HAL_DMAStateTypedef State)
+__sram__ HAL_StatusTypeDef UartDMAUpdate(uint32_t DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
 {
   if (DMAE)
     return HAL_OK;
@@ -278,160 +245,110 @@ __sram__ HAL_StatusTypeDef UartDMAUpdate(uint32_t DMAE, HAL_DMAChTypedef DmaCh, 
 
 /**
  * @brief  Tx packet
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
- * @param  Packet: pointer to a HAL_UARTPacketTypedef structure, specifies the tx data packet
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Packet: pointer to a HAL_UART_PacketTypedef structure, specifies the tx data packet
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_UART_TX_Packet(UTCON_TypeDef *UTCON, HAL_UARTPacketTypedef *Packet)
+__sram__ HAL_StatusTypeDef HAL_UART_TX_Packet(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet)
 {
-  if (Packet == NULL || Packet->Data == NULL || (UTCON != UT0CON && UTCON != UT1CON))
+  if (Packet == NULL || Packet->Data == NULL || (Uart != UART_0 && Uart != UART_1))
     return HAL_ERROR;
 
   /* wait rx if it is half-duplex */
-  if (UTCON->UTHD)
+  if (Uart->UTCON.UTHD)
   {
-    while (UTCON->UTRDMAE)
+    while (Uart->UTCON.UTRDMAE)
       ;
   }
 
   /* wait previous packet ends */
-  while (UTCON->UTTDMAE)
+  while (Uart->UTCON.UTTDMAE)
     ;
 
-  if (UTCON == UT0CON)
-  {
-    if (UartDMAUpdate(UT0CON->UTRDMAE, Ut0DmaCh, OC32_DMA_UART0, OC32_DMA_BUSY) != HAL_OK)
-      return HAL_ERROR;
+  HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
+  if (UartDMAUpdate(Uart->UTCON.UTRDMAE, DmaCh, DmaModule, OC32_DMA_BUSY) != HAL_OK)
+    return HAL_ERROR;
 
-    if (Packet->Mode == UART_MODE_INT)
-    {
-      UTCON->UTIE = 1U;
-    }
-  }
-
-  if (UTCON == UT1CON)
-  {
-    if (UartDMAUpdate(UT1CON->UTRDMAE, Ut1DmaCh, OC32_DMA_UART1, OC32_DMA_BUSY) != HAL_OK)
-      return HAL_ERROR;
-
-    if (Packet->Mode == UART_MODE_INT)
-    {
-      UTCON->UTIE = 1U;
-    }
-  }
+  Uart->UTCON.UTIE = Packet->IntE;
 
   /* setup tx dma */
-  UTCON->UTTDMAE = 1U;
+  Uart->UTCON.UTTDMAE = 1U;
 
-  if (UartTxSetup(UTCON, Packet->Length, Packet->Data) != HAL_OK)
+  if (UartTxSetup(Uart, Packet->Length, Packet->Data) != HAL_OK)
     return HAL_ERROR;
 
   /* kcik start tx */
-  UTCON->UTTKS = 1U;
+  Uart->UTCON.UTTKS = 1U;
 
   /* return if it is interrupt mode */
-  if (UTCON->UTIE)
+  if (Uart->UTCON.UTIE)
   {
     return HAL_OK;
   }
   else
   {
-    while (UTCON->UTTBV == 0)
+    while (Uart->UTCON.UTTBV == 0)
       ;
     /* clear done flag */
-    UTCON->UTTCLR = 1U;
-    UTCON->UTTDMAE = 0;
-    if (UTCON == UT0CON)
-    {
-      return UartDMAUpdate(UT0CON->UTRDMAE, Ut0DmaCh, OC32_DMA_UART0, OC32_DMA_IDLE);
-    }
-    else if (UTCON == UT1CON)
-    {
-      return UartDMAUpdate(UT1CON->UTRDMAE, Ut1DmaCh, OC32_DMA_UART1, OC32_DMA_IDLE);
-    }
-    else
-    {
-      return HAL_ERROR;
-    }
+    Uart->UTCON.UTTCLR = 1U;
+    Uart->UTCON.UTTDMAE = 0U;
+    return UartDMAUpdate(Uart->UTCON.UTRDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   }
 }
 
 /**
  * @brief  Rx packet
- * @param  UTCON: pointer to a UTCON_TypeDef structure, specifies which UART
- * @param  Packet: pointer to a HAL_UARTPacketTypedef structure, specifies the rx data packet
+ * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Packet: pointer to a HAL_UART_PacketTypedef structure, specifies the rx data packet
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_UART_RX_Packet(UTCON_TypeDef *UTCON, HAL_UARTPacketTypedef *Packet)
+__sram__ HAL_StatusTypeDef HAL_UART_RX_Packet(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet)
 {
-  if (Packet == NULL || Packet->Data == NULL || (UTCON != UT0CON && UTCON != UT1CON))
+  if (Packet == NULL || Packet->Data == NULL || (Uart != UART_0 && Uart != UART_1))
     return HAL_ERROR;
 
   /* wait tx if it is half-duplex */
-  if (UTCON->UTHD)
+  if (Uart->UTCON.UTHD)
   {
-    while (UTCON->UTTDMAE)
+    while (Uart->UTCON.UTTDMAE)
       ;
   }
 
   /* wait previous packet ends */
-  while (UTCON->UTRDMAE)
+  while (Uart->UTCON.UTRDMAE)
     ;
 
-  if (UTCON == UT0CON)
-  {
-    if (UartDMAUpdate(UT0CON->UTTDMAE, Ut0DmaCh, OC32_DMA_UART0, OC32_DMA_BUSY) != HAL_OK)
-      return HAL_ERROR;
+  HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
 
-    if (Packet->Mode == UART_MODE_INT)
-    {
-      UTCON->UTIE = 1U;
-    }
-  }
+  if (UartDMAUpdate(Uart->UTCON.UTTDMAE, DmaCh, DmaModule, OC32_DMA_BUSY) != HAL_OK)
+    return HAL_ERROR;
 
-  if (UTCON == UT1CON)
-  {
-    if (UartDMAUpdate(UT1CON->UTTDMAE, Ut1DmaCh, OC32_DMA_UART1, OC32_DMA_BUSY) != HAL_OK)
-      return HAL_ERROR;
-
-    if (Packet->Mode == UART_MODE_INT)
-    {
-      UTCON->UTIE = 1U;
-    }
-  }
+  Uart->UTCON.UTIE = Packet->IntE;
 
   /* setup rx dma */
-  UTCON->UTRDMAE = 1U;
+  Uart->UTCON.UTRDMAE = 1U;
 
-  if (UartRxSetup(UTCON, Packet->Length, Packet->Data) != HAL_OK)
+  if (UartRxSetup(Uart, Packet->Length, Packet->Data) != HAL_OK)
     return HAL_ERROR;
 
   /* enable rx */
-  UTCON->UTRE = 1U;
+  Uart->UTCON.UTRE = 1U;
 
   /* return if it is interrupt mode */
-  if (UTCON->UTIE)
+  if (Uart->UTCON.UTIE)
     return HAL_OK;
   else
   {
-    while (UTCON->UTRBV == 0)
+    while (Uart->UTCON.UTRBV == 0)
       ;
     /* clear done flag */
-    UTCON->UTRE = 0;
-    UTCON->UTRCLR = 1U;
-    UTCON->UTRDMAE = 0;
-    if (UTCON == UT0CON)
-    {
-      return UartDMAUpdate(UT0CON->UTTDMAE, Ut0DmaCh, OC32_DMA_UART0, OC32_DMA_IDLE);
-    }
-    else if (UTCON == UT0CON)
-    {
-      return UartDMAUpdate(UT1CON->UTTDMAE, Ut1DmaCh, OC32_DMA_UART1, OC32_DMA_IDLE);
-    }
-    else
-    {
-      return HAL_ERROR;
-    }
+    Uart->UTCON.UTRE = 0U;
+    Uart->UTCON.UTRCLR = 1U;
+    Uart->UTCON.UTRDMAE = 0U;
+
+    return UartDMAUpdate(Uart->UTCON.UTTDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   }
 }
 
@@ -439,7 +356,7 @@ __sram__ HAL_StatusTypeDef HAL_UART_RX_Packet(UTCON_TypeDef *UTCON, HAL_UARTPack
  * @brief  Handles Uart interrupt request at user side.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(UTCON_TypeDef *UTCON)
+__sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(MODULE_UART_TypeDef *Uart)
 {
   return HAL_OK;
 }
@@ -447,44 +364,33 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(UTCON_TypeDef *UTCON)
 /**
  * @brief  Handles UART interrupt request.
  */
-__sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(UTCON_TypeDef *UTCON)
+__sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(MODULE_UART_TypeDef *Uart)
 {
-  uint32_t DmaCh;
-  uint32_t Module;
-  if (UTCON == UT0CON)
-  {
-    DmaCh = Ut0DmaCh;
-    Module = OC32_DMA_UART0;
-  }
-  else if (UTCON == UT1CON)
-  {
-    DmaCh = Ut1DmaCh;
-    Module = OC32_DMA_UART1;
-  }
-  else
-  {
+  if (Uart != UART_0 && Uart != UART_1)
     return HAL_ERROR;
+
+  HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
+
+  if (Uart->UTCON.UTTBV)
+  {
+    Uart->UTCON.UTTCLR = 1U;
+    Uart->UTCON.UTTDMAE = 0U;
+    UartDMAUpdate(Uart->UTCON.UTRDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   }
 
-  if (UTCON->UTTBV)
+  if (Uart->UTCON.UTRBV)
   {
-    UTCON->UTTCLR = 1U;
-    UTCON->UTTDMAE = 0;
-    UartDMAUpdate(UTCON->UTRDMAE, DmaCh, Module, OC32_DMA_IDLE);
-  }
-
-  if (UTCON->UTRBV)
-  {
-    UTCON->UTRCLR = 1U;
-    UTCON->UTRE = 0;
-    UTCON->UTRDMAE = 0;
-    UartDMAUpdate(UTCON->UTTDMAE, DmaCh, Module, OC32_DMA_IDLE);
+    Uart->UTCON.UTRCLR = 1U;
+    Uart->UTCON.UTRE = 0U;
+    Uart->UTCON.UTRDMAE = 0U;
+    UartDMAUpdate(Uart->UTCON.UTTDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   }
 
   if (DMAChState[DmaCh] == OC32_DMA_IDLE)
-    UTCON->UTIE = 0;
+    Uart->UTCON.UTIE = 0U;
 
-  return HAL_UART_UserIRQ(UTCON);
+  return HAL_UART_UserIRQ(Uart);
 }
 
 #endif /* HAL_UART_ENABLE */

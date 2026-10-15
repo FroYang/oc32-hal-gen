@@ -51,13 +51,13 @@ extern "C"
       OC32_DMA_CH2 = 2U,
       OC32_DMA_CH3 = 3U,
       OC32_DMA_CH_TOTAL
-   } HAL_DMAChTypedef;
+   } HAL_DMA_ChTypedef;
 
    typedef enum
    {
       OC32_DMA_IDLE = 0U,
       OC32_DMA_BUSY = 1U
-   } HAL_DMAStateTypedef;
+   } HAL_DMA_StateTypedef;
 
    typedef enum
    {
@@ -78,7 +78,7 @@ extern "C"
       OC32_DMA_reserved1 = 14U,
       OC32_DMA_CRC = 15U,
       OC32_DMA_NONE
-   } HAL_DMAMapTypedef;
+   } HAL_DMA_MapTypedef;
 
    typedef enum
    {
@@ -115,7 +115,7 @@ extern "C"
       OC32_HIC_CH_PORTA = 30U,
       OC32_HIC_CH_PORTB = 31U,
       OC32_HIC_CH_TOTAL
-   } HAL_HICChTypedef;
+   } HAL_HIC_ChTypedef;
 
    typedef enum
    {
@@ -152,7 +152,7 @@ extern "C"
       OC32_HIC_PORTA = 1U << 30,
       OC32_HIC_PORTB = 1U << 31,
       OC32_HIC_NONE
-   } HAL_HICMapTypedef;
+   } HAL_HIC_MapTypedef;
 
    /**
     * @}
@@ -163,11 +163,11 @@ extern "C"
     */
    typedef enum
    {
-      OC32_INT_PRI0 = 0U,
-      OC32_INT_PRI1 = 1U,
-      OC32_INT_PRI2 = 2U,
-      OC32_INT_PRI3 = 3U
-   } HAL_INTPriTypedef;
+      OC32_HIC_PRI0 = 0U,
+      OC32_HIC_PRI1 = 1U,
+      OC32_HIC_PRI2 = 2U,
+      OC32_HIC_PRI3 = 3U
+   } HAL_HIC_PriorityTypedef;
 
 /**
  * @}
@@ -193,10 +193,10 @@ extern "C"
       HAL_TICK_FREQ_100Hz = 10U,
       HAL_TICK_FREQ_1KHz = 1U,
       HAL_TICK_FREQ_DEFAULT = HAL_TICK_FREQ_1KHz
-   } HAL_TickFreqTypeDef;
+   } HAL_TICK_FreqTypeDef;
 
    extern volatile uint32_t uwTick;
-   extern HAL_TickFreqTypeDef uwTickFreq;
+   extern HAL_TICK_FreqTypeDef uwTickFreq;
 
 /** @defgroup HAL_ENABLE Module Enable
  * @{
@@ -208,6 +208,7 @@ extern "C"
 #define HAL_LVD_ENABLE
 #define HAL_WDT_ENABLE
 #define HAL_UART_ENABLE
+#define HAL_TIMER_ENABLE
 
    /* enable depends on model list:
       #define HAL_PORT_B_ENABLE

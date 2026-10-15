@@ -39,17 +39,17 @@ extern "C"
     WDT_MODE_WAKE = 0x2U,
     WDT_MODE_INT = 0x3U,
     WDT_MODE_INT_AND_WAKE = 0x4U
-  } HAL_WDTModeTypedef;
+  } HAL_WDT_ModeTypedef;
 
   /**
    * @brief  WDT Init Structure definition
    */
   typedef struct
   {
-    WDTCON_TypeDef *WDTCON;   /*!< Specifies which WDTCON */
-    HAL_WDTModeTypedef Mode;  /*!< Specifies the Mode: INT or None */
+    MODULE_WDT_TypeDef *Wdt;   /*!< Specifies the watchdogtimer */
+    HAL_WDT_ModeTypedef Mode;  /*!< Specifies the Mode: INT or None */
     uint32_t Period;          /*!< Specifies the overflow period (us) */
-  } HAL_WDTInitTypeDef;
+  } HAL_WDT_InitTypeDef;
 
 /**
  * @}
@@ -75,11 +75,11 @@ extern "C"
 
   /* Exported functions ----------------------------------------------------*/
 
-  HAL_StatusTypeDef HAL_WDT_Init(HAL_WDTInitTypeDef *Init);
-  HAL_StatusTypeDef HAL_WDT_DeInit(WDTCON_TypeDef *WDTCON);
-  __sram__ HAL_StatusTypeDef HAL_WDT_Clear(WDTCON_TypeDef *WDTCON);
-  HAL_StatusTypeDef HAL_WDT_IRQHandler(void);
-  __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(void);
+  HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init);
+  HAL_StatusTypeDef HAL_WDT_DeInit(MODULE_WDT_TypeDef *Wdt);
+  __sram__ HAL_StatusTypeDef HAL_WDT_Clear(MODULE_WDT_TypeDef *Wdt);
+  HAL_StatusTypeDef HAL_WDT_IRQHandler(MODULE_WDT_TypeDef *Wdt);
+  __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(MODULE_WDT_TypeDef *Wdt);
 
   /**
    * @}

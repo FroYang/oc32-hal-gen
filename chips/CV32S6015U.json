@@ -23,7 +23,7 @@
     "vdd_value": 5000,
     "features": [
         {
-            "key": "PORT_B",
+            "key": "PORTB",
             "description": "GPIO Port B",
             "always": true
         },

@@ -37,7 +37,7 @@ extern "C"
         RCM_OSC_IHOSC = 0x1U,
         RCM_OSC_XLOSC = 0x2U,
         RCM_OSC_XHOSC = 0x3U
-    } HAL_RCMOscTypedef;
+    } HAL_RCM_OscTypedef;
 
 
     /**
@@ -45,9 +45,9 @@ extern "C"
      */
     typedef struct
     {
-        HAL_RCMOscTypedef OscType;  /*!< osc */
-        uint32_t OutFreq;           /*!< output freq */
-    } HAL_RCMInitTypeDef;
+        HAL_RCM_OscTypedef OscType;  /*!< osc */
+        uint32_t OutFreq;           /*!< output freq Hz */
+    } HAL_RCM_InitTypeDef;
 
     /**
      * @brief  RCM Oscillator trim definition
@@ -56,7 +56,7 @@ extern "C"
     {
         RCM_OSC_TRIM_OFF = 0x0U,
         RCM_OSC_TRIM_ON = 0x1U,
-    } HAL_RCMOscTrimTypedef;
+    } HAL_RCM_OscTrimTypedef;
 
     /**
      * @brief  RCM Oscillator trim lock definition
@@ -65,7 +65,7 @@ extern "C"
     {
         RCM_OSC_TRIM_LOCK_OFF = 0x0U,
         RCM_OSC_TRIM_LOCK_ON = 0x1U,
-    } HAL_RCMOscTrimLockTypedef;
+    } HAL_RCM_OscTrimLockTypedef;
 
 
 /**
@@ -147,13 +147,13 @@ extern "C"
 
     /* Initialization and de-initialization functions */
     HAL_StatusTypeDef HAL_RCM_DeInit(void);
-    HAL_StatusTypeDef HAL_RCM_Init(HAL_RCMInitTypeDef *Init);
+    HAL_StatusTypeDef HAL_RCM_Init(HAL_RCM_InitTypeDef *Init);
     HAL_StatusTypeDef HAL_PLL_IRQHandler(void);
     __weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void);
 
 #ifdef HAL_USB_ENABLE
-    HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCMOscTrimTypedef Trim);
-    HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCMOscTrimLockTypedef Lock);
+    HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim);
+    HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCM_OscTrimLockTypedef Lock);
 #endif
 
     /* Frequency query functions */

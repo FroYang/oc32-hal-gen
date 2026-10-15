@@ -47,7 +47,7 @@ typedef enum
   LVD_TRIG_V4300 = 13U,
   LVD_TRIG_V4500 = 14U,
   LVD_TRIG_V4700 = 15U
-} HAL_LVDTrigVTypedef;
+} HAL_LVD_TrigVTypedef;
 
 /**
  * @}
@@ -63,7 +63,7 @@ typedef enum
   LVD_MODE_WAKE = 0x2U,
   LVD_MODE_INT = 0x3U,
   LVD_MODE_INT_AND_WAKE = 0x4U
-} HAL_LVDModeTypedef;
+} HAL_LVD_ModeTypedef;
 
 /**
  * @}
@@ -73,9 +73,9 @@ typedef enum
  * @brief  LVD Init structure definition
  */
 typedef struct {
-    HAL_LVDModeTypedef Mode;  /*!< Specifies the Mode */
-    HAL_LVDTrigVTypedef TrigV; /*!< Specifies the Trigger voltage */
-} HAL_LVDInitTypeDef;
+    HAL_LVD_ModeTypedef Mode;  /*!< Specifies the Mode */
+    HAL_LVD_TrigVTypedef TrigV; /*!< Specifies the Trigger voltage */
+} HAL_LVD_InitTypeDef;
 
 /**
  * @}
@@ -86,7 +86,7 @@ typedef struct {
  * @{
  */
 
-HAL_StatusTypeDef HAL_LVD_Init(HAL_LVDInitTypeDef *Init);
+HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init);
 HAL_StatusTypeDef HAL_LVD_DeInit(void);
 __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void);
 HAL_StatusTypeDef HAL_LVD_IRQHandler(void);

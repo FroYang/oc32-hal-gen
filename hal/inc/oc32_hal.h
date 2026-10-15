@@ -20,7 +20,16 @@ extern "C"
 
   /* Exported constants --------------------------------------------------*/
 
+  typedef enum
+  {
+    MODULE_INT_OFF = 0x0U,
+    MODULE_INT_ON = 0x1U
+  } HAL_MODULE_INTTypedef;
+
   /* Exported types ------------------------------------------------------*/
+
+
+
   typedef struct
   {
     uint32_t ChEnable;       /* specify interrupt enable for each channel */
@@ -63,7 +72,7 @@ extern "C"
 #define HAL_GetHalVer() (__OC32_HAL_VERSION)
 
   void HAL_Delay(uint32_t Delay);
-  __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMAChTypedef DmaCh, HAL_DMAMapTypedef Module, HAL_DMAStateTypedef State);
+  __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
   int __syscall_handler(uint32_t Num);
   int __systrap_handler(void);
   uint32_t HAL_GetRevID(void);
@@ -99,6 +108,7 @@ extern "C"
 #include "oc32_hal_crc.h"
 #include "oc32_hal_lvd.h"
 #include "oc32_hal_uart.h"
+#include "oc32_hal_timer.h"
 
 #ifdef __cplusplus
 }

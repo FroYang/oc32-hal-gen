@@ -32,7 +32,7 @@
  * @{
  */
 volatile uint32_t uwTick;
-HAL_TickFreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT; /* 1KHz */
+HAL_TICK_FreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT; /* 1KHz */
 
 /* Syscall request buffer: filled by __syscall_handler via SYSC instruction */
 static uint32_t requestbuf[4];
@@ -91,11 +91,11 @@ void *memset(void *dest, int c, uint32_t n)
 void uart_tx_char(char c)
 {
 #ifdef HAL_UART0_DEBUG
-    HAL_UART_TX_OneByte(UT0CON, c);
+    HAL_UART_TX_OneByte(UART_0, c);
 #endif
 
 #ifdef HAL_UART1_DEBUG
-    HAL_UART_TX_OneByte(UT1CON, c);
+    HAL_UART_TX_OneByte(UART_1, c);
 #endif
 }
 
@@ -297,7 +297,7 @@ int printf(const char *format, ...)
  * @brief  update DMA channel state
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMAChTypedef DmaCh, HAL_DMAMapTypedef Module, HAL_DMAStateTypedef State)
+__sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
 {
     /* error if try to set the busy channel */
     if (State && DMAChState[DmaCh])
@@ -435,10 +435,10 @@ static void request_REGTRIM2(void)
  *       implementation  in user file.
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_TICK_Init(void)
+__sram__ HAL_StatusTypeDef HAL_TICK_Init(void)
 {
-    HAL_WDTInitTypeDef Init = {
-        .WDTCON = WDT1CON,
+    HAL_WDT_InitTypeDef Init = {
+        .Wdt = WDT_1,
         .Mode = WDT_MODE_INT,
         .Period = HAL_TICK_FREQ_DEFAULT * 1000U};
 
@@ -459,8 +459,8 @@ HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
     /* e.g: ChEnable = OC32_HIC_SERR | OC32_HIC_CCP0 | OC32_HIC_TIMER6 .... */
     WRITE_SR(HIE, Init->ChEnable);
 
-    /* e.g: ChPriorityBit0 = HPL_Bit0(OC32_INT_PRI1, OC32_HIC_CH_SERR) | HPL_Bit0(OC32_INT_PRI0, OC32_HIC_CH_UART1) | .... */
-    /* e.g: ChPriorityBit1 = HPL_Bit1(OC32_INT_PRI1, OC32_HIC_CH_SERR) | HPL_Bit1(OC32_INT_PRI0, OC32_HIC_CH_UART1) | .... */
+    /* e.g: ChPriorityBit0 = HPL_Bit0(OC32_HIC_PRI1, OC32_HIC_CH_SERR) | HPL_Bit0(OC32_HIC_PRI0, OC32_HIC_CH_UART1) | .... */
+    /* e.g: ChPriorityBit1 = HPL_Bit1(OC32_HIC_PRI1, OC32_HIC_CH_SERR) | HPL_Bit1(OC32_HIC_PRI0, OC32_HIC_CH_UART1) | .... */
     WRITE_SR(HIPL0, Init->ChPriorityBit0);
     WRITE_SR(HIPL1, Init->ChPriorityBit1);
 

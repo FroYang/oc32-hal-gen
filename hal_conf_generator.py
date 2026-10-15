@@ -111,8 +111,8 @@ def render_conf_template(chip_config, user_settings):
     for i in range(int_priority):
         suffix = f"{i:02d}" if i >= 10 else str(i)
         comma = "," if i < int_priority - 1 else ""
-        int_enum_lines.append(f"OC32_INT_PRI{suffix}       = {i}U{comma}")
-    content = content.replace("__HAL_CONFIG_INT_PRI_ENUM__", "\n".join(int_enum_lines))    
+        int_enum_lines.append(f"OC32_HIC_PRI{suffix}       = {i}U{comma}")
+    content = content.replace("__HAL_CONFIG_HIC_PRI_ENUM__", "\n".join(int_enum_lines))    
 
     # DMA ch enum — generate CH0..CH(n-1) entries
     dma_ch_lines = []

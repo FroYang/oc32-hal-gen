@@ -48,31 +48,31 @@ extern "C"
   {
     __HAL_CONFIG_DMA_CH__ 
     OC32_DMA_CH_TOTAL
-  } HAL_DMAChTypedef;
+  } HAL_DMA_ChTypedef;
 
   typedef enum
   {
     OC32_DMA_IDLE = 0U,
     OC32_DMA_BUSY = 1U
-  } HAL_DMAStateTypedef;
+  } HAL_DMA_StateTypedef;
 
   typedef enum
   {
     __HAL_CONFIG_DMA_MAP__ 
     OC32_DMA_NONE
-  } HAL_DMAMapTypedef;
+  } HAL_DMA_MapTypedef;
 
   typedef enum
   {
     __HAL_CONFIG_HIC_CH__ 
     OC32_HIC_CH_TOTAL
-  } HAL_HICChTypedef;
+  } HAL_HIC_ChTypedef;
 
   typedef enum
   {
     __HAL_CONFIG_HIC_MAP__ 
     OC32_HIC_NONE
-  } HAL_HICMapTypedef;
+  } HAL_HIC_MapTypedef;
 
   /**
    * @}
@@ -83,8 +83,8 @@ extern "C"
    */
   typedef enum
   {
-    __HAL_CONFIG_INT_PRI_ENUM__
-  } HAL_INTPriTypedef;
+    __HAL_CONFIG_HIC_PRI_ENUM__
+  } HAL_HIC_PriorityTypedef;
 
 /**
  * @}
@@ -102,10 +102,10 @@ extern "C"
     HAL_TICK_FREQ_100Hz = 10U,
     HAL_TICK_FREQ_1KHz = 1U,
     HAL_TICK_FREQ_DEFAULT = __HAL_CONFIG_TICK_FREQ__
-  } HAL_TickFreqTypeDef;
+  } HAL_TICK_FreqTypeDef;
 
   extern volatile uint32_t uwTick;
-  extern HAL_TickFreqTypeDef uwTickFreq;
+  extern HAL_TICK_FreqTypeDef uwTickFreq;
 
   __HAL_CONFIG_UART_DEBUG__
 
