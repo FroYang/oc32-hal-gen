@@ -209,6 +209,7 @@ extern "C"
 #define HAL_WDT_ENABLE
 #define HAL_UART_ENABLE
 #define HAL_TIMER_ENABLE
+#define HAL_CCP_ENABLE
 
    /* enable depends on model list:
       #define HAL_PORT_B_ENABLE

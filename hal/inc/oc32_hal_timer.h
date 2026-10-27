@@ -198,8 +198,8 @@ extern "C"
    */
   typedef enum
   {
-    TIMER_EXPAUSE_HIGH = 0,
-    TIMER_EXPAUSE_LOW = 1U
+    TIMER_EXPAUSE_HI = 0,
+    TIMER_EXPAUSE_LO = 1U
   } HAL_TIMER_ExPauseConTypedef;
 
   /**
@@ -262,6 +262,7 @@ extern "C"
     MODULE_TIMER_TypeDef *Timer;              /*!< Specifies the timer */
     uint32_t ReloadVal;                       /*!< Specifies the reload value */
     uint32_t PreScaler;                       /*!< Specifies the prescaler */
+    uint32_t CountVal;                        /*!< Specifies the counter value */
     HAL_MODULE_INTTypedef IntE;               /*!< Specifies the interrupt mode */
     HAL_TIMER_CountModeTypedef CountMode;     /*!< Specifies the count mode */
     HAL_TIMER_StopConTypedef StopCon;         /*!< Specifies the stop condition */
@@ -319,6 +320,19 @@ extern "C"
     HAL_TIMER_ExEventConTypedef ExCon;   /*!< Specifies the event ex-source condition */
   } HAL_TIMER_EventInitTypeDef;
 
+
+  /**
+   * @brief  TIMER update structure definition
+   */
+  typedef struct
+  {
+    MODULE_TIMER_TypeDef *Timer;              /*!< Specifies the timer */
+    uint32_t ReloadVal;                       /*!< Specifies the reload value */
+    uint32_t PreScaler;                       /*!< Specifies the prescaler */
+    uint32_t CountVal;                        /*!< Specifies the counter value */
+  } HAL_TIMER_UpdateTypeDef;
+
+
   /* Exported constants --------------------------------------------------*/
 
   /* Exported macros -------------------------------------------------------*/
@@ -326,10 +340,12 @@ extern "C"
   /* Exported functions ----------------------------------------------------*/
 
 #ifdef HAL_TIMER_ENABLE
+  static inline void HAL_TIMER_Update(HAL_TIMER_UpdateTypeDef *Update);
   HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init);
   HAL_StatusTypeDef HAL_TIMER_DeInit(MODULE_TIMER_TypeDef *Timer);
   HAL_StatusTypeDef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypeDef *Init);
   __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_ResetNow(MODULE_TIMER_TypeDef *Timer);
+  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypeDef *Update);
   HAL_StatusTypeDef HAL_TIMER_PauseInit(HAL_TIMER_PauseInitTypeDef *Init);
   __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_EventInit(HAL_TIMER_EventInitTypeDef *Init);
   __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitOv(MODULE_TIMER_TypeDef *Timer);

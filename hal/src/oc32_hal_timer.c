@@ -36,6 +36,19 @@ HAL_StatusTypeDef TimerModuleCheck(MODULE_TIMER_TypeDef *Timer)
   }
 }
 
+/**
+ * @brief  Initializes the TIMER peripheral according to the specified parameters.
+ * @param  Update: pointer to a MODULE_TIMER_TypeDef structure.
+ * @retval HAL status
+ */
+ static inline void HAL_TIMER_Update(HAL_TIMER_UpdateTypeDef *Update)
+{
+  /* setup reload value */
+  Update->TARL = (Update->ReloadVal & 0xFFFFU) | ((Update->PreScaler & 0xFFFFU) << 16U);
+  Update->Timer->TCNT = Update->CountVal;
+  return;
+}
+
 
 /**
  * @brief  Initializes the TIMER peripheral according to the specified parameters.
@@ -48,7 +61,7 @@ HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init)
     return HAL_ERROR;
 
   /* setup reload value & prescaler */
-  Init->Timer->TARL = (Init->ReloadVal & 0xFFFFU) | ((Init->PreScaler & 0xFFFFU) << 16U);
+  HAL_TIMER_Update(Init);
   Init->Timer->TCON.TCM = Init->CountMode;
   Init->Timer->TCON.TOFM = Init->OvfMode;
   Init->Timer->TCON.TCS = Init->CountSource;
@@ -58,8 +71,6 @@ HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init)
   Init->Timer->TECON.TSBR = Init->ReadReg;
   Init->Timer->TCON.TOIE = Init->IntE;
   Init->Timer->TECON.TCSC = Init->StopCon;
-
-  Init->Timer->TCNT = 0U;
 
   /* enable the timer */
   Init->Timer->TCON.TE = 1U;
@@ -100,6 +111,23 @@ HAL_StatusTypeDef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypeDef *Init)
   Init->Timer->TCON.TRGE = Init->GenEvent;
   Init->Timer->TCON.TERS = Init->ExSource;
   Init->Timer->TCON.TERC = Init->ExCon;
+
+  return HAL_OK;
+}
+
+
+/**
+ * @brief  update the timer
+ * @param  Update: pointer to a HAL_TIMER_UpdateTypeDef structure.
+ * @retval HAL status
+ */
+__weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypeDef *Update)
+{
+  if (TimerModuleCheck(Trig->Timer) != HAL_OK)
+    return HAL_ERROR;
+
+  HAL_TIMER_Update(Update);
+  Trig->Timer->TCON.TUT = 1U;
 
   return HAL_OK;
 }
