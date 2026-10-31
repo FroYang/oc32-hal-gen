@@ -77,7 +77,7 @@ HAL_StatusTypeDef HAL_UART_Init(HAL_UART_InitTypeDef *Init)
 HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart)
 {
   if (Uart != UART_0 && Uart != UART_1)
-    return HAL_ERROR; 
+    return HAL_ERROR;
 
   *(volatile uint32_t *)&Uart->UTCON = 0U;
   Uart->UTCON.UTTCLR = 1U;
@@ -371,16 +371,18 @@ __sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(MODULE_UART_TypeDef *Uart)
 
   HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
   HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
+  HAL_StatusTypeDef status = HAL_OK;
 
   if (Uart->UTCON.UTTBV)
   {
+    status = HAL_UART_UserIRQ(Uart);
     Uart->UTCON.UTTCLR = 1U;
     Uart->UTCON.UTTDMAE = 0U;
     UartDMAUpdate(Uart->UTCON.UTRDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   }
-
-  if (Uart->UTCON.UTRBV)
+  else if (Uart->UTCON.UTRBV)
   {
+    status = HAL_UART_UserIRQ(Uart);
     Uart->UTCON.UTRCLR = 1U;
     Uart->UTCON.UTRE = 0U;
     Uart->UTCON.UTRDMAE = 0U;
@@ -390,7 +392,7 @@ __sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(MODULE_UART_TypeDef *Uart)
   if (DMAChState[DmaCh] == OC32_DMA_IDLE)
     Uart->UTCON.UTIE = 0U;
 
-  return HAL_UART_UserIRQ(Uart);
+  return status;
 }
 
 #endif /* HAL_UART_ENABLE */

@@ -65,6 +65,14 @@
             "always": false
         },
         {
+            "key": "CCP",
+            "description": "Capture/Compare/PWM Peripheral",
+            "always": false,
+            "dependencies": [
+                "TIMER"
+            ]
+        },
+        {
             "key": "USB",
             "description": "Fullspeed USB",
             "always": false

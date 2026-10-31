@@ -174,10 +174,11 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
  */
 __sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void)
 {
+  HAL_StatusTypeDef status = HAL_CRC_UserIRQ();
   CRCCON->CRCCCLR = 1U;
   CRCCON->CRCIE = 0;
   HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
-  return HAL_CRC_UserIRQ();
+  return status;
 }
 
 #endif /* HAL_CRC_ENABLE */

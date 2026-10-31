@@ -320,18 +320,16 @@ extern "C"
     HAL_TIMER_ExEventConTypedef ExCon;   /*!< Specifies the event ex-source condition */
   } HAL_TIMER_EventInitTypeDef;
 
-
   /**
    * @brief  TIMER update structure definition
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer;              /*!< Specifies the timer */
-    uint32_t ReloadVal;                       /*!< Specifies the reload value */
-    uint32_t PreScaler;                       /*!< Specifies the prescaler */
-    uint32_t CountVal;                        /*!< Specifies the counter value */
+    MODULE_TIMER_TypeDef *Timer; /*!< Specifies the timer */
+    uint32_t ReloadVal;          /*!< Specifies the reload value */
+    uint32_t PreScaler;          /*!< Specifies the prescaler */
+    uint32_t CountVal;           /*!< Specifies the counter value */
   } HAL_TIMER_UpdateTypeDef;
-
 
   /* Exported constants --------------------------------------------------*/
 

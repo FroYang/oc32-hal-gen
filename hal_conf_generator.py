@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import shutil
+import subprocess
 from pathlib import Path
 from tkinter import *
 from tkinter import ttk, filedialog, messagebox
@@ -21,7 +22,7 @@ def get_resource_path(relative_path):
 # Paths
 ROOT_DIR = Path(__file__).parent
 CHIPS_DIR = ROOT_DIR / "chips"
-HAL_SRC_DIR = ROOT_DIR / "hal"  # 源 HAL 目录（包含 inc/ 和 src/）
+HAL_SRC_DIR = ROOT_DIR / "hal"  # 源 HAL 目录（包含 chip/, inc/ 和 src/）
 
 # Load chips config
 def load_chips_config():
@@ -378,7 +379,7 @@ class App:
             f.write(content)
 
         # 复制其他 HAL 文件（跳过已生成的 oc32_hal_conf.h）
-        for src_dir in [HAL_SRC_DIR / "inc", HAL_SRC_DIR / "src"]:
+        for src_dir in [HAL_SRC_DIR / "inc", HAL_SRC_DIR / "src", HAL_SRC_DIR / "chip"]:
             if src_dir.exists():
                 dst_dir = out_path / "hal" / src_dir.name
                 dst_dir.mkdir(parents=True, exist_ok=True)
@@ -396,7 +397,12 @@ class App:
     def _open_output(self):
         out_path = Path(self.var_outdir.get())
         out_path.mkdir(parents=True, exist_ok=True)
-        os.startfile(str(out_path))
+        if sys.platform == "win32":
+            os.startfile(str(out_path))
+        elif sys.platform == "darwin":
+            subprocess.run(["open", str(out_path)])
+        else:
+            subprocess.run(["xdg-open", str(out_path)])
 
 
 def main():

@@ -18,6 +18,9 @@ extern "C"
 #include <stddef.h>
 #include <stdint.h>
 
+
+
+
   /* Exported types ------------------------------------------------------*/
 
   /**
@@ -39,6 +42,12 @@ extern "C"
     HAL_BUSY = 0x02U,
     HAL_TIMEOUT = 0x03U
   } HAL_StatusTypeDef;
+
+  typedef struct
+  {
+    uint32_t Data;           /*!< Specifies Data buffer */
+    HAL_StatusTypeDef Error; /*!< Specifies the status */
+  } HAL_ResultTypedef;
 
 /* Exported macros -----------------------------------------------------*/
 

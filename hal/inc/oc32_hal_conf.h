@@ -16,7 +16,28 @@ extern "C"
 
 #include "CV32S6015MSR.h"
 
+
+/* Exported types ------------------------------------------------------*/
+
+  typedef struct
+  {
+    uint32_t ChEnable;       /* specify interrupt enable for each channel */
+    uint32_t ChPriorityBit0; /* specify interrupt priority for each channel */
+    uint32_t ChPriorityBit1; /* specify interrupt priority for each channel */
+  } HAL_HICInitTypeDef;
+
+
+
+
 /* Exported constants ----------------------------------------------------*/
+
+  typedef enum
+  {
+    MODULE_INT_OFF = 0x0U,
+    MODULE_INT_ON = 0x1U
+  } HAL_MODULE_INTTypedef;
+
+
 
 /** @defgroup HAL_Clocks HAL Clocks
  * @{

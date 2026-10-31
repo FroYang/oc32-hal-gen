@@ -91,6 +91,15 @@ extern "C"
   } HAL_CCP_UpdateModeTypedef;
 
   /**
+   * @brief  CCP force channel enum definition
+   */
+  typedef enum
+  {
+    CCP_FORCE_CH0 = 0x0U,
+    CCP_FORCE_CH1 = 0x1U,
+  } HAL_CCP_ForceChannelTypedef;
+
+  /**
    * @brief  CCP force input enum definition
    */
   typedef enum
@@ -176,6 +185,15 @@ extern "C"
     CCP_GATE_XOR = 2U,
     CCP_GATE_REPLACE = 3U
   } HAL_CCP_GateModeTypedef;
+
+  /**
+   * @brief  CCP gate invert enum definition
+   */
+  typedef enum
+  {
+    CCP_GATE_INV_OFF = 0x0U,
+    CCP_GATE_INV_ON = 0x1U,
+  } HAL_CCP_GateInvTypedef;
 
   /**
    * @brief  CCP gate enable enum definition
@@ -277,7 +295,47 @@ extern "C"
     HAL_CCP_OutputInvertTypedef NegOutInv; /*!< Specifies the negative output invert */
   } HAL_CCP_PwmInitTypeDef;
 
-  
+  /**
+   * @brief  CCP gate config Init structure definition
+   */
+  typedef struct
+  {
+    MODULE_CCP_TypeDef *CCP;            /*!< Specifies the CCP */
+    uint32_t GateStart;                 /*!< Specifies the start value */
+    uint32_t GateEnd;                   /*!< Specifies the end value */
+    HAL_CCP_GateModeTypedef GateMode;   /*!< Specifies the gate mode */
+    HAL_CCP_GateTypedef GateUpCountE;   /*!< Specifies the gate enable */
+    HAL_CCP_GateTypedef GateDownCountE; /*!< Specifies the gate enable */
+    HAL_CCP_GateInvTypedef GateInv;     /*!< Specifies the gate invert */
+    HAL_CCP_GateFlagTypedef GateFlag;   /*!< Specifies the gate flag mode */
+  } HAL_CCP_GateInitTypeDef;
+
+  /**
+   * @brief  CCP force config Init structure definition
+   */
+  typedef struct
+  {
+    MODULE_CCP_TypeDef *CCP;                    /*!< Specifies the CCP */
+    HAL_CCP_ForceChannelTypedef ForceChannel;   /*!< Specifies the force channel */
+    HAL_CCP_ForceInSourceTypedef ForceInSource; /*!< Specifies the force input source */
+    HAL_CCP_ForceConTypedef ForceCon;           /*!< Specifies the force condition */
+    HAL_CCP_ForceInTypedef ForceE;              /*!< Specifies the force enable */
+    HAL_CCP_ForceLvdTypedef ForceLvdE;          /*!< Specifies the force lvd */
+    HAL_CCP_ForceStateTypedef ForcePoState;     /*!< Specifies the positive output force state */
+    HAL_CCP_ForceStateTypedef ForceNoState;     /*!< Specifies the negative output force state */
+  } HAL_CCP_ForceInitTypeDef;
+
+  /**
+   * @brief  CCP update structure definition
+   */
+  typedef struct
+  {
+    MODULE_CCP_TypeDef *CCP; /*!< Specifies the CCP */
+    uint32_t Duty;           /*!< Specifies the duty cycle */
+    uint32_t GateStart;      /*!< Specifies the gate start value */
+    uint32_t GateEnd;        /*!< Specifies the gate end value */
+  } HAL_CCP_UpdateTypeDef;
+
   /* Exported constants --------------------------------------------------*/
 
   /* Exported macros -------------------------------------------------------*/
@@ -285,7 +343,20 @@ extern "C"
   /* Exported functions ----------------------------------------------------*/
 
 #ifdef HAL_CCP_ENABLE
+  static inline uint32_t HAL_CCP_CaptureValue(MODULE_CCP_TypeDef *CCP);
+  static inline void HAL_CCP_Update(HAL_CCP_UpdateTypeDef *Update);
+
   HAL_StatusTypeDef HAL_CCP_Init(HAL_CCP_BaseInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_GateInit(HAL_CCP_GateInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_CaptureInit(HAL_CCP_CaptureInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_CompareInit(HAL_CCP_CompareInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_PwmInit(HAL_CCP_PwmInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_GateInit(HAL_CCP_GateInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_ForceInit(HAL_CCP_ForceInitTypeDef *Init);
+  HAL_StatusTypeDef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypeDef *Update);
+  HAL_StatusTypeDef HAL_CCP_WaitCf(MODULE_CCP_TypeDef *CCP);
+  HAL_StatusTypeDef HAL_CCP_WaitGf(MODULE_CCP_TypeDef *CCP);
+  HAL_StatusTypeDef HAL_CCP_WaitFf(MODULE_CCP_TypeDef *CCP);
   HAL_StatusTypeDef HAL_CCP_DeInit(MODULE_CCP_TypeDef *CCP);
 
   __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_UserIRQ(MODULE_CCP_TypeDef *CCP);

@@ -9,15 +9,56 @@
     "int_priority": 4,
     "dma_channels": 4,
     "dma_map": [
-        "SPI0", "SPI1", "IIC", "UART0", "UART1", "ADC0",
-        "MPWM0", "MPWM1", "MPWM2", "FLASH", "DAC0", "ADC1",
-        "DAC1", "reserved0", "reserved1", "CRC"
+        "SPI0",
+        "SPI1",
+        "IIC",
+        "UART0",
+        "UART1",
+        "ADC0",
+        "MPWM0",
+        "MPWM1",
+        "MPWM2",
+        "FLASH",
+        "DAC0",
+        "ADC1",
+        "DAC1",
+        "reserved0",
+        "reserved1",
+        "CRC"
     ],
     "hic_map": [
-        "SERR", "CMP0", "CMP1", "CCP0", "CCP1", "CCP2", "CCP3", "CCP4", 
-        "CCP5", "TIMER0", "TIMER1", "TIMER2", "TIMER3",  "TIMER4", "TIMER5", "TIMER6",
-        "TIMER7", "WDT", "ADC0", "ADC1", "UART0", "UART1", "SPI0", "SPI1",
-        "IIC", "MPWM0", "MPWM1", "MPWM2", "DAC", "CRC", "PORTA", "PORTB"
+        "SERR",
+        "CMP0",
+        "CMP1",
+        "CCP0",
+        "CCP1",
+        "CCP2",
+        "CCP3",
+        "CCP4",
+        "CCP5",
+        "TIMER0",
+        "TIMER1",
+        "TIMER2",
+        "TIMER3",
+        "TIMER4",
+        "TIMER5",
+        "TIMER6",
+        "TIMER7",
+        "WDT",
+        "ADC0",
+        "ADC1",
+        "UART0",
+        "UART1",
+        "SPI0",
+        "SPI1",
+        "IIC",
+        "MPWM0",
+        "MPWM1",
+        "MPWM2",
+        "DAC",
+        "CRC",
+        "PORTA",
+        "PORTB"
     ],
     "vdd_value": 5000,
     "features": [
@@ -40,7 +81,8 @@
             "always": false,
             "macro_name": "FLASH_VERIFY",
             "dependencies": [
-                "FLASH", "CRC"
+                "FLASH",
+                "CRC"
             ]
         },
         {
@@ -57,6 +99,14 @@
             "key": "TIMER",
             "description": "Timer",
             "always": false
+        },
+        {
+            "key": "CCP",
+            "description": "Capture/Compare/PWM Peripheral",
+            "always": false,
+            "dependencies": [
+                "TIMER"
+            ]
         },
         {
             "key": "DEBUG",

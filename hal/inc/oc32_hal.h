@@ -20,31 +20,7 @@ extern "C"
 
   /* Exported constants --------------------------------------------------*/
 
-  typedef enum
-  {
-    MODULE_INT_OFF = 0x0U,
-    MODULE_INT_ON = 0x1U
-  } HAL_MODULE_INTTypedef;
-
   /* Exported types ------------------------------------------------------*/
-
-
-
-  typedef struct
-  {
-    uint32_t ChEnable;       /* specify interrupt enable for each channel */
-    uint32_t ChPriorityBit0; /* specify interrupt priority for each channel */
-    uint32_t ChPriorityBit1; /* specify interrupt priority for each channel */
-  } HAL_HICInitTypeDef;
-
-  /**
-   * @brief  result structure definition
-   */
-  typedef struct
-  {
-    uint32_t Data;           /*!< Specifies Data buffer */
-    HAL_StatusTypeDef Error; /*!< Specifies the status */
-  } HAL_ResultTypedef;
 
   typedef __builtin_va_list va_list;
 
@@ -109,6 +85,7 @@ extern "C"
 #include "oc32_hal_lvd.h"
 #include "oc32_hal_uart.h"
 #include "oc32_hal_timer.h"
+#include "oc32_hal_ccp.h"
 
 #ifdef __cplusplus
 }
