@@ -34,10 +34,7 @@ extern "C"
   void *memcpy(void *dest, const void *src, uint32_t n);
   void *memset(void *dest, int c, uint32_t n);
 
-#ifdef HAL_UART_DEBUG_ENABLE
-  int puts(const char *s);
-  int printf(const char *format, ...);
-#endif
+
 
   HAL_StatusTypeDef HAL_TICK_Init(void);
   HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init);
@@ -86,6 +83,13 @@ extern "C"
 #include "oc32_hal_uart.h"
 #include "oc32_hal_timer.h"
 #include "oc32_hal_ccp.h"
+
+#ifdef HAL_UART_DEBUG_ENABLE
+  __weak__ int puts(const char *s);
+  __weak__ int printf(const char *format, ...);
+  HAL_StatusTypeDef HAL_DEBUG_Init(HAL_UART_PinsTypedef *Pins);
+#endif
+  
 
 #ifdef __cplusplus
 }

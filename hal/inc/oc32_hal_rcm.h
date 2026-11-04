@@ -29,27 +29,6 @@ extern "C"
     /* Exported types ------------------------------------------------------*/
 
     /**
-     * @brief  RCM Oscillator type structure definition
-     */
-    typedef enum
-    {
-        RCM_OSC_ILOSC = 0x0U,
-        RCM_OSC_IHOSC = 0x1U,
-        RCM_OSC_XLOSC = 0x2U,
-        RCM_OSC_XHOSC = 0x3U
-    } HAL_RCM_OscTypedef;
-
-
-    /**
-     * @brief  RCM Init configuration structure definition
-     */
-    typedef struct
-    {
-        HAL_RCM_OscTypedef OscType;  /*!< osc */
-        uint32_t OutFreq;           /*!< output freq Hz */
-    } HAL_RCM_InitTypeDef;
-
-    /**
      * @brief  RCM Oscillator trim definition
      */
     typedef enum
@@ -147,7 +126,7 @@ extern "C"
 
     /* Initialization and de-initialization functions */
     HAL_StatusTypeDef HAL_RCM_DeInit(void);
-    HAL_StatusTypeDef HAL_RCM_Init(HAL_RCM_InitTypeDef *Init);
+    HAL_StatusTypeDef HAL_RCM_Init(void);
     HAL_StatusTypeDef HAL_PLL_IRQHandler(void);
     __weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void);
 

@@ -39,11 +39,16 @@ extern "C"
 /** @defgroup HAL_Clocks HAL Clocks
  * @{
  */
+#define __HAL_CONFIG_CLK_SRC__
+__HAL_CONFIG_ILOSC_TYPE__
+#define __HAL_CONFIG_PLL__
+#define __HAL_CONFIG_PLL_OM__
+__HAL_CONFIG_CDR_LINES__
 #define OC32_XHOSC_FREQ ((uint32_t)__HAL_CONFIG_XHOSC_FREQ__) /* External oscillator frequency in Hz */
+#define OC32_XLOSC_FREQ ((uint32_t)__HAL_CONFIG_XLOSC_FREQ__) /* External low-speed oscillator frequency in Hz */
 #define OC32_IHOSC_FREQ ((uint32_t)__HAL_CONFIG_IHOSC_FREQ__) /* Internal oscillator frequency in Hz */
 #define OC32_ILOSC_FREQ ((uint32_t)__HAL_CONFIG_ILOSC_FREQ__) /* Internal oscillator frequency in Hz */
-#define OC32_CDR_FREQ ((uint32_t)__HAL_CONFIG_CDR_FREQ__)     /* USB CDR output frequency in Hz */
-#define OC32_SCLK_FREQ ((uint32_t)__HAL_CONFIG_SCLK_FREQ__)   /* System clock frequency in MHz */
+#define OC32_SCLK_FREQ ((uint32_t)__HAL_CONFIG_SCLK_FREQ__)   /* System clock frequency in Hz */
 /**
  * @}
  */

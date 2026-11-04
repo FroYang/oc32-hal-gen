@@ -35,6 +35,10 @@ def load_chips_config():
 
 CHIPS = load_chips_config()
 
+# Canonical clock-source list. Used by the generator (default when a chip omits
+# 'clk_sources') and as the base set for filtering.
+ALL_CLOCK_SOURCES = ["IHOSC", "ILOSC", "XHOSC", "XLOSC"]
+
 
 def _colored_label_frame(parent, text, color, padx=8, pady=6):
     """自定义带颜色标题的 LabelFrame，label 用 Canvas 实现以支持 font/fg 属性"""
@@ -71,8 +75,6 @@ def render_conf_template(chip_config, user_settings):
 
     ihosc = chip_config.get("ihosc_freq", 24000000)
     ilosc = chip_config.get("ilosc_freq", 4000)
-    cdr = chip_config.get("cdr_freq", 12000000)
-    sclk = chip_config.get("sclk_freq", 99000000)
     debug_uart = user_settings["debug_uart"]
     int_priority = chip_config["int_priority"]
     dma_channels = chip_config["dma_channels"]
@@ -83,12 +85,50 @@ def render_conf_template(chip_config, user_settings):
     content = content.replace("__HAL_CONFIG_NAME__", name)
 
     # Clock definitions
-    xhosc = user_settings["xhosc_freq"]
-    content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(xhosc * 1000000))
+    xhosc = user_settings.get("xhosc_freq", 4)
+    xlosc = user_settings.get("xlosc_freq", 32.768)
+    content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(int(xhosc) * 1000000))
+    content = content.replace("__HAL_CONFIG_XLOSC_FREQ__", str(int(round(float(xlosc) * 1000))))
     content = content.replace("__HAL_CONFIG_IHOSC_FREQ__", str(ihosc))
     content = content.replace("__HAL_CONFIG_ILOSC_FREQ__", str(ilosc))
-    content = content.replace("__HAL_CONFIG_CDR_FREQ__", str(cdr))
-    content = content.replace("__HAL_CONFIG_SCLK_FREQ__", str(sclk))
+    # System Clock: user-entered value in MHz -> Hz
+    sclk_mhz = user_settings.get("sclk_mhz", 99)
+    content = content.replace("__HAL_CONFIG_SCLK_FREQ__", str(int(sclk_mhz) * 1000000))
+
+    # USB CDR: drives HAL_RCM_CDR_ENABLE + OC32_CDR_FREQ directly.
+    # Only emitted when the chip defines cdr_freq and the toggle is on.
+    cdr_enabled = user_settings.get("cdr_enable", False)
+    if chip_config.get("cdr_freq") is not None and cdr_enabled:
+        cdr_lines = (
+            f"#define HAL_RCM_CDR_ENABLE\n"
+            f"#define OC32_CDR_FREQ ((uint32_t){chip_config['cdr_freq']}U)     /* USB CDR output frequency in Hz */"
+        )
+    else:
+        cdr_lines = ""
+    content = content.replace("__HAL_CONFIG_CDR_LINES__", cdr_lines)
+
+    # Clock source
+    clk_src = user_settings.get("clk_src", "IHOSC").upper()
+    content = content.replace("__HAL_CONFIG_CLK_SRC__", f"OC32_CLK_SRC_{clk_src}")
+    # PLL
+    pll = user_settings.get("pll", "Disable").upper()
+    content = content.replace("__HAL_CONFIG_PLL__", f"OC32_CLK_PLL_{pll}")
+    # PLL Frequency Over-Monitor
+    pll_om = user_settings.get("pll_om", "Disable").upper()
+    content = content.replace("__HAL_CONFIG_PLL_OM__", f"OC32_CLK_PLL_OM_{pll_om}")
+
+    # ILOSC real vs. fake marker. 'ilosc_real' (default false) only matters when
+    # ILOSC is a supported clock source for this chip.
+    ilosc_avail = "ILOSC" in (
+        set(chip_config.get("clk_sources")) if chip_config.get("clk_sources")
+        else set(ALL_CLOCK_SOURCES)
+    )
+    if ilosc_avail:
+        ilosc_macro = "OC32_CLK_ILOSC_REAL" if chip_config.get("ilosc_real", False) \
+            else "OC32_CLK_ILOSC_FAKE"
+        content = content.replace("__HAL_CONFIG_ILOSC_TYPE__", f"#define {ilosc_macro}")
+    else:
+        content = content.replace("__HAL_CONFIG_ILOSC_TYPE__", "")
 
     # FLASH definitions — match reference output format (hex, with comments)
     flash_kb = chip_config["flash_size"]
@@ -157,19 +197,14 @@ def render_conf_template(chip_config, user_settings):
     for mod in features:
         key = mod["key"]
         always = mod.get("always", False)
+        macro_key = mod.get("macro_name")
+        macro_name = f"HAL_{macro_key}_ENABLE" if macro_key else f"HAL_{key}_ENABLE"
         if always:
-            module_lines.append(f"#define HAL_{key}_ENABLE")
+            module_lines.append(f"#define {macro_name}")
+        elif user_features.get(key, False):
+            module_lines.append(f"#define {macro_name}")
         else:
-            deps = mod.get("dependencies", [])
-            macro_key = mod.get("macro_name")
-            macro_name = f"HAL_{macro_key}_ENABLE" if macro_key else f"HAL_{key}_ENABLE"
-            checked = user_features.get(key, False)
-            if deps and checked:
-                module_lines.append(f"#define {macro_name}")
-            elif checked:
-                module_lines.append(f"#define {macro_name}")
-            else:
-                comment_lines.append(f"   /* #define {macro_name} */")
+            comment_lines.append(f"   /* #define {macro_name} */")
     content = content.replace("__HAL_CONFIG_USER_MODULES__",
         "\n".join(module_lines + comment_lines))
 
@@ -181,7 +216,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("OC32 HAL Config Generator")
-        self.root.geometry("650x500")
+        self.root.geometry("630x630")
         self.root.resizable(True, True)
 
         self.chip_config = None
@@ -211,18 +246,76 @@ class App:
         chip_combo.pack(pady=4)
         chip_combo.bind("<<ComboboxSelected>>", self._on_chip_changed)
 
-        # Middle: Clock settings
+        # Middle: System settings
         sys_frame = _colored_label_frame(left, "System Settings", "blue")
         sys_frame.pack(fill=X, padx=2, pady=2)
 
-        # XHOSC selection
+        # Clock source (new, at the front)
+        clk_src_frame = Frame(sys_frame)
+        clk_src_frame.pack(fill=X, pady=2)
+        Label(clk_src_frame, text="Clock Source:").pack(side=LEFT, anchor=W)
+        self.var_clk_src = StringVar(value="IHOSC")
+        self.clk_src_combo = ttk.Combobox(clk_src_frame, textvariable=self.var_clk_src,
+                                          values=["IHOSC", "ILOSC", "XHOSC", "XLOSC"],
+                                          state="readonly", width=8)
+        self.clk_src_combo.pack(side=RIGHT, padx=(4, 0))
+
+        # PLL (new)
+        pll_frame = Frame(sys_frame)
+        pll_frame.pack(fill=X, pady=2)
+        Label(pll_frame, text="PLL:").pack(side=LEFT, anchor=W)
+        self.var_pll = StringVar(value="Disable")
+        self.pll_combo = ttk.Combobox(pll_frame, textvariable=self.var_pll,
+                                       values=["Enable", "Disable"], state="readonly", width=8)
+        self.pll_combo.pack(side=RIGHT, padx=(4, 0))
+        self.pll_combo.bind("<<ComboboxSelected>>", self._on_pll_changed)
+
+        # PLL Frequency Over-Monitor (new, placed right after PLL)
+        pll_om_frame = Frame(sys_frame)
+        pll_om_frame.pack(fill=X, pady=2)
+        self._pll_om_label = Label(pll_om_frame, text="PLL Freq Over Monitor:")
+        self._pll_om_label.pack(side=LEFT, anchor=W)
+        self.var_pll_om = StringVar(value="Disable")
+        self.pll_om_combo = ttk.Combobox(pll_om_frame, textvariable=self.var_pll_om,
+                                         values=["Enable", "Disable"], state="readonly", width=8)
+        self.pll_om_combo.pack(side=RIGHT, padx=(4, 0))
+
+        # USB CDR (new) — visible/usable only when chip defines cdr_freq
+        cdr_frame = Frame(sys_frame)
+        cdr_frame.pack(fill=X, pady=2)
+        self._cdr_label = Label(cdr_frame, text="USB CDR:")
+        self._cdr_label.pack(side=LEFT, anchor=W)
+        self.var_cdr = StringVar(value="Disable")
+        self.cdr_combo = ttk.Combobox(cdr_frame, textvariable=self.var_cdr,
+                                      values=["Enable", "Disable"], state="readonly", width=8)
+        self.cdr_combo.pack(side=RIGHT, padx=(4, 0))
+
+        # System Clock (new, user-entered MHz) — replaces chip sclk_freq
+        sclk_frame = Frame(sys_frame)
+        sclk_frame.pack(fill=X, pady=2)
+        self._sclk_label = Label(sclk_frame, text="System Clock (MHz):")
+        self._sclk_label.pack(side=LEFT, anchor=W)
+        self.var_sclk = IntVar(value=99)
+        self.sclk_entry = Entry(sclk_frame, textvariable=self.var_sclk, width=8)
+        self.sclk_entry.pack(side=RIGHT, padx=(4, 0))
+
+        # XHOSC frequency (user-entered, MHz)
         xhosc_frame = Frame(sys_frame)
         xhosc_frame.pack(fill=X, pady=2)
-        Label(xhosc_frame, text="XHOSC Frequency (MHz):").pack(side=LEFT, anchor=W)
+        self._xhosc_label = Label(xhosc_frame, text="XHOSC Frequency (MHz):")
+        self._xhosc_label.pack(side=LEFT, anchor=W)
         self.var_xhosc = IntVar(value=4)
-        self.xhosc_combo = ttk.Combobox(xhosc_frame, textvariable=self.var_xhosc,
-                                       values=list(range(1, 25)), state="readonly", width=8)
-        self.xhosc_combo.pack(side=RIGHT, padx=(4, 0))
+        self.xhosc_entry = Entry(xhosc_frame, textvariable=self.var_xhosc, width=8)
+        self.xhosc_entry.pack(side=RIGHT, padx=(4, 0))
+
+        # XLOSC frequency (user-entered, kHz, supports decimals e.g. 32.768)
+        xlosc_frame = Frame(sys_frame)
+        xlosc_frame.pack(fill=X, pady=2)
+        self._xlosc_label = Label(xlosc_frame, text="XLOSC Frequency (kHz):")
+        self._xlosc_label.pack(side=LEFT, anchor=W)
+        self.var_xlosc = StringVar(value="32.768")
+        self.xlosc_entry = Entry(xlosc_frame, textvariable=self.var_xlosc, width=10)
+        self.xlosc_entry.pack(side=RIGHT, padx=(4, 0))
 
         # Tick frequency
         tick_freq_frame = Frame(sys_frame)
@@ -260,7 +353,7 @@ class App:
         Entry(out_frame, textvariable=self.var_outdir).pack(fill=X, pady=2)
         Button(out_frame, text="Browse...", command=self._browse_outdir).pack(pady=4)
 
-        # Right panel: Module selection + Preview
+        # Right panel: Module selection
         right = Frame(main)
         main.add(right)
 
@@ -302,8 +395,66 @@ class App:
         Button(btn_frame, text="Open Output Dir", command=self._open_output,
                width=20).pack(pady=4)
 
-        # Init preview
+        # Init module list
+        # Initialize PLL-dependent controls' grayout state
+        self._on_pll_changed(None)
+
+        # Initialize oscillator support gating from the default chip
+        self._apply_osc_support(CHIPS.get(list(CHIPS.keys())[0]))
+        # Restrict clock-source options from the default chip
+        self._apply_clk_sources(CHIPS.get(list(CHIPS.keys())[0]))
+
         self._on_chip_changed(None)
+
+    def _on_pll_changed(self, event=None):
+        """When PLL is disabled, gray out & disable the PLL over-monitor
+        and System Clock controls (they only make sense with PLL on)."""
+        pll_on = self.var_pll.get() == "Enable"
+        state = "normal" if pll_on else "disabled"
+        fg = "black" if pll_on else "#808080"
+        # PLL Freq Over Monitor
+        self.pll_om_combo.config(state=state)
+        self._pll_om_label.config(fg=fg)
+        if not pll_on:
+            self.var_pll_om.set("Disable")
+        # System Clock
+        self.sclk_entry.config(state=state, fg=fg,
+                               disabledforeground=fg if pll_on else "#808080")
+
+    ALL_CLOCK_SOURCES = ["IHOSC", "ILOSC", "XHOSC", "XLOSC"]
+
+    def _apply_clk_sources(self, chip_config):
+        """Rebuild the Clock Source combobox to the sources the chip JSON lists
+        in 'clk_sources' (defaults to all four when the key is absent)."""
+        sources = list(self.ALL_CLOCK_SOURCES)
+        if chip_config and chip_config.get("clk_sources"):
+            sources = [s for s in self.ALL_CLOCK_SOURCES
+                       if s in chip_config["clk_sources"]]
+        self.clk_src_combo.config(values=sources)
+        # Snap selection to a valid source (fall back to first if current not listed)
+        cur = self.var_clk_src.get()
+        if cur not in sources:
+            self.var_clk_src.set(sources[0] if sources else "IHOSC")
+
+    def _apply_osc_support(self, chip_config):
+        """Enable/disable the XHOSC & XLOSC frequency entries based on whether
+        the chip's 'clk_sources' list includes them (single source of truth).
+        Absent 'clk_sources' -> both enabled (backward compatible)."""
+        if chip_config and chip_config.get("clk_sources"):
+            sources = set(chip_config["clk_sources"])
+        else:
+            sources = set(self.ALL_CLOCK_SOURCES)
+        xhosc_on = "XHOSC" in sources
+        xlosc_on = "XLOSC" in sources
+        for entry, label, on in (
+            (self.xhosc_entry, self._xhosc_label, xhosc_on),
+            (self.xlosc_entry, self._xlosc_label, xlosc_on),
+        ):
+            state = "normal" if on else "disabled"
+            fg = "black" if on else "#808080"
+            entry.config(state=state, fg=fg,
+                         disabledforeground="#808080" if not on else "black")
+            label.config(fg=fg)
 
     def _on_chip_changed(self, event):
         key = self.var_chip.get()
@@ -311,6 +462,18 @@ class App:
 
         self.chip_config = new_config
         self._last_chip_key = key
+
+        # Gray out / disable the USB CDR control when the chip has no cdr_freq
+        cdr_supported = bool(new_config) and new_config.get("cdr_freq") is not None
+        self.cdr_combo.config(state="normal" if cdr_supported else "disabled")
+        self._cdr_label.config(fg="black" if cdr_supported else "#808080")
+        if not cdr_supported:
+            self.var_cdr.set("Disable")
+
+        # Gate XHOSC/XLOSC frequency entries per chip JSON
+        self._apply_osc_support(new_config)
+        # Restrict clock-source options per chip JSON
+        self._apply_clk_sources(new_config)
 
         # Clear old module checkboxes
         for child in self.mod_scroll_frame.winfo_children():
@@ -328,20 +491,37 @@ class App:
                 Checkbutton(frame, variable=var).pack(side=RIGHT)
                 self.module_vars[f"mod_{idx}"] = var
 
-        self._update_preview()
-
-    def _update_preview(self):
-        pass
-
     def _collect_settings(self):
-        features = {}
-        if not self.chip_config:
+        def _safe_int(var, default):
+            try:
+                return int(var.get())
+            except (TypeError, ValueError):
+                return default
+
+        def _safe_float(var, default):
+            try:
+                return float(var.get())
+            except (TypeError, ValueError):
+                return default
+
+        def _base():
             return {
-                "xhosc_freq": self.var_xhosc.get(),
+                "xhosc_freq": _safe_int(self.var_xhosc, 4),
+                "xlosc_freq": _safe_float(self.var_xlosc, 32.768),
+                "clk_src": self.var_clk_src.get(),
+                "pll": self.var_pll.get(),
+                "pll_om": self.var_pll_om.get(),
+                "cdr_enable": self.var_cdr.get() == "Enable",
+                "sclk_mhz": _safe_int(self.var_sclk, 99),
                 "tick_freq": self.var_tick_freq.get(),
                 "debug_uart": self.var_debug.get(),
-                "features": features,
             }
+
+        features = {}
+        if not self.chip_config:
+            base = _base()
+            base["features"] = features
+            return base
         optional_features = [m for m in self.chip_config["features"] if not m.get("always", False)]
         for idx, mod in enumerate(optional_features):
             var = self.module_vars.get(f"mod_{idx}")
@@ -354,7 +534,13 @@ class App:
                     for dep in mod.get("dependencies", []):
                         features[dep] = True
         return {
-            "xhosc_freq": self.var_xhosc.get(),
+            "xhosc_freq": _safe_int(self.var_xhosc, 4),
+            "xlosc_freq": _safe_float(self.var_xlosc, 32.768),
+            "clk_src": self.var_clk_src.get(),
+            "pll": self.var_pll.get(),
+            "pll_om": self.var_pll_om.get(),
+            "cdr_enable": self.var_cdr.get() == "Enable",
+            "sclk_mhz": _safe_int(self.var_sclk, 99),
             "tick_freq": self.var_tick_freq.get(),
             "debug_uart": self.var_debug.get(),
             "baud_rate": self.var_baud.get(),

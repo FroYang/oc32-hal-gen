@@ -178,6 +178,8 @@ typedef volatile struct
     uint32_t  : 11;
 } CLKCON_TypeDef; // 0x8018
 #define CLKCON ((CLKCON_TypeDef *)0x3FF08018)
+#define CLKCON_DEFAULT (0x00001F01U)
+#define CSWT_MAX (0x7FU)
 
 typedef volatile struct
 {
@@ -204,6 +206,8 @@ typedef volatile struct
     uint32_t PFO : 1;
 } PLLCON_TypeDef; // 0x82FC
 #define PLLCON ((PLLCON_TypeDef *)0x3FF082FC)
+#define PLLCON_DEFAULT (0x00000028U)
+#define PFCNT_MAX (0x3FFU)
 
 
 // ---- Flashloader (0x3FF08020) ----

@@ -1,9 +1,10 @@
 {
     "name": "CV32S6015U",
+    "clk_sources": ["IHOSC", "ILOSC", "XHOSC"],
+    "ilosc_real": false,
     "ihosc_freq": 24000000,
     "ilosc_freq": 4000,
     "cdr_freq": 12000000,
-    "sclk_freq": 99000000,
     "flash_size": 256,
     "zone0_size": 30,
     "zone1_size": 98,
@@ -66,7 +67,7 @@
         },
         {
             "key": "CCP",
-            "description": "Capture/Compare/PWM Peripheral",
+            "description": "Capture/Compare/PWM",
             "always": false,
             "dependencies": [
                 "TIMER"
@@ -76,15 +77,6 @@
             "key": "USB",
             "description": "Fullspeed USB",
             "always": false
-        },
-        {
-            "key": "RCM_CDR",
-            "description": "RCM Use USB CDR",
-            "always": false,
-            "macro_name": "RCM_CDR",
-            "dependencies": [
-                "USB"
-            ]
         },
         {
             "key": "DEBUG",

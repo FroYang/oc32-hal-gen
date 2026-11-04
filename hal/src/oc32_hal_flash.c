@@ -208,7 +208,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_Flash_PacketTypeDef *Packet)
     if ((Lines < 2U) || ((Lines & (Lines - 1U)) != 0U) || (Lines > 256U))
         goto normal_read;
 
-dma_read:
+/* dma_read */
     if (FlashReadLines(Packet) != HAL_OK)
         return HAL_ERROR;
     else
@@ -508,7 +508,7 @@ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
  * @param  Size: Zone size
  * @retval HAL status
  */
-__sram__ static HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, uint32_t Size)
+__sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, uint32_t Size)
 {
     /* DMA buffer for flash reads */
     static uint32_t flashbuf[64] __attribute__((aligned(4)));
@@ -589,7 +589,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void)
 
     FlashCrcInit();
 
-    uint32_t tries;
+    uint32_t tries = 0U;
     while (++tries < HAL_FLASH_VERIFY_RETRY)
     {
         /* Bank0 Boot: 30K */

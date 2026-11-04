@@ -17,6 +17,22 @@
 uint32_t SystemClock = OC32_IHOSC_FREQ;
 
 /* Private function prototypes -----------------------------------------------*/
+
+static HAL_StatusTypeDef RCM_ClockSwitchWait(void)
+{
+    /* Wait till clock switch is ready */
+    uint32_t tickstart = HAL_TICK_GetVal();
+    while (CLKCON->CSF == 0)
+    {
+        if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
+        {
+            return HAL_TIMEOUT;
+        }
+    }
+    return HAL_OK;
+}
+
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -25,42 +41,9 @@ uint32_t SystemClock = OC32_IHOSC_FREQ;
  */
 HAL_StatusTypeDef HAL_RCM_DeInit(void)
 {
-    /* config wait timer(biggest number) for clock switching */
-    CLKCON->CSWT = 0x7FU;
-
-    /* if PLL, switch from PLL to OSC */
-    if (CLKCON->PLLE)
-    {
-        CLKCON->PLLE = 0;
-        /* Wait till clock switch is ready */
-        uint32_t tickstart = HAL_TICK_GetVal();
-        while (CLKCON->CSF == 0)
-        {
-            if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-            {
-                return HAL_TIMEOUT;
-            }
-        }
-    }
-
-    /* if XHOSC, switch from XHOSC to IHOSC */
-    if (CLKCON->XHOSCE)
-    {
-        CLKCON->XHOSCE = 0;
-        /* Wait till clock switch is ready */
-        uint32_t tickstart = HAL_TICK_GetVal();
-        while (CLKCON->CSF == 0)
-        {
-            if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-            {
-                return HAL_TIMEOUT;
-            }
-        }
-    }
-
     /* default value */
-    WRITE_SR(CLKCON, 0x00001F01U);
-    WRITE_SR(PLLCON, 0x00000028U);
+    WRITE_SR(CLKCON, CLKCON_DEFAULT);
+    WRITE_SR(PLLCON, PLLCON_DEFAULT);
     WRITE_SR(BPCON, HAL_GetRegTrim0w0());
     WRITE_SR(IOSCCON, HAL_GetRegTrim0w1());
     WRITE_SR(VTSCON, HAL_GetRegTrim0w2());
@@ -76,130 +59,134 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
 
 /**
  * @brief  Initializes the RCM clock according to the specified parameters.
- * @param  Init: pointer to an HAL_RCM_InitTypeDef structure that contains
- *         the configuration information for the RCM clock.
- * @note   DeInit should be used before re-Initialize
+ * @note   DeInit should be called before re-Initialize
  * @retval HAL status
  */
-HAL_StatusTypeDef HAL_RCM_Init(HAL_RCM_InitTypeDef *Init)
+HAL_StatusTypeDef HAL_RCM_Init(void)
 {
-    /* Check Null pointer */
-    if ((Init == NULL) || (Init->OutFreq > OC32_SCLK_FREQ))
-    {
-        return HAL_ERROR;
-    }
-
     /* flash clock config: slow down the clock for safe */
     FLCCON->FLCC = FLASH_CLK_DIV5;
     FLUCON->FLUC = FLASH_CLK_DIV5;
     FLCCON->FLTSHSL = FLASH_CORE_TSHSL_MAX;
 
     /* config wait timer(biggest number) for clock switching */
-    CLKCON->CSWT = 0x7FU;
-    uint32_t tickstart;
-    uint32_t reffreq = 0;
+    CLKCON->CSWT = CSWT_MAX;
+
+    /* default is IHOSC */
+    uint32_t reffreq = OC32_IHOSC_FREQ;
+    SystemClock = OC32_IHOSC_FREQ;
 
 #ifdef HAL_RCM_CDR_ENABLE
     CLKCON->UXCDRE = 1U;
     reffreq = OC32_CDR_FREQ;
-    /* skip osc cfg, cdr always need ihosc(default) */
+    /* CDR requires the system to run on IHOSC. Skip the oscillator switch
+       blocks (they would select a different source) and jump straight to
+       the PLL stage. reffreq stays based on the default IHOSC. */
     goto pll_cfg;
 #endif
 
-osc_cfg:
-    /* XHOSC config */
-    if (Init->OscType == RCM_OSC_XHOSC)
-    {
-        CLKCON->XHOSCE = 1u;
-        /* Wait till clock switch is ready */
-        tickstart = HAL_TICK_GetVal();
-        while (CLKCON->CSF == 0)
-        {
-            if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-            {
-                return HAL_TIMEOUT;
-            }
-        }
-        reffreq = OC32_XHOSC_FREQ;
-    }
-    /* IOSC config */
-    else if (Init->OscType == RCM_OSC_ILOSC)
-    {
-        /* output should be same as low freq clock */
-        if (Init->OutFreq != OC32_ILOSC_FREQ)
-            return HAL_ERROR;
+/* Real ILOSC hardware oscillator — reserved for future chips.
+   Only compiles when the part actually supports ILOSC as a real source. */
+#if defined(OC32_CLK_SRC_ILOSC) && defined(OC32_CLK_ILOSC_REAL)
+    CLKCON->ILOSCE = 1U;
+    reffreq = OC32_ILOSC_FREQ;
+#endif // OC32_CLK_SRC_ILOSC && OC32_CLK_ILOSC_REAL
 
-        CLKCON->IOSCH = 0;
-        reffreq = OC32_ILOSC_FREQ;
-    }
-    else if (Init->OscType == RCM_OSC_IHOSC)
-    {
-        CLKCON->IOSCH = 1U;
-        reffreq = OC32_ILOSC_FREQ;
-    }
-    else
-    {
-        return HAL_ERROR;
-    }
+/* reserved for future chips. */
+#ifdef OC32_CLK_SRC_XLOSC
+    CLKCON->XLOSCE = 1U;
+    reffreq = OC32_XLOSC_FREQ;
+#endif // OC32_CLK_SRC_XLOSC
 
-    /* return if system uses osc clock directly */
-    if (reffreq == Init->OutFreq)
-    {
-        SystemClock = Init->OutFreq;
-        goto exit_ok;
-    }
+#ifdef OC32_CLK_SRC_XHOSC
+    CLKCON->XHOSCE = 1U;
+    reffreq = OC32_XHOSC_FREQ;
+#endif // OC32_CLK_SRC_XHOSC
 
-    /* system use pll clock */
+#if defined(OC32_CLK_SRC_XHOSC) || defined(OC32_CLK_SRC_XLOSC) || defined(OC32_CLK_ILOSC_REAL)
+    if (RCM_ClockSwitchWait() != HAL_OK) goto rcm_cfg_err;
+#endif // OC32_CLK_SRC_XHOSC || OC32_CLK_SRC_XLOSC || OC32_CLK_ILOSC_REAL
+
+/* Fake ILOSC — low-frequency mode of IHOSC (no separate oscillator).
+   Slows the internal IHOSC clock; no source switch, so no CSF wait. */
+#if defined(OC32_CLK_SRC_ILOSC) && defined(OC32_CLK_ILOSC_FAKE)
+    CLKCON->IOSCH = 0U;
+    reffreq = OC32_ILOSC_FREQ;
+#endif // OC32_CLK_SRC_ILOSC && OC32_CLK_ILOSC_FAKE
+
+/* system may use pll clock */
 pll_cfg:
+    SystemClock = reffreq;
+
+#ifdef OC32_CLK_PLL_ENABLE
     /* Pll div factor */
-    static const uint32_t plldf[] = {1u, 2u, 4u, 8u, 16u, 32u, 63u, 128u};
-    uint32_t pllfreq;
+    static const uint32_t plldf[] = {1U, 2U, 4U, 8U, 16U, 32U, 63U, 128U};
+    uint32_t pllfreq = 0U;   /* actual chosen PLL output frequency, set by the loop */
 
     /* Find optimal plldf and pllmf (closest to OutFreq) */
-    uint32_t best_plldf_idx = 0;
-    uint32_t best_pllmf = 1;
+    uint32_t best_plldf_idx = 0U;
+    uint32_t best_pllmf = 1U;
     uint32_t best_error = UINT32_MAX;
-    for (uint32_t i = 0; i < sizeof(plldf) / sizeof(plldf[0]); i++)
+    for (uint32_t i = 0U; i < sizeof(plldf) / sizeof(plldf[0]); i++)
     {
         uint32_t div_freq = reffreq / plldf[i];
-        if (div_freq == 0)
+        if (div_freq == 0U)
             continue;
-        uint32_t pllmf = (Init->OutFreq + div_freq - 1) / div_freq; /* ceil */
+        uint32_t pllmf = (OC32_SCLK_FREQ + div_freq - 1U) / div_freq; /* ceil */
         if (pllmf > 255U)
             continue;
-        uint32_t pllfreq = div_freq * pllmf;
-        uint32_t error = (pllfreq > Init->OutFreq) ? (pllfreq - Init->OutFreq) : (Init->OutFreq - pllfreq);
+        uint32_t cand_freq = div_freq * pllmf;
+        uint32_t error = (cand_freq > OC32_SCLK_FREQ) ? (cand_freq - OC32_SCLK_FREQ) : (OC32_SCLK_FREQ - cand_freq);
         if (error < best_error)
         {
             best_error = error;
             best_plldf_idx = i;
             best_pllmf = pllmf;
+            pllfreq = cand_freq;   /* keep outer pllfreq in sync with the winner */
         }
     }
-    if (best_error == UINT32_MAX)
-        return HAL_ERROR;
+    if (best_error == UINT32_MAX) goto rcm_cfg_err; /* no valid pll config found */
 
+    /* PLL output monitor */
+#ifdef OC32_CLK_PLL_OM_ENABLE
+    /* PLL freq over value */
+    uint32_t pfoval = (2048U * reffreq) / OC32_SCLK_FREQ;
+    if (pfoval > 0U && pfoval <= PFCNT_MAX)
+    {
+        PLLCON->PFCNT = pfoval - pfoval / 16U; /* 15/16 expected count */
+        PLLCON->PFOM = 1U;
+    }
+    else
+    {
+        goto rcm_cfg_err; /* invalid pfoval */
+    }
+#endif // OC32_CLK_PLL_OM_ENABLE
+
+    /* PLLM = 0U is a safe default (low jitter mode). Users who need a
+       different PLLM setting can override this by hand in their own copy
+       of the RCM driver. */
     CLKCON->PLLM = 0U;
     PLLCON->PFD = best_plldf_idx;
     PLLCON->PFM = best_pllmf;
-    CLKCON->PLLE = 1u;
-    /* Wait till clock switch is ready */
-    tickstart = HAL_TICK_GetVal();
-    while (CLKCON->CSF == 0)
-    {
-        if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
-        {
-            return HAL_TIMEOUT;
-        }
-    }
+    CLKCON->PLLE = 1U;
+    if (RCM_ClockSwitchWait() != HAL_OK) goto rcm_cfg_err;
+
+    /* check pll freq over or not */
+#ifdef OC32_CLK_PLL_OM_ENABLE
+    if (PLLCON->PFO) goto rcm_cfg_err;
+#endif // OC32_CLK_PLL_OM_ENABLE
 
     /* update system clock */
     SystemClock = pllfreq;
+#endif // OC32_CLK_PLL_ENABLE
 
-exit_ok:
     /* update flash clock setting base on new system clock */
     HAL_FLASH_ClkUpdate();
     return HAL_OK;
+
+rcm_cfg_err:
+    HAL_RCM_DeInit();
+    return HAL_ERROR;
 }
 
 #ifdef HAL_USB_ENABLE
@@ -234,16 +221,14 @@ uint32_t HAL_RCM_GetSysClockFreq(void)
     return SystemClock;
 }
 
-
 /**
  * @brief  Handles PLL interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
 HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
 {
-  return HAL_OK;
+    return HAL_OK;
 }
-
 
 /**
  * @brief  Handles PLL interrupt request.

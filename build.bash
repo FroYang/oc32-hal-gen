@@ -58,12 +58,12 @@ fi
 echo "Linux build complete: dist/OC32_HAL_Config_Generator"
 
 # Build Windows executable with Wine if available
-WINE_PYTHON="/backup/wine/python/drive_c/users/fro/AppData/Local/Programs/Python/Python315/python.exe"
+WINE_PYTHON="/backup/wine/win10/drive_c/Python314/python.exe"
 if command -v wine >/dev/null 2>&1 && [ -f "$WINE_PYTHON" ]; then
     echo ""
     echo "Building standalone executable for Windows (Wine)..."
-    export WINEPREFIX=/backup/wine/python
-    wine C:/users/fro/AppData/Local/Programs/Python/Python315/python.exe -m PyInstaller --onefile --windowed \
+    export WINEPREFIX=/backup/wine/win10
+    wine C:/Python314/python.exe -m PyInstaller --onefile --windowed \
         --name "OC32_HAL_Config_Generator" \
         --add-data "chips;chips" \
         --add-data "hal;hal" \

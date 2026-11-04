@@ -84,214 +84,6 @@ void *memset(void *dest, int c, uint32_t n)
     return dest;
 }
 
-#ifdef HAL_UART_DEBUG_ENABLE
-/**
- * @brief  uart tx char for debug
- */
-void uart_tx_char(char c)
-{
-#ifdef HAL_UART0_DEBUG
-    HAL_UART_TX_OneByte(UART_0, c);
-#endif
-
-#ifdef HAL_UART1_DEBUG
-    HAL_UART_TX_OneByte(UART_1, c);
-#endif
-}
-
-/**
- * @brief  Minimal puts for bare-metal (-nostdlib) environments.
- */
-int puts(const char *s)
-{
-    while (*s)
-    {
-        uart_tx_char(*s++);
-    }
-    uart_tx_char('\n');
-    return 1;
-}
-
-
-
-static int txchar(char c)
-{
-    uart_tx_char(c);
-    return 1;
-}
-
-static int txstring(const char *s)
-{
-    int count = 0;
-    while (*s)
-    {
-        count += txchar(*s++);
-    }
-    return count;
-}
-
-static int txuint(unsigned int n)
-{
-    int count = 0;
-
-    if (n >= 10)
-    {
-        count += txuint(n / 10);
-    }
-    count += txchar('0' + (n % 10));
-
-    return count;
-}
-
-static int txint(int n)
-{
-    int count = 0;
-
-    if (n < 0)
-    {
-        count += txchar('-');
-        if (n == (int)0x80000000)
-        {
-            count += txstring("2147483648");
-            return count;
-        }
-        n = -n;
-    }
-    count += txuint((unsigned int)n);
-
-    return count;
-}
-
-static char get_hex_char(unsigned int n)
-{
-    const char *hex_chars = "0123456789abcdef";
-    return hex_chars[n & 0xF];
-}
-
-static char get_hex_char_upper(unsigned int n)
-{
-    const char *hex_chars = "0123456789ABCDEF";
-    return hex_chars[n & 0xF];
-}
-
-static int txhex(unsigned int n)
-{
-    char buf[9];
-    int i = 7;
-    int count = 0;
-
-    do
-    {
-        buf[i--] = get_hex_char(n);
-        n >>= 4;
-    } while (n > 0);
-
-    while (i >= 0)
-    {
-        buf[i--] = '0';
-    }
-
-    count += txstring(buf);
-
-    return count;
-}
-
-static int txhex_upper(unsigned int n)
-{
-    char buf[9];
-    int i = 7;
-    int count = 0;
-
-    do
-    {
-        buf[i--] = get_hex_char_upper(n);
-        n >>= 4;
-    } while (n > 0);
-
-    while (i >= 0)
-    {
-        buf[i--] = '0';
-    }
-
-    count += txstring(buf);
-
-    return count;
-}
-
-static int txptr(void *ptr)
-{
-    int count = 0;
-    count += txstring("0x");
-    count += txhex((unsigned int)(unsigned long)ptr);
-    return count;
-}
-
-int printf(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-
-    int count = 0;
-
-    while (*format)
-    {
-        if (*format == '%')
-        {
-            format++;
-
-            switch (*format)
-            {
-            case 'd':
-                count += txint(va_arg(args, int));
-                break;
-
-            case 'u':
-                count += txuint(va_arg(args, unsigned int));
-                break;
-
-            case 'x':
-                count += txhex(va_arg(args, unsigned int));
-                break;
-
-            case 'X':
-                count += txhex_upper(va_arg(args, unsigned int));
-                break;
-
-            case 's':
-                count += txstring(va_arg(args, char *));
-                break;
-
-            case 'c':
-                count += txchar(va_arg(args, int));
-                break;
-
-            case 'p':
-                count += txptr(va_arg(args, void *));
-                break;
-
-            case '%':
-                count += txchar('%');
-                break;
-
-            default:
-                count += txchar('%');
-                count += txchar(*format);
-                break;
-            }
-        }
-        else
-        {
-            count += txchar(*format);
-        }
-
-        format++;
-    }
-
-    va_end(args);
-    return count;
-}
-
-#endif
 
 /**
  * @brief  update DMA channel state
@@ -661,3 +453,230 @@ HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
     return HAL_ERROR;
 
 }
+
+
+
+
+#ifdef HAL_UART_DEBUG_ENABLE
+/**
+ * @brief  uart tx char for debug
+ */
+void uart_tx_char(char c)
+{
+#ifdef HAL_UART0_DEBUG
+    HAL_UART_TX_OneByte(UART_0, c);
+#endif
+
+#ifdef HAL_UART1_DEBUG
+    HAL_UART_TX_OneByte(UART_1, c);
+#endif
+}
+
+/**
+ * @brief  Minimal puts for bare-metal (-nostdlib) environments.
+ */
+__weak__ int puts(const char *s)
+{
+    while (*s)
+    {
+        uart_tx_char(*s++);
+    }
+    uart_tx_char('\n');
+    return 1;
+}
+
+
+
+static int txchar(char c)
+{
+    uart_tx_char(c);
+    return 1;
+}
+
+static int txstring(const char *s)
+{
+    int count = 0;
+    while (*s)
+    {
+        count += txchar(*s++);
+    }
+    return count;
+}
+
+static int txuint(unsigned int n)
+{
+    int count = 0;
+
+    if (n >= 10)
+    {
+        count += txuint(n / 10);
+    }
+    count += txchar('0' + (n % 10));
+
+    return count;
+}
+
+static int txint(int n)
+{
+    int count = 0;
+
+    if (n < 0)
+    {
+        count += txchar('-');
+        if (n == (int)0x80000000)
+        {
+            count += txstring("2147483648");
+            return count;
+        }
+        n = -n;
+    }
+    count += txuint((unsigned int)n);
+
+    return count;
+}
+
+static char get_hex_char(unsigned int n)
+{
+    const char *hex_chars = "0123456789abcdef";
+    return hex_chars[n & 0xF];
+}
+
+static char get_hex_char_upper(unsigned int n)
+{
+    const char *hex_chars = "0123456789ABCDEF";
+    return hex_chars[n & 0xF];
+}
+
+static int txhex(unsigned int n)
+{
+    char buf[9];
+    int i = 7;
+    int count = 0;
+
+    do
+    {
+        buf[i--] = get_hex_char(n);
+        n >>= 4;
+    } while (n > 0);
+
+    while (i >= 0)
+    {
+        buf[i--] = '0';
+    }
+
+    count += txstring(buf);
+
+    return count;
+}
+
+static int txhex_upper(unsigned int n)
+{
+    char buf[9];
+    int i = 7;
+    int count = 0;
+
+    do
+    {
+        buf[i--] = get_hex_char_upper(n);
+        n >>= 4;
+    } while (n > 0);
+
+    while (i >= 0)
+    {
+        buf[i--] = '0';
+    }
+
+    count += txstring(buf);
+
+    return count;
+}
+
+static int txptr(void *ptr)
+{
+    int count = 0;
+    count += txstring("0x");
+    count += txhex((unsigned int)(unsigned long)ptr);
+    return count;
+}
+
+__weak__ int printf(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    int count = 0;
+
+    while (*format)
+    {
+        if (*format == '%')
+        {
+            format++;
+
+            switch (*format)
+            {
+            case 'd':
+                count += txint(va_arg(args, int));
+                break;
+
+            case 'u':
+                count += txuint(va_arg(args, unsigned int));
+                break;
+
+            case 'x':
+                count += txhex(va_arg(args, unsigned int));
+                break;
+
+            case 'X':
+                count += txhex_upper(va_arg(args, unsigned int));
+                break;
+
+            case 's':
+                count += txstring(va_arg(args, char *));
+                break;
+
+            case 'c':
+                count += txchar(va_arg(args, int));
+                break;
+
+            case 'p':
+                count += txptr(va_arg(args, void *));
+                break;
+
+            case '%':
+                count += txchar('%');
+                break;
+
+            default:
+                count += txchar('%');
+                count += txchar(*format);
+                break;
+            }
+        }
+        else
+        {
+            count += txchar(*format);
+        }
+
+        format++;
+    }
+
+    va_end(args);
+    return count;
+}
+
+
+HAL_StatusTypeDef HAL_DEBUG_Init(HAL_UART_PinsTypedef *Pins)
+{
+    HAL_UART_InitTypeDef Init;
+    #ifdef HAL_UART0_DEBUG
+    Init.Uart = UART_0;
+    #endif
+    #ifdef HAL_UART1_DEBUG
+    Init.Uart = UART_1;
+    #endif
+    Init.BaudRate = HAL_UART_DEBUG_BR;
+    Init.Pins = Pins;
+    return HAL_OK;
+}
+
+#endif
