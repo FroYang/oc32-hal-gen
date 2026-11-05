@@ -130,12 +130,7 @@ __HAL_CONFIG_CDR_LINES__
   extern volatile uint32_t uwTick;
   extern HAL_TICK_FreqTypeDef uwTickFreq;
 
-  __HAL_CONFIG_UART_DEBUG__
-
-#ifdef HAL_UART_DEBUG_ENABLE
-  __HAL_CONFIG_UART_DEBUG_BR__
-  __HAL_CONFIG_UART_DEBUG_SUB__
-#endif
+  __HAL_CONFIG_UART_DEBUG_BLOCK__
 
   /** @defgroup HAL_ENABLE Module Enable
    * @{

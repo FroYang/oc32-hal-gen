@@ -665,18 +665,11 @@ __weak__ int printf(const char *format, ...)
 }
 
 
-HAL_StatusTypeDef HAL_DEBUG_Init(HAL_UART_PinsTypedef *Pins)
+HAL_StatusTypeDef HAL_DEBUG_Init(void)
 {
     HAL_UART_InitTypeDef Init;
-    #ifdef HAL_UART0_DEBUG
-    Init.Uart = UART_0;
-    #endif
-    #ifdef HAL_UART1_DEBUG
-    Init.Uart = UART_1;
-    #endif
-    Init.BaudRate = HAL_UART_DEBUG_BR;
-    Init.Pins = Pins;
-    return HAL_OK;
+
+    return HAL_UART_Init(&Init);
 }
 
 #endif

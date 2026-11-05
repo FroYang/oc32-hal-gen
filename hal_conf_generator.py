@@ -67,6 +67,62 @@ def _gen_uart_debug_sub(uart_name):
         return '/* #define HAL_UART0_DEBUG */\n#define HAL_UART1_DEBUG'
 
 
+# Debug UART option labels -> HAL macro enum values from oc32_hal_uart.h.
+# NOTE: the HAL parity enum has no explicit "None" member; "None" maps to the
+# zero value (UART_PAR_ODD = 0), the closest available setting.
+_UART_PARITY_MACROS = {
+    "None":       "UART_PAR_NONE",
+    "Odd":        "UART_PAR_ODD",
+    "Even":       "UART_PAR_EVEN",
+    "Always 0":   "UART_PAR_0",
+    "Always 1":   "UART_PAR_1",
+}
+_UART_DUPLEX_MACROS = {
+    "Full": "UART_FULL_DUPLEX",
+    "Half (use TX pin only)": "UART_HALF_DUPLEX",
+}
+_UART_PINS_MACROS = {
+    "TX0 & RX0": "UART_PINS_0",
+    "TX1 & RX1": "UART_PINS_1",
+}
+
+
+def _gen_uart_debug_opts(user_settings):
+    """Generate #define lines for Debug UART parity/duplex/pins options."""
+    lines = []
+    parity = user_settings.get("uart_parity", "None")
+    duplex = user_settings.get("uart_duplex", "Full")
+    pins = user_settings.get("uart_pins", "TX0 & RX0")
+    lines.append(f"#define HAL_UART_DEBUG_PARITY   {_UART_PARITY_MACROS[parity]}")
+    lines.append(f"#define HAL_UART_DEBUG_DUPLEX   {_UART_DUPLEX_MACROS[duplex]}")
+    lines.append(f"#define HAL_UART_DEBUG_PINS     {_UART_PINS_MACROS[pins]}")
+    return "\n".join(lines)
+
+
+def _gen_uart_debug_block(user_settings, features, user_features):
+    """Render the entire UART-debug block, or an empty string when the UART
+    feature is not selected (so no floating/empty #ifdef block is emitted).
+
+    The block is gated on the UART *feature* being enabled in the chip's
+    `features` list; baud rate, UART0/1 select, and the parity/duplex/pins
+    options all live inside the #ifdef so they only exist when active.
+    """
+    uart_feature = next((m for m in features if m["key"] == "UART"), None)
+    if not (uart_feature and user_features.get("UART", False)):
+        return ""
+
+    block = (
+        "#define HAL_UART_DEBUG_ENABLE\n"
+        "\n"
+        "#ifdef HAL_UART_DEBUG_ENABLE\n"
+        f"#define HAL_UART_DEBUG_BR   {user_settings['baud_rate']} /* 9600/14400 .... ~ 1000000 */\n"
+        f"{_gen_uart_debug_sub(user_settings['debug_uart'])}\n"
+        f"{_gen_uart_debug_opts(user_settings)}\n"
+        "#endif"
+    )
+    return block
+
+
 # --- Config rendering ---
 def render_conf_template(chip_config, user_settings):
     tmpl_path = HAL_SRC_DIR / "oc32_hal_conf_template.h"
@@ -145,7 +201,6 @@ def render_conf_template(chip_config, user_settings):
     # VDD / Tick
     content = content.replace("__HAL_CONFIG_VDD_VALUE__", f'{chip_config["vdd_value"]}U')
     content = content.replace("__HAL_CONFIG_TICK_FREQ__", f'HAL_TICK_FREQ_{user_settings["tick_freq"]}')
-    content = content.replace("__HAL_CONFIG_UART_DEBUG_SUB__", _gen_uart_debug_sub(debug_uart))
 
     # Int enum — generate PRI0..PRI(n-1) entries
     int_enum_lines = []
@@ -181,15 +236,11 @@ def render_conf_template(chip_config, user_settings):
     content = content.replace("__HAL_CONFIG_HIC_CH__", "\n".join(hic_ch_lines))
     content = content.replace("__HAL_CONFIG_HIC_MAP__", "\n".join(hic_map_lines))
 
-    # UART debug section
-    uart_feature = next((m for m in features if m["key"] == "UART"), None)
-    if (uart_feature and user_features.get("UART", False)):
-        content = content.replace("__HAL_CONFIG_UART_DEBUG__", "#define HAL_UART_DEBUG_ENABLE\n")
-        content = content.replace("__HAL_CONFIG_UART_DEBUG_BR__",
-            f"#define HAL_UART_DEBUG_BR   {user_settings['baud_rate']} /* 9600/14400 .... ~ 1000000 */\n")
-    else:
-        content = content.replace("__HAL_CONFIG_UART_DEBUG__", "\n")
-        content = content.replace("__HAL_CONFIG_UART_DEBUG_BR__", "\n")
+    # UART debug section — emit the whole #define + #ifdef block, or nothing.
+    # This keeps the generated conf.h clean when the UART feature is off (no
+    # floating/empty #ifdef block left behind).
+    content = content.replace("__HAL_CONFIG_UART_DEBUG_BLOCK__",
+        _gen_uart_debug_block(user_settings, features, user_features))
 
     # User modules enable section — driven by GUI checkbox state from user_settings
     module_lines = []
@@ -216,7 +267,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("OC32 HAL Config Generator")
-        self.root.geometry("630x630")
+        self.root.geometry("750x650")
         self.root.resizable(True, True)
 
         self.chip_config = None
@@ -232,7 +283,7 @@ class App:
 
         # Left panel: Settings
         left = Frame(main)
-        main.add(left, width=320)
+        main.add(left, width=400)
 
         # Top: Chip selection
         chip_frame = _colored_label_frame(left, "Chip Selection", "red")
@@ -246,9 +297,36 @@ class App:
         chip_combo.pack(pady=4)
         chip_combo.bind("<<ComboboxSelected>>", self._on_chip_changed)
 
-        # Middle: System settings
-        sys_frame = _colored_label_frame(left, "System Settings", "blue")
-        sys_frame.pack(fill=X, padx=2, pady=2)
+        # Middle: System settings — scrollable so the many rows never push the
+        # Output-dir + button rows below the visible area.
+        sys_outer = Frame(left)
+        sys_outer.pack(fill=X, padx=2, pady=2)
+        sys_label_bg = "#f0f0f0"
+        sys_title_bar = Frame(sys_outer, bg=sys_label_bg, height=22)
+        sys_title_bar.pack(fill=X)
+        sys_title_bar.pack_propagate(False)
+        sys_title_canvas = Canvas(sys_title_bar, width=400, height=22, bg=sys_label_bg,
+                                  highlightthickness=0)
+        sys_title_canvas.pack(side=LEFT, fill=BOTH, expand=True)
+        sys_title_canvas.create_text(6, 11, anchor=W, text="System Settings",
+                                    font=("Microsoft YaHei", 9, "bold"), fill="blue")
+        sys_title_sep = Frame(sys_outer, bg="#cccccc", height=1)
+        sys_title_sep.pack(fill=X)
+
+        sys_scroll_canvas = Canvas(sys_outer, highlightthickness=0)
+        sys_scroll_sb = Scrollbar(sys_outer, orient=VERTICAL, command=sys_scroll_canvas.yview)
+        sys_frame = Frame(sys_scroll_canvas, padx=8, pady=6)
+        sys_frame.bind(
+            "<Configure>",
+            lambda e: sys_scroll_canvas.configure(scrollregion=sys_scroll_canvas.bbox("all"))
+        )
+        sys_scroll_canvas.create_window((0, 0), window=sys_frame, anchor="nw")
+        sys_scroll_canvas.configure(yscrollcommand=sys_scroll_sb.set)
+        # Keep the settings scrollable and compact so the left panel never
+        # forces the window taller than needed.
+        sys_scroll_canvas.config(height=380)
+        sys_scroll_canvas.pack(side=LEFT, fill=BOTH, expand=True)
+        sys_scroll_sb.pack(side=RIGHT, fill=Y)
 
         # Clock source (new, at the front)
         clk_src_frame = Frame(sys_frame)
@@ -273,7 +351,7 @@ class App:
         # PLL Frequency Over-Monitor (new, placed right after PLL)
         pll_om_frame = Frame(sys_frame)
         pll_om_frame.pack(fill=X, pady=2)
-        self._pll_om_label = Label(pll_om_frame, text="PLL Freq Over Monitor:")
+        self._pll_om_label = Label(pll_om_frame, text="PLL Frequency Over Monitor:")
         self._pll_om_label.pack(side=LEFT, anchor=W)
         self.var_pll_om = StringVar(value="Disable")
         self.pll_om_combo = ttk.Combobox(pll_om_frame, textvariable=self.var_pll_om,
@@ -346,12 +424,52 @@ class App:
                                        state="readonly", width=10)
         self.baud_combo.pack(side=RIGHT, padx=(4, 0))
 
-        # Bottom: Output dir
+        # Debug UART Parity
+        uart_parity_frame = Frame(sys_frame)
+        uart_parity_frame.pack(fill=X, pady=2)
+        Label(uart_parity_frame, text="Debug UART Parity:").pack(side=LEFT, anchor=W)
+        self.var_uart_parity = StringVar(value="None")
+        self.uart_parity_combo = ttk.Combobox(uart_parity_frame, textvariable=self.var_uart_parity,
+                                               values=["None", "Odd", "Even", "Always 0", "Always 1"],
+                                               state="readonly", width=16)
+        self.uart_parity_combo.pack(side=RIGHT, padx=(4, 0))
+
+        # Debug UART Duplex
+        uart_duplex_frame = Frame(sys_frame)
+        uart_duplex_frame.pack(fill=X, pady=2)
+        Label(uart_duplex_frame, text="Debug UART Duplex:").pack(side=LEFT, anchor=W)
+        self.var_uart_duplex = StringVar(value="Full")
+        self.uart_duplex_combo = ttk.Combobox(uart_duplex_frame, textvariable=self.var_uart_duplex,
+                                              values=["Full", "Half (use TX pin only)"],
+                                              state="readonly", width=16)
+        self.uart_duplex_combo.pack(side=RIGHT, padx=(4, 0))
+
+        # Debug UART Pins
+        uart_pins_frame = Frame(sys_frame)
+        uart_pins_frame.pack(fill=X, pady=2)
+        Label(uart_pins_frame, text="Debug UART Pins:").pack(side=LEFT, anchor=W)
+        self.var_uart_pins = StringVar(value="TX0 & RX0")
+        self.uart_pins_combo = ttk.Combobox(uart_pins_frame, textvariable=self.var_uart_pins,
+                                            values=["TX0 & RX0", "TX1 & RX1"],
+                                            state="readonly", width=16)
+        self.uart_pins_combo.pack(side=RIGHT, padx=(4, 0))
+
+        # Output dir (left panel). Buttons live in the persistent bottom bar so
+        # they are always visible regardless of panel height.
         out_frame = _colored_label_frame(left, "Output Directory", "green")
-        out_frame.pack(fill=X, padx=2, pady=2, expand=True)
+        out_frame.pack(fill=X, padx=2, pady=2)
         self.var_outdir = StringVar(value=self.output_dir)
         Entry(out_frame, textvariable=self.var_outdir).pack(fill=X, pady=2)
-        Button(out_frame, text="Browse...", command=self._browse_outdir).pack(pady=4)
+        Button(out_frame, text="Browse...", command=self._browse_outdir).pack(pady=0)
+
+        # Action buttons — packed right below the Output Directory row so they
+        # sit compactly next to Browse instead of in a far-away bottom bar.
+        self._btn_bar = Frame(left)
+        self._btn_bar.pack(fill=X, padx=2, pady=(0, 2))
+        Button(self._btn_bar, text="Generate Config", command=self._generate,
+               width=20).pack(side=LEFT, padx=4, pady=2)
+        Button(self._btn_bar, text="Open Output Dir", command=self._open_output,
+               width=20).pack(side=LEFT, padx=4, pady=2)
 
         # Right panel: Module selection
         right = Frame(main)
@@ -381,19 +499,28 @@ class App:
             "<Configure>",
             lambda e: self.mod_canvas.configure(scrollregion=self.mod_canvas.bbox("all"))
         )
-        self.mod_canvas.create_window((0, 0), window=self.mod_scroll_frame, anchor="nw")
         self.mod_canvas.configure(yscrollcommand=mod_scrollbar.set)
+
+        # Keep the inner frame (and thus the RIGHT-aligned checkboxes) stretched to
+        # the canvas width so they stay flush to the right edge of the panel.
+        # A canvas window only honors the requested width unless it is told to fill;
+        # so we re-create the window each time the canvas is resized with a matching
+        # width, which makes each fill=X row span the whole panel.
+        self._mod_canvas_win_id = None
+
+        def _resync_mod_width(event):
+            if self._mod_canvas_win_id is not None:
+                self.mod_canvas.delete(self._mod_canvas_win_id)
+            self._mod_canvas_win_id = self.mod_canvas.create_window(
+                (0, 0), window=self.mod_scroll_frame,
+                anchor="nw", width=event.width
+            )
+            self.mod_scroll_frame.configure(width=event.width)
+
+        self.mod_canvas.bind("<Configure>", _resync_mod_width)
 
         self.mod_canvas.pack(side=LEFT, fill=BOTH, expand=True)
         mod_scrollbar.pack(side=RIGHT, fill=Y)
-
-        # Buttons
-        btn_frame = Frame(left)
-        btn_frame.pack(fill=X, padx=2, pady=10)
-        Button(btn_frame, text="Generate Config", command=self._generate,
-               width=20).pack(pady=4)
-        Button(btn_frame, text="Open Output Dir", command=self._open_output,
-               width=20).pack(pady=4)
 
         # Init module list
         # Initialize PLL-dependent controls' grayout state
@@ -485,10 +612,12 @@ class App:
             optional_features = [m for m in self.chip_config["features"] if not m.get("always", False)]
             for idx, mod in enumerate(optional_features):
                 frame = Frame(self.mod_scroll_frame)
+                # fill=BOTH + expand makes each row stretch to the full panel
+                # width, so the RIGHT-packed checkbox hugs the right edge.
                 frame.pack(fill=X, pady=2)
                 Label(frame, text=f"{mod['key']}:  {mod.get('description', '')}").pack(side=LEFT)
                 var = IntVar(value=0)
-                Checkbutton(frame, variable=var).pack(side=RIGHT)
+                Checkbutton(frame, variable=var).pack(side=RIGHT, padx=(0, 8))
                 self.module_vars[f"mod_{idx}"] = var
 
     def _collect_settings(self):
@@ -515,6 +644,9 @@ class App:
                 "sclk_mhz": _safe_int(self.var_sclk, 99),
                 "tick_freq": self.var_tick_freq.get(),
                 "debug_uart": self.var_debug.get(),
+                "uart_parity": self.var_uart_parity.get(),
+                "uart_duplex": self.var_uart_duplex.get(),
+                "uart_pins": self.var_uart_pins.get(),
             }
 
         features = {}
@@ -544,6 +676,9 @@ class App:
             "tick_freq": self.var_tick_freq.get(),
             "debug_uart": self.var_debug.get(),
             "baud_rate": self.var_baud.get(),
+            "uart_parity": self.var_uart_parity.get(),
+            "uart_duplex": self.var_uart_duplex.get(),
+            "uart_pins": self.var_uart_pins.get(),
             "features": features,
         }
 

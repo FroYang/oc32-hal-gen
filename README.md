@@ -2,14 +2,15 @@
 
 OC32 系列 MCU 的 HAL 配置文件生成工具。通过图形界面选择芯片型号、配置系统参数和模块功能，自动生成完整的 `hal/` 目录（含定制化的 `oc32_hal_conf.h` 及其他 HAL 源文件）。
 
-可打包为独立 `.exe`（PyInstaller），分发给没有 Python 环境的用户。
+可打包为独立可执行文件（PyInstaller），分发给没有 Python 环境的用户（Windows 生成 `.exe`，Linux 生成无后缀二进制）。
 
 ## 项目结构
 
 ```
 oc32-hal-gen/
 ├── hal_conf_generator.py       # 主程序（Tkinter GUI + 生成逻辑）
-├── build.ps1                   # PyInstaller 打包脚本
+├── build.ps1                   # PyInstaller 打包脚本（Windows）
+├── build.bash                  # PyInstaller 打包脚本（Linux，可选 Wine 交叉生成 Windows）
 ├── OC32_HAL_Config_Generator.spec  # PyInstaller 打包规范
 ├── chips/                      # 芯片型号配置（JSON，新增即支持新芯片）
 │   ├── CV32S6015.json
@@ -18,7 +19,7 @@ oc32-hal-gen/
     ├── oc32_hal_conf_template.h # 配置文件模板（含 __占位符__）
     ├── inc/                    # 头文件（复制到输出目录）
     ├── src/                    # 源文件（复制到输出目录）
-    └── chip/                   # 芯片 MSR 头文件（复制到输出目录）
+    └── chip/                   # 芯片 MSR/SR 头文件（复制到输出目录）
 ```
 
 > 程序默认在 `chips/` 中自动发现所有 `*.json`，因此新增芯片只需添加 JSON 文件，无需改动代码。
@@ -37,13 +38,23 @@ oc32-hal-gen/
 python hal_conf_generator.py
 ```
 
-### 打包为独立 exe
+### 打包为独立可执行文件
+
+Windows：
 
 ```powershell
 .\build.ps1
 ```
 
 生成的可执行文件位于 `dist\OC32_HAL_Config_Generator.exe`，脚本会将其复制到 `D:\nsis\oc32\bin`。
+
+Linux：
+
+```bash
+./build.bash
+```
+
+生成 `dist/OC32_HAL_Config_Generator`，脚本会将其复制到 `/home/fro/oc32/linux/bin`；若检测到 Wine 及 Windows Python，还会交叉生成 `dist/OC32_HAL_Config_Generator.exe` 并复制到 `/home/fro/oc32/windows/bin`。
 
 ## 界面说明
 
@@ -54,12 +65,23 @@ python hal_conf_generator.py
 
 **System Settings（系统配置）**
 
-| 项 | 说明 | 可选值 |
+| 项 | 说明 | 可选值 / 默认 |
 |---|---|---|
-| XHOSC Frequency (MHz) | 外部高速振荡器频率，生成 `OC32_XHOSC_FREQ` | 1–24 |
+| Clock Source | 时钟源，生成 `OC32_CLK_SRC_XXX`；下拉项随芯片 `clk_sources` 动态变化 | IHOSC / ILOSC / XHOSC / XLOSC |
+| PLL | 是否启用 PLL，生成 `OC32_CLK_PLL_XXX` | Enable / Disable |
+| PLL Freq Over Monitor | PLL 频率过监测，生成 `OC32_CLK_PLL_OM_XXX`；仅 PLL 启用时可操作 | Enable / Disable |
+| USB CDR | 启用 USB CDR，生成 `HAL_RCM_CDR_ENABLE` 与 `OC32_CDR_FREQ`；仅当芯片定义了 `cdr_freq` 时可操作 | Enable / Disable |
+| System Clock (MHz) | 系统时钟频率（MHz，用户输入），生成 `OC32_SCLK_FREQ`；仅 PLL 启用时可用 | 默认 99 |
+| XHOSC Frequency (MHz) | 外部高速振荡器频率（MHz，用户输入），生成 `OC32_XHOSC_FREQ`；随芯片 `clk_sources` 是否含 XHOSC 启用/禁用 | 默认 4 |
+| XLOSC Frequency (kHz) | 外部低速振荡器频率（kHz，用户输入，支持小数），生成 `OC32_XLOSC_FREQ`；随芯片 `clk_sources` 是否含 XLOSC 启用/禁用 | 默认 32.768 |
 | Tick Frequency | 系统滴答频率，决定 `HAL_TICK_FREQ_DEFAULT` | 10Hz / 100Hz / 1KHz |
 | Debug UART | 调试输出串口，决定 `HAL_UART0_DEBUG` / `HAL_UART1_DEBUG` | UART0 / UART1 |
-| Baud Rate | 调试串口波特率，生成 `HAL_UART_DEBUG_BR` | 9600 … 1000000 |
+| Baud Rate | 调试串口波特率，生成 `HAL_UART_DEBUG_BR` | 9600 … 1000000（默认 115200） |
+| Debug UART Parity | 调试串口校验位，生成 `HAL_UART_DEBUG_PARITY` | None / Odd / Even / Always 0 / Always 1 |
+| Debug UART Duplex | 调试串口全/半双工，生成 `HAL_UART_DEBUG_DUPLEX` | Full / Half (use TX pin only) |
+| Debug UART Pins | 调试串口引脚，生成 `HAL_UART_DEBUG_PINS` | TX0 & RX0 / TX1 & RX1 |
+
+> 说明：系统时钟 SCLK 不再由芯片 JSON 提供，改由 GUI 输入；`System Clock` 与 `PLL Freq Over Monitor` 只有在 **PLL = Enable** 时才可编辑。`XHOSC` / `XLOSC` 输入框与下拉项根据所选芯片的 `clk_sources` 自动启用或禁用。
 
 **Output Directory（输出目录）**
 - 配置生成文件的保存路径，默认为用户桌面（`~/Desktop`）。
@@ -82,11 +104,12 @@ python hal_conf_generator.py
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
-| `name` | string | 芯片名称，显示在生成的配置头注释中 |
-| `ihosc_freq` | int | 内部高速振荡器频率（**Hz**），用于 `OC32_IHOSC_FREQ` |
+| `name` | string | 芯片名称，显示在生成的配置头注释中（缺省 `OC32`） |
+| `clk_sources` | string[] | 该芯片支持的时钟源子集，取值 `IHOSC`/`ILOSC`/`XHOSC`/`XLOSC`；GUI 据此过滤 Clock Source 下拉项并启用/禁用 XHOSC、XLOSC 输入框（缺省视为全部四种） |
+| `ilosc_real` | bool | ILOSC 为真实晶振时 `true`，生成 `OC32_CLK_ILOSC_REAL`；否则生成 `OC32_CLK_ILOSC_FAKE`（缺省 `false`）；仅当 `clk_sources` 含 ILOSC 时输出该宏 |
+| `ihosc_freq` | int | 内部高速振荡器频率（**Hz**），用于 `OC32_IHOSC_FREQ`（缺省 24000000） |
 | `ilosc_freq` | int | 内部低速振荡器频率（Hz），用于 `OC32_ILOSC_FREQ`（缺省 4000） |
-| `cdr_freq` | int | USB CDR 输出频率（Hz），用于 `OC32_CDR_FREQ`（缺省 12000000） |
-| `sclk_freq` | int | 系统时钟频率（**Hz**），用于 `OC32_SCLK_FREQ` |
+| `cdr_freq` | int | USB CDR 输出频率（Hz）。**可选字段**：仅当存在且 GUI 中 **USB CDR = Enable** 时，生成 `HAL_RCM_CDR_ENABLE` 与 `OC32_CDR_FREQ`；缺省不输出 CDR 相关宏 |
 | `flash_size` | int | Flash 总容量（KB） |
 | `zone0_size` | int | Boot 区大小（KB） |
 | `zone1_size` | int | User 区大小（KB） |
@@ -96,6 +119,8 @@ python hal_conf_generator.py
 | `hic_map` | string[] | 各 HIC（中断）通道映射的外设名，按索引生成 `OC32_HIC_CH_XXX` 与位掩码 `OC32_HIC_XXX` |
 | `vdd_value` | int | VDD 电压值（mV） |
 | `features` | object[] | 可选功能模块列表，见下 |
+
+> 注意：系统时钟 SCLK 由 GUI 输入（`System Clock (MHz)`），不再从芯片 JSON 读取，因此 JSON 中**不需要** `sclk_freq` 字段。
 
 每个 `features[]` 条目：
 
@@ -112,10 +137,11 @@ python hal_conf_generator.py
 ```json
 {
   "name": "CV32S6015U",
+  "clk_sources": ["IHOSC", "ILOSC", "XHOSC"],
+  "ilosc_real": false,
   "ihosc_freq": 24000000,
   "ilosc_freq": 4000,
   "cdr_freq": 12000000,
-  "sclk_freq": 99000000,
   "flash_size": 256,
   "zone0_size": 30,
   "zone1_size": 98,
@@ -146,8 +172,6 @@ python hal_conf_generator.py
     { "key": "TIMER",        "description": "Timer" },
     { "key": "CCP",          "description": "Capture/Compare/PWM",   "dependencies": ["TIMER"] },
     { "key": "USB",          "description": "Fullspeed USB" },
-    { "key": "RCM_CDR",      "description": "RCM Use USB CDR",
-      "macro_name": "RCM_CDR", "dependencies": ["USB"] },
     { "key": "DEBUG",        "description": "Debug Printf Via UART", "dependencies": ["UART"] }
   ]
 }
@@ -163,15 +187,18 @@ python hal_conf_generator.py
     ├── inc/
     │   ├── oc32_hal_conf.h   ← 根据当前配置生成的头文件
     │   ├── oc32_hal.h
-    │   └── ...（其余 inc/ 头文件）
+    │   ├── oc32_hal_rcm.h / oc32_hal_ccp.h / oc32_hal_uart.h ...
     ├── src/
     │   ├── oc32_hal.c
     │   ├── oc32_hal_flash.c
-    │   └── ...（其余 src/ 源文件）
+    │   └── ...（其余 src/ 源文件，含 oc32_hal_int.c / .S）
     └── chip/
-        └── CV32S6015MSR.h（chip/ 目录内容）
+        ├── CV32S6015MSR.h
+        └── CV32S6015SR.h
 ```
 
 生成逻辑要点：
-- `oc32_hal_conf.h` 由 `hal/oc32_hal_conf_template.h` 渲染而来，替换所有 `__占位符__`（时钟、Flash、DMA、HIC、中断优先级、模块启用等）。
+- `oc32_hal_conf.h` 由 `hal/oc32_hal_conf_template.h` 渲染而来，替换所有 `__占位符__`（时钟源、PLL、ILOSC 类型、SCLK/XHOSC/XLOSC、CDR、Flash、DMA、HIC、中断优先级、Tick、VDD、UART 调试、模块启用等）。
+- UART 调试相关宏（`HAL_UART_DEBUG_ENABLE`、`HAL_UART_DEBUG_BR`、`HAL_UART0/1_DEBUG`、`HAL_UART_DEBUG_PARITY/DUPLEX/PINS`）作为一个整体块由模板中的 `__HAL_CONFIG_UART_DEBUG_BLOCK__` 占位符渲染：勾选 **UART** 功能时整块生成并保留在 `#ifdef HAL_UART_DEBUG_ENABLE ... #endif` 内；未勾选时整块被替换为空，不会留下空的 `#ifdef` 残块或未展开的占位符。
 - 其余 `inc/`、`src/`、`chip/` 目录内容原样复制，跳过已生成的 `oc32_hal_conf.h`。
+- 未勾选的可选模块与未启用的 CDR/UART 调试开关，以注释形式保留（如 `/* #define HAL_XXX_ENABLE */`），便于后续手动启用。
