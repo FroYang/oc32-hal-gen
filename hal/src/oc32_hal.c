@@ -84,7 +84,6 @@ void *memset(void *dest, int c, uint32_t n)
     return dest;
 }
 
-
 /**
  * @brief  update DMA channel state
  * @retval HAL status
@@ -286,7 +285,6 @@ void HAL_Delay(uint32_t Delay)
     }
 }
 
-
 /**
  * @brief  Returns the device revision identifier.
  * @retval Revision ID (from fused __FUSE_PID[1])
@@ -451,11 +449,7 @@ HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
 #endif /* HAL_VTS_ENABLE */
 
     return HAL_ERROR;
-
 }
-
-
-
 
 #ifdef HAL_UART_DEBUG_ENABLE
 /**
@@ -484,8 +478,6 @@ __weak__ int puts(const char *s)
     uart_tx_char('\n');
     return 1;
 }
-
-
 
 static int txchar(char c)
 {
@@ -664,12 +656,25 @@ __weak__ int printf(const char *format, ...)
     return count;
 }
 
-
+#ifdef HAL_UART_DEBUG_ENABLE
 HAL_StatusTypeDef HAL_DEBUG_Init(void)
 {
     HAL_UART_InitTypeDef Init;
-
+    #ifdef HAL_UART0_DEBUG
+    Init.Uart = UART_0;
+    #endif
+    #ifdef HAL_UART1_DEBUG
+    Init.Uart = UART_1;
+    #endif  
+    Init.Parity = HAL_UART_DEBUG_PARITY;
+    Init.Bits = UART_8_BIT_PAR;
+    Init.BaudRate = HAL_UART_DEBUG_BR;
+    Init.Duplex = HAL_UART_DEBUG_DUPLEX;
+    Init.Pins = HAL_UART_DEBUG_PINS;
+    Init.DmaCh = OC32_DMA_CH0;
+    
     return HAL_UART_Init(&Init);
 }
+#endif /* HAL_UART_DEBUG_ENABLE */
 
 #endif

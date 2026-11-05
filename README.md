@@ -32,15 +32,6 @@ oc32-hal-gen/
 
 > 程序默认在 `chips/` 中自动发现所有 `*.json`，因此新增芯片只需添加 JSON 文件，无需改动代码。
 
-### 其他实验版本（对照保留，非交付主线，位于 `_experiments/`）
-
-| 目录 | 说明 | 与 pure_ttk 区别 |
-|---|---|---|
-| `_experiments/customtk/` | 最早的 CustomTkinter 版 | 每个控件 Canvas 手绘，交互较重 |
-| `_experiments/native_combo/` | 混合版：下拉换原生 `ttk.Combobox`，其余仍 CTk | 折中方案 |
-| `pure_ttk/`（根目录） | **纯 tkinter+ttk**（当前主线） | 全原生控件，零 Canvas，最跟手、产物更小 |
-
-三者共用同一份 `gen.py`，**生成结果逐字节一致**。
 
 ## 依赖
 
@@ -106,8 +97,9 @@ Linux（同时可选交叉生成 Windows）：
 - 点击 **Browse...** 可选择目录。
 
 **生成按钮**
-- **Generate Config**：根据当前配置生成 HAL 目录。
-- **Open Output Dir**：用系统文件管理器打开输出目录。
+- **Generate**：根据当前配置生成 HAL 目录。
+- **Default**：将所有配置项重置为默认值。
+- **Open Output**：用系统文件管理器打开输出目录。
 
 ### 右侧面板
 
