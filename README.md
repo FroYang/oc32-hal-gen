@@ -2,16 +2,20 @@
 
 OC32 系列 MCU 的 HAL 配置文件生成工具。通过图形界面选择芯片型号、配置系统参数和模块功能，自动生成完整的 `hal/` 目录（含定制化的 `oc32_hal_conf.h` 及其他 HAL 源文件）。
 
-可打包为独立可执行文件（PyInstaller），分发给没有 Python 环境的用户（Windows 生成 `.exe`，Linux 生成无后缀二进制）。
+可打包为独立可执行文件（PyInstaller），分发给没有 Python 环境的用户（Windows 生成 `.exe`，Linux 生成无后缀二进制）。打包产物内已自带 Python 解释器、Tcl/Tk 与 customtkinter，用户机器无需安装 Python。
 
 ## 项目结构
 
 ```
 oc32-hal-gen/
-├── hal_conf_generator.py       # 主程序（Tkinter GUI + 生成逻辑）
-├── build.ps1                   # PyInstaller 打包脚本（Windows）
-├── build.bash                  # PyInstaller 打包脚本（Linux，可选 Wine 交叉生成 Windows）
+├── customtk/                   # 主程序（CustomTkinter）
+│   ├── gen.py                  # 生成逻辑（纯函数，无 GUI 依赖）
+│   ├── ui.py                   # 图形界面（窗口、控件、事件处理）
+│   └── README.md               # ctk 版说明
+├── build_ctk.bash              # PyInstaller 打包脚本（Linux，可 Wine 交叉生成 Windows）
+├── build_ctk.ps1              # PyInstaller 打包脚本（Windows）
 ├── OC32_HAL_Config_Generator.spec  # PyInstaller 打包规范
+├── THIRD-PARTY-LICENSES.txt   # 第三方许可声明（商用发布随附）
 ├── chips/                      # 芯片型号配置（JSON，新增即支持新芯片）
 │   ├── CV32S6015.json
 │   └── CV32S6015U.json
@@ -27,34 +31,39 @@ oc32-hal-gen/
 ## 依赖
 
 - Python 3.8+
-- `tkinter`（Python 自带）
+- `customtkinter`（`pip install customtkinter`，运行/打包时均需）
 - `PyInstaller`（仅打包时需要）
 
 ## 使用方式
 
 ### 直接运行（开发调试）
 
-```powershell
-python hal_conf_generator.py
+```bash
+python3 -m pip install customtkinter
+python3 customtk/ui.py
 ```
+
+> `gen.py` 为纯生成逻辑（无 GUI），可在无图形环境下单独调用；`ui.py` 为图形界面入口。
 
 ### 打包为独立可执行文件
 
 Windows：
 
 ```powershell
-.\build.ps1
+.\build_ctk.ps1
 ```
 
 生成的可执行文件位于 `dist\OC32_HAL_Config_Generator.exe`，脚本会将其复制到 `D:\nsis\oc32\bin`。
 
-Linux：
+Linux（同时可选交叉生成 Windows）：
 
 ```bash
-./build.bash
+./build_ctk.bash
 ```
 
-生成 `dist/OC32_HAL_Config_Generator`，脚本会将其复制到 `/home/fro/oc32/linux/bin`；若检测到 Wine 及 Windows Python，还会交叉生成 `dist/OC32_HAL_Config_Generator.exe` 并复制到 `/home/fro/oc32/windows/bin`。
+生成 `dist_ctk/OC32_HAL_Config_Generator`，脚本会将其复制到 `/home/fro/oc32/linux/bin`；若检测到 Wine 及 Windows Python，还会交叉生成 `dist/OC32_HAL_Config_Generator.exe` 并复制到 `/home/fro/oc32/windows/bin`。
+
+> 打包脚本通过 `--add-data` 把 `chips/`、`hal/`、`customtk/` 及 customtkinter 资源一并打入可执行文件，最终产物无需 Python 环境即可运行。
 
 ## 界面说明
 

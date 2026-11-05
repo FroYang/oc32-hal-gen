@@ -1,0 +1,135 @@
+================================================================================
+ OC32 HAL Config Generator — Third-Party Licenses
+================================================================================
+
+This distribution bundles the following third-party open-source software.
+The permissive licenses below (MIT, BSD) allow commercial use, modification,
+and redistribution. Where a license requires attribution "in all copies or
+substantial portions," the full license text is reproduced here.
+
+--------------------------------------------------------------------------------
+ 1. CustomTkinter
+--------------------------------------------------------------------------------
+ Version:  6.0.0
+ Author:   Tom Schimansky
+ License:  MIT (package metadata also lists CC0 1.0 Universal)
+ Purpose:  Modern Tkinter UI widget set used by the app's GUI layer
+           (customtk/ui.py).
+
+ This app was built using CustomTkinter.  CustomTkinter is a modern and
+ customizable Python UI library based on Tkinter, released under the MIT
+ license.  No source of this project is required to be disclosed as a
+ consequence of using CustomTkinter.
+
+ MIT License
+
+ Copyright (c) 2023 Tom Schimansky
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+--------------------------------------------------------------------------------
+ 2. darkdetect
+--------------------------------------------------------------------------------
+ Version:  0.8.0
+ Author:   Alberto Sottile
+ License:  BSD 3-Clause
+ Purpose:  Detects system light/dark appearance; a runtime dependency of
+           CustomTkinter.
+
+ Copyright (c) 2019, Alberto Sottile
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+     * Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+     * Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+     * Neither the name of "darkdetect" nor the
+       names of its contributors may be used to endorse or promote products
+       derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL "Alberto Sottile" BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+ 3. Tk / Tcl-Tk (runtime of tkinter)
+--------------------------------------------------------------------------------
+ Version:  Tk 8.6.17 / Tcl 8.6
+ Author:   (see original TCL/TK authorship notices)
+ License:  TCL/TK B-STYLE license (BSD-style, commercial-friendly)
+ Purpose:  The underlying widget toolkit that CustomTkinter renders through.
+           Shipped as part of the platform's Tcl/Tk libraries; not a
+           requirement to disclose your source.
+
+ TCL/TK is provided "AS IS" under a BSD-style license granting the right to
+ use, copy, modify, and distribute for commercial or non-commercial purposes,
+ with the original copyright notice and disclaimer retained.  No obligation
+ is imposed on distributors of derived applications.
+
+--------------------------------------------------------------------------------
+ 4. PyInstaller
+--------------------------------------------------------------------------------
+ Version:  6.22.3
+ Author:   The PyInstaller Development Team
+ License:  GNU GPL v2 (with a Bootloader Exception)
+ Purpose:  Builds the standalone one-file executables.  NOT a runtime library
+           of your application code — it is a build-time tool.
+
+ Copy of PyInstaller's license terms (COPYING.txt), reproduced for reference:
+
+   The PyInstaller licensing terms
+   Copyright (c) 2010-2023, PyInstaller Development Team
+   Based on previous work under copyright (c) 2002 McMillan Enterprises.
+
+   PyInstaller is licensed under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   Bootloader Exception
+   --------------------
+   In addition to the permissions in the GNU General Public License, the
+   authors give you unlimited permission to link or embed compiled bootloader
+   and related files into combinations with other programs, and to distribute
+   those combinations without any restriction coming from the use of those
+   files. (The General Public License restrictions do apply in other
+   respects; for example, they cover modification of the files, and
+   distribution when not linked into a combined executable.)
+
+   "Bootloader and related files" are the files embedded within the final
+   executable (./bootloader/ and PyInstaller/loader).
+
+ COMMERCIAL-USE NOTE:  Because of the Bootloader Exception, you may ship a
+ commercial application that contains the compiled PyInstaller bootloader
+ without imposing GPL obligations on your own code.  No source disclosure of
+ your generator is required.  The full PyInstaller COPYING.txt is available
+ in the PyInstaller distribution (dist-info/licenses/COPYING.txt).
+
+================================================================================
+ End of third-party license notices.
+================================================================================

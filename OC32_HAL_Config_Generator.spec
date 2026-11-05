@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['hal_conf_generator.py'],
+    ['customtk/ui.py'],
     pathex=[],
     binaries=[],
-    datas=[('chips', 'chips'), ('hal', 'hal')],
+    datas=[('chips', 'chips'), ('hal', 'hal'), ('customtk', 'customtk')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
