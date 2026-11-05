@@ -267,7 +267,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("OC32 HAL Config Generator")
-        self.root.geometry("750x650")
+        self.root.geometry("750x600")
         self.root.resizable(True, True)
 
         self.chip_config = None
@@ -313,20 +313,9 @@ class App:
         sys_title_sep = Frame(sys_outer, bg="#cccccc", height=1)
         sys_title_sep.pack(fill=X)
 
-        sys_scroll_canvas = Canvas(sys_outer, highlightthickness=0)
-        sys_scroll_sb = Scrollbar(sys_outer, orient=VERTICAL, command=sys_scroll_canvas.yview)
-        sys_frame = Frame(sys_scroll_canvas, padx=8, pady=6)
-        sys_frame.bind(
-            "<Configure>",
-            lambda e: sys_scroll_canvas.configure(scrollregion=sys_scroll_canvas.bbox("all"))
-        )
-        sys_scroll_canvas.create_window((0, 0), window=sys_frame, anchor="nw")
-        sys_scroll_canvas.configure(yscrollcommand=sys_scroll_sb.set)
-        # Keep the settings scrollable and compact so the left panel never
-        # forces the window taller than needed.
-        sys_scroll_canvas.config(height=380)
-        sys_scroll_canvas.pack(side=LEFT, fill=BOTH, expand=True)
-        sys_scroll_sb.pack(side=RIGHT, fill=Y)
+        # Plain (non-scrollable) host frame for the settings rows.
+        sys_frame = Frame(sys_outer, padx=8, pady=6)
+        sys_frame.pack(fill=X, side=TOP)
 
         # Clock source (new, at the front)
         clk_src_frame = Frame(sys_frame)
@@ -361,7 +350,7 @@ class App:
         # USB CDR (new) — visible/usable only when chip defines cdr_freq
         cdr_frame = Frame(sys_frame)
         cdr_frame.pack(fill=X, pady=2)
-        self._cdr_label = Label(cdr_frame, text="USB CDR:")
+        self._cdr_label = Label(cdr_frame, text="PLL Reference Selects USB-CDR:")
         self._cdr_label.pack(side=LEFT, anchor=W)
         self.var_cdr = StringVar(value="Disable")
         self.cdr_combo = ttk.Combobox(cdr_frame, textvariable=self.var_cdr,
@@ -404,56 +393,6 @@ class App:
                                            values=["10Hz", "100Hz", "1KHz"], state="readonly", width=8)
         self.tick_freq_combo.pack(side=RIGHT, padx=(4, 0))
 
-        # Debug UART selection
-        debug_uart_frame = Frame(sys_frame)
-        debug_uart_frame.pack(fill=X, pady=2)
-        Label(debug_uart_frame, text="Debug UART:").pack(side=LEFT, anchor=W)
-        self.var_debug = StringVar(value="UART1")
-        self.debug_combo = ttk.Combobox(debug_uart_frame, textvariable=self.var_debug,
-                                      values=["UART0", "UART1"], state="readonly", width=8)
-        self.debug_combo.pack(side=RIGHT, padx=(4, 0))
-
-        # Baud rate
-        uart_baud_frame = Frame(sys_frame)
-        uart_baud_frame.pack(fill=X, pady=2)
-        Label(uart_baud_frame, text="Debug UART Baud Rate:").pack(side=LEFT, anchor=W)
-        self.var_baud = StringVar(value="115200")
-        self.baud_combo = ttk.Combobox(uart_baud_frame, textvariable=self.var_baud,
-                                       values=["9600", "14400", "19200", "38400",
-                                               "57600", "115200", "230400", "460800", "921600", "1000000"],
-                                       state="readonly", width=10)
-        self.baud_combo.pack(side=RIGHT, padx=(4, 0))
-
-        # Debug UART Parity
-        uart_parity_frame = Frame(sys_frame)
-        uart_parity_frame.pack(fill=X, pady=2)
-        Label(uart_parity_frame, text="Debug UART Parity:").pack(side=LEFT, anchor=W)
-        self.var_uart_parity = StringVar(value="None")
-        self.uart_parity_combo = ttk.Combobox(uart_parity_frame, textvariable=self.var_uart_parity,
-                                               values=["None", "Odd", "Even", "Always 0", "Always 1"],
-                                               state="readonly", width=16)
-        self.uart_parity_combo.pack(side=RIGHT, padx=(4, 0))
-
-        # Debug UART Duplex
-        uart_duplex_frame = Frame(sys_frame)
-        uart_duplex_frame.pack(fill=X, pady=2)
-        Label(uart_duplex_frame, text="Debug UART Duplex:").pack(side=LEFT, anchor=W)
-        self.var_uart_duplex = StringVar(value="Full")
-        self.uart_duplex_combo = ttk.Combobox(uart_duplex_frame, textvariable=self.var_uart_duplex,
-                                              values=["Full", "Half (use TX pin only)"],
-                                              state="readonly", width=16)
-        self.uart_duplex_combo.pack(side=RIGHT, padx=(4, 0))
-
-        # Debug UART Pins
-        uart_pins_frame = Frame(sys_frame)
-        uart_pins_frame.pack(fill=X, pady=2)
-        Label(uart_pins_frame, text="Debug UART Pins:").pack(side=LEFT, anchor=W)
-        self.var_uart_pins = StringVar(value="TX0 & RX0")
-        self.uart_pins_combo = ttk.Combobox(uart_pins_frame, textvariable=self.var_uart_pins,
-                                            values=["TX0 & RX0", "TX1 & RX1"],
-                                            state="readonly", width=16)
-        self.uart_pins_combo.pack(side=RIGHT, padx=(4, 0))
-
         # Output dir (left panel). Buttons live in the persistent bottom bar so
         # they are always visible regardless of panel height.
         out_frame = _colored_label_frame(left, "Output Directory", "green")
@@ -477,7 +416,7 @@ class App:
 
         # Module selection frame — fills all of right panel
         mod_outer = Frame(right)
-        mod_outer.pack(fill=BOTH, expand=True, padx=2, pady=2)
+        mod_outer.pack(fill=BOTH, expand=True, padx=2, pady=2, side=TOP)
         mod_label_bg = "#f0f0f0"
         mod_title_bar = Frame(mod_outer, bg=mod_label_bg, height=22)
         mod_title_bar.pack(fill=X)
@@ -521,6 +460,71 @@ class App:
 
         self.mod_canvas.pack(side=LEFT, fill=BOTH, expand=True)
         mod_scrollbar.pack(side=RIGHT, fill=Y)
+
+        # Debug UART options block — separate block at the bottom of the right
+        # panel. Its enabled/grayed state is driven by the DEBUG feature
+        # checkbox, so it is disabled until "Debug Printf" is selected.
+        uart_outer = _colored_label_frame(right, "Debug UART Options", "teal")
+        uart_outer.pack(fill=X, padx=2, pady=2, side=BOTTOM)
+        self.uart_block_widgets = []  # (label, combo) pairs to gray out
+
+        uart_dbg_row = Frame(uart_outer)
+        uart_dbg_row.pack(fill=X, pady=2)
+        dbg_lbl = Label(uart_dbg_row, text="Module:")
+        dbg_lbl.pack(side=LEFT, anchor=W)
+        self.var_debug = StringVar(value="UART1")
+        self.debug_combo = ttk.Combobox(uart_dbg_row, textvariable=self.var_debug,
+                                        values=["UART0", "UART1"], state="readonly", width=8)
+        self.debug_combo.pack(side=RIGHT, padx=(4, 0))
+        self.uart_block_widgets.append((dbg_lbl, self.debug_combo))
+
+        uart_baud_row = Frame(uart_outer)
+        uart_baud_row.pack(fill=X, pady=2)
+        baud_lbl = Label(uart_baud_row, text="Baud Rate:")
+        baud_lbl.pack(side=LEFT, anchor=W)
+        self.var_baud = StringVar(value="115200")
+        self.baud_combo = ttk.Combobox(uart_baud_row, textvariable=self.var_baud,
+                                       values=["9600", "14400", "19200", "38400",
+                                               "57600", "115200", "230400", "460800", "921600", "1000000"],
+                                       state="readonly", width=10)
+        self.baud_combo.pack(side=RIGHT, padx=(4, 0))
+        self.uart_block_widgets.append((baud_lbl, self.baud_combo))
+
+        uart_parity_row = Frame(uart_outer)
+        uart_parity_row.pack(fill=X, pady=2)
+        par_lbl = Label(uart_parity_row, text="Parity:")
+        par_lbl.pack(side=LEFT, anchor=W)
+        self.var_uart_parity = StringVar(value="None")
+        self.uart_parity_combo = ttk.Combobox(uart_parity_row, textvariable=self.var_uart_parity,
+                                               values=["None", "Odd", "Even", "Always 0", "Always 1"],
+                                               state="readonly", width=16)
+        self.uart_parity_combo.pack(side=RIGHT, padx=(4, 0))
+        self.uart_block_widgets.append((par_lbl, self.uart_parity_combo))
+
+        uart_duplex_row = Frame(uart_outer)
+        uart_duplex_row.pack(fill=X, pady=2)
+        dup_lbl = Label(uart_duplex_row, text="Duplex:")
+        dup_lbl.pack(side=LEFT, anchor=W)
+        self.var_uart_duplex = StringVar(value="Full")
+        self.uart_duplex_combo = ttk.Combobox(uart_duplex_row, textvariable=self.var_uart_duplex,
+                                               values=["Full", "Half (use TX pin only)"],
+                                               state="readonly", width=16)
+        self.uart_duplex_combo.pack(side=RIGHT, padx=(4, 0))
+        self.uart_block_widgets.append((dup_lbl, self.uart_duplex_combo))
+
+        uart_pins_row = Frame(uart_outer)
+        uart_pins_row.pack(fill=X, pady=2)
+        pin_lbl = Label(uart_pins_row, text="Pins:")
+        pin_lbl.pack(side=LEFT, anchor=W)
+        self.var_uart_pins = StringVar(value="TX0 & RX0")
+        self.uart_pins_combo = ttk.Combobox(uart_pins_row, textvariable=self.var_uart_pins,
+                                            values=["TX0 & RX0", "TX1 & RX1"],
+                                            state="readonly", width=16)
+        self.uart_pins_combo.pack(side=RIGHT, padx=(4, 0))
+        self.uart_block_widgets.append((pin_lbl, self.uart_pins_combo))
+
+        # Start grayed out until the DEBUG feature is selected.
+        self._set_uart_block_state(False)
 
         # Init module list
         # Initialize PLL-dependent controls' grayout state
@@ -617,8 +621,38 @@ class App:
                 frame.pack(fill=X, pady=2)
                 Label(frame, text=f"{mod['key']}:  {mod.get('description', '')}").pack(side=LEFT)
                 var = IntVar(value=0)
-                Checkbutton(frame, variable=var).pack(side=RIGHT, padx=(0, 8))
+                if mod["key"] == "DEBUG":
+                    # This checkbox drives the Debug UART options block state.
+                    chk = Checkbutton(frame, variable=var, command=self._toggle_uart_block)
+                else:
+                    chk = Checkbutton(frame, variable=var)
+                chk.pack(side=RIGHT, padx=(0, 8))
                 self.module_vars[f"mod_{idx}"] = var
+
+            # Reset the UART block to grayed-out when the chip switches.
+            self._set_uart_block_state(False)
+
+    def _toggle_uart_block(self):
+        """Command handler for the DEBUG feature checkbox — mirrors the
+        checkbox state onto the Debug UART options block."""
+        key = self.var_chip.get()
+        cfg = CHIPS.get(key)
+        enabled = False
+        if cfg:
+            optional_features = [m for m in cfg.get("features", []) if not m.get("always", False)]
+            for i, mod in enumerate(optional_features):
+                if mod["key"] == "DEBUG":
+                    enabled = bool(self.module_vars.get(f"mod_{i}").get())
+                    break
+        self._set_uart_block_state(enabled)
+
+    def _set_uart_block_state(self, enabled):
+        """Enable or gray-out the Debug UART options block."""
+        state = "normal" if enabled else "disabled"
+        fg = "black" if enabled else "#808080"
+        for lbl, combo in self.uart_block_widgets:
+            combo.config(state=state)
+            lbl.config(fg=fg)
 
     def _collect_settings(self):
         def _safe_int(var, default):

@@ -75,11 +75,6 @@ Linux：
 | XHOSC Frequency (MHz) | 外部高速振荡器频率（MHz，用户输入），生成 `OC32_XHOSC_FREQ`；随芯片 `clk_sources` 是否含 XHOSC 启用/禁用 | 默认 4 |
 | XLOSC Frequency (kHz) | 外部低速振荡器频率（kHz，用户输入，支持小数），生成 `OC32_XLOSC_FREQ`；随芯片 `clk_sources` 是否含 XLOSC 启用/禁用 | 默认 32.768 |
 | Tick Frequency | 系统滴答频率，决定 `HAL_TICK_FREQ_DEFAULT` | 10Hz / 100Hz / 1KHz |
-| Debug UART | 调试输出串口，决定 `HAL_UART0_DEBUG` / `HAL_UART1_DEBUG` | UART0 / UART1 |
-| Baud Rate | 调试串口波特率，生成 `HAL_UART_DEBUG_BR` | 9600 … 1000000（默认 115200） |
-| Debug UART Parity | 调试串口校验位，生成 `HAL_UART_DEBUG_PARITY` | None / Odd / Even / Always 0 / Always 1 |
-| Debug UART Duplex | 调试串口全/半双工，生成 `HAL_UART_DEBUG_DUPLEX` | Full / Half (use TX pin only) |
-| Debug UART Pins | 调试串口引脚，生成 `HAL_UART_DEBUG_PINS` | TX0 & RX0 / TX1 & RX1 |
 
 > 说明：系统时钟 SCLK 不再由芯片 JSON 提供，改由 GUI 输入；`System Clock` 与 `PLL Freq Over Monitor` 只有在 **PLL = Enable** 时才可编辑。`XHOSC` / `XLOSC` 输入框与下拉项根据所选芯片的 `clk_sources` 自动启用或禁用。
 
@@ -97,6 +92,23 @@ Linux：
 - 根据所选芯片的 `features` 字段动态生成复选框（`always: true` 的模块强制启用、不出现在列表中）。
 - 勾选模块后，对应 `HAL_XXX_ENABLE` 宏被展开；未勾选则以注释形式保留。
 - 支持模块依赖关系：勾选某模块时，其 `dependencies` 中列出的模块会被自动启用（例如勾选 `FLASH_VERIFY` 会一并启用 `FLASH` 与 `CRC`）。依赖项在生成时自动补全，无需手动勾选。
+
+**Debug UART（调试串口选项，位于右下角独立区块）**
+- 调试串口选项集中在右下角的独立 **Debug UART** 区块中，包含：
+
+| 项 | 说明 | 可选值 / 默认 |
+|---|---|---|
+| Debug UART | 调试输出串口，决定 `HAL_UART0_DEBUG` / `HAL_UART1_DEBUG` | UART0 / UART1（默认 UART1） |
+| Baud Rate | 调试串口波特率，生成 `HAL_UART_DEBUG_BR` | 9600 … 1000000（默认 115200） |
+| Parity | 调试串口校验位，生成 `HAL_UART_DEBUG_PARITY` | None / Odd / Even / Always 0 / Always 1 |
+| Duplex | 调试串口全/半双工，生成 `HAL_UART_DEBUG_DUPLEX` | Full / Half (use TX pin only) |
+| Pins | 调试串口引脚，生成 `HAL_UART_DEBUG_PINS` | TX0 & RX0 / TX1 & RX1 |
+
+- 该区块的启用状态由 **Feature Configure 中的 `DEBUG`（Debug Printf Via UART）功能项控制**，状态随勾选**双向**变化：
+  - `DEBUG` 勾选 → 整个 Debug UART 区块**启用**。
+  - `DEBUG` 取消勾选 → 区块**禁用并置灰**。
+  - 反复切换 DEBUG 时，区块状态始终与勾选保持一致。
+  - 切换芯片时，区块默认回到禁用状态，需重新勾选 `DEBUG` 方可启用。
 
 ## 芯片配置文件（JSON 格式）
 
