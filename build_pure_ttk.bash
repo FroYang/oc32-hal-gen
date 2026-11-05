@@ -1,12 +1,15 @@
 #!/bin/bash
-# Build the CustomTkinter OC32 HAL Config Generator (customtk/ + gen.py + ui.py)
+# Build the pure tkinter+ttk OC32 HAL Config Generator (pure_ttk/ + gen.py + ui.py)
 # into standalone executables: Linux binary and (via Wine) Windows .exe.
+#
+# pure_ttk 版只依赖 Python 标准库（tkinter/ttk）与 PyInstaller，
+# 无需 customtkinter。因此产物更小、启动解包更快。
 set -e
 cd "$(dirname "$0")"
 
 echo "============================================"
-echo "OC32 HAL Config Generator (CustomTkinter)"
-echo "Entry point: customtk/ui.py  (imports gen.py)"
+echo "OC32 HAL Config Generator (pure tkinter+ttk)"
+echo "Entry point: pure_ttk/ui.py  (imports gen.py)"
 echo "============================================"
 echo ""
 
@@ -19,36 +22,32 @@ fi
 PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python)
 echo "Python: $($PYTHON_CMD --version 2>&1)"
 
-# ---- Ensure pip / PyInstaller / customtkinter are present ----
+# ---- Ensure pip / PyInstaller present（纯标准库版不需要装 customtkinter） ----
 $PYTHON_CMD -m pip --version >/dev/null 2>&1 || { echo "pip missing; aborting."; exit 1; }
 if ! $PYTHON_CMD -m pip show pyinstaller >/dev/null 2>&1; then
     echo "Installing PyInstaller..."
     $PYTHON_CMD -m pip install --user pyinstaller || $PYTHON_CMD -m pip install pyinstaller
 fi
-if ! $PYTHON_CMD -c "import customtkinter" >/dev/null 2>&1; then
-    echo "Installing customtkinter (required at build time so PyInstaller can bundle it)..."
-    $PYTHON_CMD -m pip install --user customtkinter || $PYTHON_CMD -m pip install customtkinter
-fi
 
 # ---- Clean ----
-rm -rf build_ctk dist_ctk
-rm -rf build
+rm -rf build_pure_ttk dist_pure_ttk
+rm -rf build dist
 
 # ---- Linux build ----
 echo ""
 echo "Building Linux onefile executable..."
 $PYTHON_CMD -m PyInstaller --onefile --windowed \
-    --distpath dist_ctk \
-    --workpath build_ctk \
+    --distpath dist_pure_ttk \
+    --workpath build_pure_ttk \
     --name "OC32_HAL_Config_Generator" \
     --add-data "chips:chips" \
     --add-data "hal:hal" \
-    --add-data "customtk:customtk" \
-    customtk/ui.py --noconfirm
+    --add-data "pure_ttk:pure_ttk" \
+    pure_ttk/ui.py --noconfirm
 
-if [ -f "dist_ctk/OC32_HAL_Config_Generator" ]; then
+if [ -f "dist_pure_ttk/OC32_HAL_Config_Generator" ]; then
     mkdir -p /home/fro/oc32/linux/bin
-    cp "dist_ctk/OC32_HAL_Config_Generator" /home/fro/oc32/linux/bin/
+    cp "dist_pure_ttk/OC32_HAL_Config_Generator" /home/fro/oc32/linux/bin/
     echo "Copied Linux binary to /home/fro/oc32/linux/bin/OC32_HAL_Config_Generator"
 else
     echo "Linux build did not produce an output file."; exit 1
@@ -64,8 +63,8 @@ if command -v wine >/dev/null 2>&1 && [ -f "$WINE_PYTHON" ]; then
         --name "OC32_HAL_Config_Generator" \
         --add-data "chips;chips" \
         --add-data "hal;hal" \
-        --add-data "customtk;customtk" \
-        customtk/ui.py --noconfirm
+        --add-data "pure_ttk;pure_ttk" \
+        pure_ttk/ui.py --noconfirm
     if [ -f "dist/OC32_HAL_Config_Generator.exe" ]; then
         mkdir -p /home/fro/oc32/windows/bin
         cp "dist/OC32_HAL_Config_Generator.exe" /home/fro/oc32/windows/bin/
@@ -80,7 +79,7 @@ fi
 
 echo ""
 echo "============================================"
-echo "CustomTkinter build complete!"
-echo "  Linux:   dist_ctk/OC32_HAL_Config_Generator"
+echo "pure tkinter+ttk build complete!"
+echo "  Linux:   dist_pure_ttk/OC32_HAL_Config_Generator"
 echo "  Windows: dist/OC32_HAL_Config_Generator.exe   (if Wine available)"
 echo "============================================"

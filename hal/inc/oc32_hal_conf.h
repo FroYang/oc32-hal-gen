@@ -216,12 +216,13 @@ OC32_HIC_PRI3       = 3U
 
   #define HAL_UART_DEBUG_ENABLE
 
-
 #ifdef HAL_UART_DEBUG_ENABLE
-  #define HAL_UART_DEBUG_BR   115200 /* 9600/14400 .... ~ 1000000 */
-
-  /* #define HAL_UART0_DEBUG */
+#define HAL_UART_DEBUG_BR   115200 /* 9600/14400 .... ~ 1000000 */
+/* #define HAL_UART0_DEBUG */
 #define HAL_UART1_DEBUG
+#define HAL_UART_DEBUG_PARITY   UART_PAR_EVEN
+#define HAL_UART_DEBUG_DUPLEX   UART_FULL_DUPLEX
+#define HAL_UART_DEBUG_PINS     UART_PINS_0
 #endif
 
   /** @defgroup HAL_ENABLE Module Enable

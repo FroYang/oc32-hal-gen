@@ -2,45 +2,59 @@
 
 OC32 系列 MCU 的 HAL 配置文件生成工具。通过图形界面选择芯片型号、配置系统参数和模块功能，自动生成完整的 `hal/` 目录（含定制化的 `oc32_hal_conf.h` 及其他 HAL 源文件）。
 
-可打包为独立可执行文件（PyInstaller），分发给没有 Python 环境的用户（Windows 生成 `.exe`，Linux 生成无后缀二进制）。打包产物内已自带 Python 解释器、Tcl/Tk 与 customtkinter，用户机器无需安装 Python。
+可打包为独立可执行文件（PyInstaller），分发给没有 Python 环境的用户（Windows 生成 `.exe`，Linux 生成无后缀二进制）。打包产物内已自带 Python 解释器与 Tcl/Tk，用户机器无需安装 Python。
 
 ## 项目结构
 
 ```
 oc32-hal-gen/
-├── customtk/                   # 主程序（CustomTkinter）
-│   ├── gen.py                  # 生成逻辑（纯函数，无 GUI 依赖）
-│   ├── ui.py                   # 图形界面（窗口、控件、事件处理）
-│   └── README.md               # ctk 版说明
-├── build_ctk.bash              # PyInstaller 打包脚本（Linux，可 Wine 交叉生成 Windows）
-├── build_ctk.ps1              # PyInstaller 打包脚本（Windows）
+├── pure_ttk/                  # ★ 主程序（纯 tkinter + ttk，原生控件，零 Canvas 重绘）
+│   ├── gen.py                 # 生成逻辑（纯函数，无 GUI 依赖，与 customtk 共用同一份）
+│   ├── ui.py                  # 图形界面（原生 tk/ttk 控件）
+│   └── README.md              # pure_ttk 版说明
+├── build_pure_ttk.bash        # PyInstaller 打包脚本（Linux，可 Wine 交叉生成 Windows）
+├── build_pure_ttk.ps1        # PyInstaller 打包脚本（Windows）
+├── _experiments/            # 历史对照版本（customtk / native_combo，已归档，非主线）
+│   ├── customtk/              # 最早的 CustomTkinter 版
+│   ├── native_combo/         # 混合版（下拉换原生，其余仍 CTk）
+│   └── build_ctk.bash/.ps1  # customtk 版打包脚本
 ├── OC32_HAL_Config_Generator.spec  # PyInstaller 打包规范
 ├── THIRD-PARTY-LICENSES.txt   # 第三方许可声明（商用发布随附）
-├── chips/                      # 芯片型号配置（JSON，新增即支持新芯片）
+├── chips/                     # 芯片型号配置（JSON，新增即支持新芯片）
 │   ├── CV32S6015.json
 │   └── CV32S6015U.json
-└── hal/                        # HAL 模板和源码
+└── hal/                       # HAL 模板和源码
     ├── oc32_hal_conf_template.h # 配置文件模板（含 __占位符__）
-    ├── inc/                    # 头文件（复制到输出目录）
-    ├── src/                    # 源文件（复制到输出目录）
-    └── chip/                   # 芯片 MSR/SR 头文件（复制到输出目录）
+    ├── inc/                   # 头文件（复制到输出目录）
+    ├── src/                   # 源文件（复制到输出目录）
+    └── chip/                  # 芯片 MSR/SR 头文件（复制到输出目录）
 ```
 
 > 程序默认在 `chips/` 中自动发现所有 `*.json`，因此新增芯片只需添加 JSON 文件，无需改动代码。
 
+### 其他实验版本（对照保留，非交付主线，位于 `_experiments/`）
+
+| 目录 | 说明 | 与 pure_ttk 区别 |
+|---|---|---|
+| `_experiments/customtk/` | 最早的 CustomTkinter 版 | 每个控件 Canvas 手绘，交互较重 |
+| `_experiments/native_combo/` | 混合版：下拉换原生 `ttk.Combobox`，其余仍 CTk | 折中方案 |
+| `pure_ttk/`（根目录） | **纯 tkinter+ttk**（当前主线） | 全原生控件，零 Canvas，最跟手、产物更小 |
+
+三者共用同一份 `gen.py`，**生成结果逐字节一致**。
+
 ## 依赖
 
-- Python 3.8+
-- `customtkinter`（`pip install customtkinter`，运行/打包时均需）
+- Python 3.8+（`pure_ttk` 只用标准库 `tkinter`/`ttk`，**无需任何第三方库**）
 - `PyInstaller`（仅打包时需要）
+
+> 旧的 `customtk/`、`native_combo/` 版运行/打包时仍需 `customtkinter`（`pip install customtkinter`）。
 
 ## 使用方式
 
 ### 直接运行（开发调试）
 
 ```bash
-python3 -m pip install customtkinter
-python3 customtk/ui.py
+python3 pure_ttk/ui.py
 ```
 
 > `gen.py` 为纯生成逻辑（无 GUI），可在无图形环境下单独调用；`ui.py` 为图形界面入口。
@@ -50,20 +64,20 @@ python3 customtk/ui.py
 Windows：
 
 ```powershell
-.\build_ctk.ps1
+.\build_pure_ttk.ps1
 ```
 
-生成的可执行文件位于 `dist\OC32_HAL_Config_Generator.exe`，脚本会将其复制到 `D:\nsis\oc32\bin`。
+生成的可执行文件位于 `dist_pure_ttk\OC32_HAL_Config_Generator.exe`，脚本会将其复制到 `D:\nsis\oc32\bin`。
 
 Linux（同时可选交叉生成 Windows）：
 
 ```bash
-./build_ctk.bash
+./build_pure_ttk.bash
 ```
 
-生成 `dist_ctk/OC32_HAL_Config_Generator`，脚本会将其复制到 `/home/fro/oc32/linux/bin`；若检测到 Wine 及 Windows Python，还会交叉生成 `dist/OC32_HAL_Config_Generator.exe` 并复制到 `/home/fro/oc32/windows/bin`。
+生成 `dist_pure_ttk/OC32_HAL_Config_Generator`，脚本会将其复制到 `/home/fro/oc32/linux/bin`；若检测到 Wine 及 Windows Python，还会交叉生成 `dist/OC32_HAL_Config_Generator.exe` 并复制到 `/home/fro/oc32/windows/bin`。
 
-> 打包脚本通过 `--add-data` 把 `chips/`、`hal/`、`customtk/` 及 customtkinter 资源一并打入可执行文件，最终产物无需 Python 环境即可运行。
+> 打包脚本通过 `--add-data` 把 `chips/`、`hal/`、`pure_ttk/` 一并打入可执行文件，最终产物无需 Python 环境即可运行。pure_ttk 版不含 customtkinter，产物比 ctk 版更小、启动解包更快。
 
 ## 界面说明
 

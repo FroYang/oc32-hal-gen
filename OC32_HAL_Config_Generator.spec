@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['customtk/ui.py'],
+    ['pure_ttk/ui.py'],
     pathex=[],
     binaries=[],
-    datas=[('chips', 'chips'), ('hal', 'hal'), ('customtk', 'customtk')],
+    datas=[('chips', 'chips'), ('hal', 'hal'), ('pure_ttk', 'pure_ttk')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
