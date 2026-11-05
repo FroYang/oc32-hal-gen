@@ -86,6 +86,9 @@ void *memset(void *dest, int c, uint32_t n)
 
 /**
  * @brief  update DMA channel state
+ * @param  DmaCh: DMA channel number
+ * @param  Module: DMA module
+ * @param  State: DMA state
  * @retval HAL status
  */
 __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
@@ -215,18 +218,14 @@ static void request_REGTRIM2(void)
  * @brief This function configures the source of the time base.
  *        The time source is configured  to have 1ms time base with a dedicated
  *        Tick interrupt priority.
- * @note This function is called  automatically at the beginning of program after
- *       reset by HAL_GPIO_Init() or at any time when clock is reconfigured.
  * @note In the default implementation, WDT1 timer is the source of time base.
  *       It is used to generate interrupts at regular time intervals.
  *       Care must be taken if HAL_Delay() is called from a peripheral ISR process,
  *       The SysTick interrupt must have higher priority (numerically higher)
  *       than the peripheral interrupt. Otherwise the caller ISR process will be blocked.
- *       The function is declared as __weak  to be overwritten  in case of other
- *       implementation  in user file.
  * @retval HAL status
  */
-__sram__ HAL_StatusTypeDef HAL_TICK_Init(void)
+HAL_StatusTypeDef HAL_TICK_Init(void)
 {
     HAL_WDT_InitTypeDef Init = {
         .Wdt = WDT_1,
@@ -241,6 +240,7 @@ __sram__ HAL_StatusTypeDef HAL_TICK_Init(void)
 /**
  * @brief  This function is called to setup global HIC(hardware interrupt controller)
  * @param  Init: pointer to a HAL_HICInitTypeDef structure.
+ * @retval HAL status
  */
 HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
 {
@@ -415,6 +415,7 @@ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
 
 /**
  * @brief  Handles POR interrupt request.
+ * @retval HAL status
  */
 HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
 {
@@ -656,7 +657,10 @@ __weak__ int printf(const char *format, ...)
     return count;
 }
 
-#ifdef HAL_UART_DEBUG_ENABLE
+/**
+ * @brief  This function is called to setup global debug uart
+ * @retval HAL status
+ */
 HAL_StatusTypeDef HAL_DEBUG_Init(void)
 {
     HAL_UART_InitTypeDef Init;
@@ -668,7 +672,7 @@ HAL_StatusTypeDef HAL_DEBUG_Init(void)
     #endif  
     Init.Parity = HAL_UART_DEBUG_PARITY;
     Init.Bits = UART_8_BIT_PAR;
-    Init.BaudRate = HAL_UART_DEBUG_BR;
+    Init.Baud = HAL_UART_DEBUG_BR;
     Init.Duplex = HAL_UART_DEBUG_DUPLEX;
     Init.Pins = HAL_UART_DEBUG_PINS;
     Init.DmaCh = OC32_DMA_CH0;
@@ -677,4 +681,32 @@ HAL_StatusTypeDef HAL_DEBUG_Init(void)
 }
 #endif /* HAL_UART_DEBUG_ENABLE */
 
-#endif
+/**
+ * @brief  This function is called to setup global system: clock, tick, debug uart, etc.
+ * @note   This function is declared as __weak  to be overwritten  in case of user.
+ * @retval HAL status
+ */
+__weak__ HAL_StatusTypeDef HAL_SYS_Init(void)
+{
+    /* setup system clock */
+    if (HAL_RCM_Init() != HAL_OK)
+        return HAL_ERROR;
+
+#ifdef HAL_FLASH_VERIFY_ENABLE
+    /* verify flash code integrity */
+    if (HAL_FLASH_VerifyCode() != HAL_OK)
+        return HAL_ERROR;
+#endif /* HAL_FLASH_VERIFY_ENABLE */
+
+#ifdef HAL_UART_DEBUG_ENABLE
+    /* setup debug uart */
+    if (HAL_DEBUG_Init() != HAL_OK)
+        return HAL_ERROR;
+#endif /* HAL_UART_DEBUG_ENABLE */
+
+    /* setup tick timer */
+    if (HAL_TICK_Init() != HAL_OK)
+        return HAL_ERROR;
+
+    return HAL_OK;
+}

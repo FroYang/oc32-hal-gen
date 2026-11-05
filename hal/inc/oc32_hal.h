@@ -87,9 +87,10 @@ extern "C"
 #ifdef HAL_UART_DEBUG_ENABLE
   __weak__ int puts(const char *s);
   __weak__ int printf(const char *format, ...);
-  HAL_StatusTypeDef HAL_DEBUG_Init(HAL_UART_PinsTypedef *Pins);
+  HAL_StatusTypeDef HAL_DEBUG_Init(void);
 #endif
-  
+
+__weak__ HAL_StatusTypeDef HAL_SYS_Init(void);
 
 #ifdef __cplusplus
 }
