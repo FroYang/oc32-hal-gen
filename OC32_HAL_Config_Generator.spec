@@ -5,7 +5,7 @@ a = Analysis(
     ['pure_ttk/ui.py'],
     pathex=[],
     binaries=[],
-    datas=[('chips', 'chips'), ('hal', 'hal'), ('pure_ttk', 'pure_ttk')],
+    datas=[('chips', 'chips'), ('hal', 'hal'), ('hal/doc', 'hal/doc'), ('pure_ttk', 'pure_ttk')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

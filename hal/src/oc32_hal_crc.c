@@ -22,7 +22,8 @@ static HAL_DMA_ChTypedef CrcDmaCh;
 /**
  * @brief  Initializes the CRC peripheral according to the specified parameters.
  * @param  Init: pointer to a HAL_CRC_InitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL
  */
 HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
 {
@@ -42,7 +43,9 @@ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
 
 /**
  * @brief  DeInitializes the CRC peripheral.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @note   Resets CRCPOLY, CRCREG, and CRCCON to 0, and records the DMA channel
+ *         state as idle.
  */
 HAL_StatusTypeDef HAL_CRC_DeInit(void)
 {
@@ -55,9 +58,10 @@ HAL_StatusTypeDef HAL_CRC_DeInit(void)
 }
 
 /**
- * @brief  Caculates once
- * @param  Data: data to be caculate
+ * @brief  Calculates CRC once for a single 32-bit value
+ * @param  Data: data to be calculated
  * @retval CRC result
+ * @note   Internal helper; kicks off the CRC computation and waits for completion.
  */
 __sram__ uint32_t CrcOnce(uint32_t Data)
 {
@@ -65,7 +69,7 @@ __sram__ uint32_t CrcOnce(uint32_t Data)
   CRCIN = Data;
   /* kick start */
   CRCCON->CRCKS = 1U;
-  /* wait caculating */
+  /* wait calculating */
   while (!CRCCON->CRCCF)
     ;
   CRCCON->CRCCCLR = 1U;
@@ -73,9 +77,10 @@ __sram__ uint32_t CrcOnce(uint32_t Data)
 }
 
 /**
- * @brief  Caculates 1 byte of data (LSB first default)
- * @param  Data: data to be caculate
+ * @brief  Calculates CRC of 1 byte of data (LSB first default)
+ * @param  Data: data to be calculated
  * @retval CRC result
+ * @note   Blocks until the CRC computation completes.
  */
 __sram__ uint32_t HAL_CRC_OneByte(uint32_t Data)
 {
@@ -88,9 +93,10 @@ __sram__ uint32_t HAL_CRC_OneByte(uint32_t Data)
 }
 
 /**
- * @brief  Caculates 1 word of data (LSB first default)
- * @param  Data: data to be caculate
+ * @brief  Calculates CRC of 1 word of data (LSB first default)
+ * @param  Data: data to be calculated
  * @retval CRC result
+ * @note   Blocks until the CRC computation completes.
  */
 __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data)
 {
@@ -103,15 +109,18 @@ __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data)
 }
 
 /**
- * @brief  Caculates 1 packet (LSB first default)
+ * @brief  Calculates CRC of a data packet (LSB first default)
  * @param  Packet: pointer to a HAL_CRC_PacketTypedef structure.
- * @retval CRC result
+ * @retval HAL_ResultTypedef:
+ *         .Data  = CRC result (in polling mode)
+ *         .Error = HAL_OK on success, HAL_ERROR on failure
+ * @note   In interrupt mode (Packet->IntE != 0), Result.Data is not valid;
+ *         the user should obtain the result in the IRQ handler.
+ *         In polling mode, blocks until computation completes.
  */
 __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
 {
-  HAL_ResultTypedef Result = {0};
-
-  Result.Error = HAL_ERROR;
+  HAL_ResultTypedef Result = {0U, HAL_ERROR};
   if (Packet == NULL || Packet->Data == NULL || Packet->IDM == CRC_IDM_WRITE_CRCIN)
     return Result;
 
@@ -126,7 +135,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
   if (Packet->IDM == CRC_IDM_READ_DMA)
   {
 
-    if (HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_BUSY) != HAL_OK)
+    if (HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_BUSY) != HAL_OK)
       return Result;
 
     /* setup DMA address */
@@ -151,17 +160,18 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
     return Result;
   }
     
-  /* wait caculating */
+  /* wait calculating */
   while (!CRCCON->CRCCF)
     ;
   CRCCON->CRCCCLR = 1U;
-  Result.Error = HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  Result.Error = HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   Result.Data = HAL_CRC_GetResult();
   return Result;
 }
 
 /**
- * @brief  Handles CRC interrupt request.
+ * @brief  Handles CRC interrupt request at user side.
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
@@ -171,13 +181,16 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
 
 /**
  * @brief  Handles CRC interrupt request.
+ * @retval Return value of HAL_CRC_UserIRQ
+ * @note   Invoked from the global interrupt handler. Clears the CRC done flag,
+ *         disables the CRC interrupt, and updates the DMA channel state to IDLE.
  */
 __sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void)
 {
   HAL_StatusTypeDef status = HAL_CRC_UserIRQ();
   CRCCON->CRCCCLR = 1U;
   CRCCON->CRCIE = 0;
-  HAL_DMA_Update(CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   return status;
 }
 

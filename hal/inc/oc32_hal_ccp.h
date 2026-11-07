@@ -260,7 +260,7 @@ extern "C"
   typedef struct
   {
     MODULE_CCP_TypeDef *CCP;           /*!< Specifies the CCP */
-    HAL_CCP_CaptureConTypedef CapCon;  /*!< Specifies the conditon */
+    HAL_CCP_CaptureConTypedef CapCon;  /*!< Specifies the condition */
     HAL_CCP_CaptureInputTypedef CapIn; /*!< Specifies the input */
     uint32_t Prescaler;                /*!< Specifies the input prescaler */
   } HAL_CCP_CaptureInitTypeDef;
@@ -272,7 +272,7 @@ extern "C"
   {
     MODULE_CCP_TypeDef *CCP;               /*!< Specifies the CCP */
     uint32_t ComVal;                       /*!< Specifies the compare value */
-    HAL_CCP_OutputConTypedef ComCon;       /*!< Specifies the conditon */
+    HAL_CCP_OutputConTypedef ComCon;       /*!< Specifies the condition */
     HAL_CCP_CompareOutputTypedef ComOut;   /*!< Specifies the output */
     HAL_CCP_OutputTypedef PosOutE;         /*!< Specifies the positive output enable */
     HAL_CCP_OutputInvertTypedef PosOutInv; /*!< Specifies the positive output invert */
@@ -288,7 +288,7 @@ extern "C"
     MODULE_CCP_TypeDef *CCP;               /*!< Specifies the CCP */
     uint32_t Duty;                         /*!< Specifies the duty */
     uint32_t DeadTime;                     /*!< Specifies the deadtime */
-    HAL_CCP_PwmFlagTypedef PwmCon;         /*!< Specifies the conditon */
+    HAL_CCP_PwmFlagTypedef PwmCon;         /*!< Specifies the condition */
     HAL_CCP_OutputTypedef PosOutE;         /*!< Specifies the positive output enable */
     HAL_CCP_OutputInvertTypedef PosOutInv; /*!< Specifies the positive output invert */
     HAL_CCP_OutputTypedef NegOutE;         /*!< Specifies the negative output enable */
@@ -347,7 +347,6 @@ extern "C"
   static inline void HAL_CCP_Update(HAL_CCP_UpdateTypeDef *Update);
 
   HAL_StatusTypeDef HAL_CCP_Init(HAL_CCP_BaseInitTypeDef *Init);
-  HAL_StatusTypeDef HAL_CCP_GateInit(HAL_CCP_GateInitTypeDef *Init);
   HAL_StatusTypeDef HAL_CCP_CaptureInit(HAL_CCP_CaptureInitTypeDef *Init);
   HAL_StatusTypeDef HAL_CCP_CompareInit(HAL_CCP_CompareInitTypeDef *Init);
   HAL_StatusTypeDef HAL_CCP_PwmInit(HAL_CCP_PwmInitTypeDef *Init);

@@ -82,6 +82,7 @@ __sram__ __weak__ int __int3()
     HIPRM->V3 = 1U;
 
     /* handler function */
+    HAL_CCP_IRQHandler(CCP_0);
 
     HIPRM->V3 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -98,6 +99,7 @@ __sram__ __weak__ int __int4()
     HIPRM->V4 = 1U;
 
     /* handler function */
+    HAL_CCP_IRQHandler(CCP_1);
 
     HIPRM->V4 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -114,6 +116,7 @@ __sram__ __weak__ int __int5()
     HIPRM->V5 = 1U;
 
     /* handler function */
+    HAL_CCP_IRQHandler(CCP_2);
 
     HIPRM->V5 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -130,6 +133,7 @@ __sram__ __weak__ int __int6()
     HIPRM->V6 = 1U;
 
     /* handler function */
+    HAL_CCP_IRQHandler(CCP_3);
 
     HIPRM->V6 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -146,6 +150,7 @@ __sram__ __weak__ int __int7()
     HIPRM->V7 = 1U;
 
     /* handler function */
+    HAL_CCP_IRQHandler(CCP_4);
 
     HIPRM->V7 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -162,6 +167,7 @@ __sram__ __weak__ int __int8()
     HIPRM->V8 = 1U;
 
     /* handler function */
+    HAL_CCP_IRQHandler(CCP_5);
 
     HIPRM->V8 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -178,6 +184,7 @@ __sram__ __weak__ int __int9()
     HIPRM->V9 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_0);
 
     HIPRM->V9 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -194,6 +201,7 @@ __sram__ __weak__ int __int10()
     HIPRM->V10 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_1);
 
     HIPRM->V10 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -210,6 +218,7 @@ __sram__ __weak__ int __int11()
     HIPRM->V11 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_2);
 
     HIPRM->V11 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -226,6 +235,7 @@ __sram__ __weak__ int __int12()
     HIPRM->V12 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_3);
 
     HIPRM->V12 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -242,6 +252,7 @@ __sram__ __weak__ int __int13()
     HIPRM->V13 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_4);
 
     HIPRM->V13 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -258,6 +269,7 @@ __sram__ __weak__ int __int14()
     HIPRM->V14 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_5);
 
     HIPRM->V14 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -274,6 +286,7 @@ __sram__ __weak__ int __int15()
     HIPRM->V15 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_6);
 
     HIPRM->V15 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -290,6 +303,7 @@ __sram__ __weak__ int __int16()
     HIPRM->V16 = 1U;
 
     /* handler function */
+    HAL_TIMER_IRQHandler(TIMER_7);
 
     HIPRM->V16 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -402,6 +416,7 @@ __sram__ __weak__ int __int22()
     HIPRM->V22 = 1U;
 
     /* handler function */
+    HAL_SPI_IRQHandler(SPI_0);
 
     HIPRM->V22 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -418,6 +433,7 @@ __sram__ __weak__ int __int23()
     HIPRM->V23 = 1U;
 
     /* handler function */
+    HAL_SPI_IRQHandler(SPI_1);
 
     HIPRM->V23 = 0U;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));

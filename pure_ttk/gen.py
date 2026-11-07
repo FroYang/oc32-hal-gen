@@ -124,13 +124,19 @@ def render_conf_template(chip_config, user_settings):
     # 时钟定义
     xhosc = user_settings.get("xhosc_freq", 4)
     xlosc = user_settings.get("xlosc_freq", 32.768)
-    content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(int(xhosc) * 1000000))
+    content = content.replace("__HAL_CONFIG_XHOSC_FREQ__", str(int(round(float(xhosc) * 1000000))))
     content = content.replace("__HAL_CONFIG_XLOSC_FREQ__", str(int(round(float(xlosc) * 1000))))
     content = content.replace("__HAL_CONFIG_IHOSC_FREQ__", str(ihosc))
     content = content.replace("__HAL_CONFIG_ILOSC_FREQ__", str(ilosc))
-    # 系统时钟：用户输入的 MHz -> Hz
+    # 系统时钟：用户输入的 MHz（可为小数）-> Hz，且不超过芯片 sclk_max（超出则按 sclk_max 处理）
     sclk_mhz = user_settings.get("sclk_mhz", 99)
-    content = content.replace("__HAL_CONFIG_SCLK_FREQ__", str(int(sclk_mhz) * 1000000))
+    sclk_hz = int(round(float(sclk_mhz) * 1000000))
+    sclk_max = chip_config.get("sclk_max")
+    sclk_clamped = False
+    if sclk_max is not None and sclk_hz > int(sclk_max):
+        sclk_hz = int(sclk_max)
+        sclk_clamped = True
+    content = content.replace("__HAL_CONFIG_SCLK_FREQ__", str(sclk_hz))
 
     # USB CDR：芯片定义 cdr_freq 且开关打开时才输出
     cdr_enabled = user_settings.get("cdr_enable", False)
@@ -238,6 +244,21 @@ def render_conf_template(chip_config, user_settings):
 
 
 # --- 写盘 + 复制 HAL 源文件 ---
+
+def sclk_clamp_info(chip_config, user_settings):
+    """判断用户输入的系统时钟是否超出芯片 sclk_max。
+
+    返回 (applied_hz, clamped, sclk_max)：
+      - applied_hz   : 实际采用的系统时钟（Hz，已夹到 sclk_max）
+      - clamped      : True 表示发生了超限夹取
+      - sclk_max     : 芯片上限（Hz，无此字段时返回 None）
+    供 UI 在生成前提示用户。"""
+    sclk_hz = int(round(float(user_settings.get("sclk_mhz", 99)) * 1000000))
+    sclk_max = chip_config.get("sclk_max")
+    if sclk_max is not None and sclk_hz > int(sclk_max):
+        return int(sclk_max), True, int(sclk_max)
+    return sclk_hz, False, int(sclk_max) if sclk_max is not None else None
+
 
 def generate_config(chip_config, user_settings, out_path) -> Path:
     """把渲染结果写入 <out_path>/hal/inc/oc32_hal_conf.h，并原样复制其余

@@ -17,9 +17,10 @@
 /* Private functions ---------------------------------------------------------*/
 
 /**
- * @brief  check whether the timer address right
+ * @brief  check whether the timer address is valid
  * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
  */
 HAL_StatusTypeDef TimerModuleCheck(MODULE_TIMER_TypeDef *Timer)
 {
@@ -37,9 +38,9 @@ HAL_StatusTypeDef TimerModuleCheck(MODULE_TIMER_TypeDef *Timer)
 }
 
 /**
- * @brief  Initializes the TIMER peripheral according to the specified parameters.
- * @param  Update: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @brief  Updates the TIMER reload value and counter for a given timer.
+ * @param  Update: pointer to a HAL_TIMER_UpdateTypeDef structure.
+ * @note   Internal helper; writes TARL (reload & prescaler) and TCNT.
  */
 static inline void HAL_TIMER_Update(HAL_TIMER_UpdateTypeDef *Update)
 {
@@ -50,9 +51,11 @@ static inline void HAL_TIMER_Update(HAL_TIMER_UpdateTypeDef *Update)
 }
 
 /**
- * @brief  Initializes the TIMER peripheral according to the specified parameters.
+ * @brief  Initializes the TIMER peripheral in base (count) mode.
  * @param  Init: pointer to a HAL_TIMER_BaseInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or Timer is not TIMER_0..TIMER_7
+ * @note   Enables the timer (TE=1) as the last step.
  */
 HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init)
 {
@@ -78,9 +81,10 @@ HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the TIMER peripheral according to the specified parameters.
+ * @brief  Initializes the TIMER peripheral in encoder mode.
  * @param  Init: pointer to a HAL_TIMER_EncodeInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or Timer is not TIMER_0..TIMER_7
  */
 HAL_StatusTypeDef HAL_TIMER_EncodeInit(HAL_TIMER_EncodeInitTypeDef *Init)
 {
@@ -96,9 +100,10 @@ HAL_StatusTypeDef HAL_TIMER_EncodeInit(HAL_TIMER_EncodeInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the TIMER peripheral according to the specified parameters.
+ * @brief  Initializes the TIMER reset feature.
  * @param  Init: pointer to a HAL_TIMER_ResetInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or Timer is not TIMER_0..TIMER_7
  */
 HAL_StatusTypeDef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypeDef *Init)
 {
@@ -115,7 +120,11 @@ HAL_StatusTypeDef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypeDef *Init)
 /**
  * @brief  update the timer
  * @param  Update: pointer to a HAL_TIMER_UpdateTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
+ * @note   Temporarily switches to user-trigger update mode, writes the new
+ *         reload/prescaler/counter, triggers a user update (TUT), then restores
+ *         the original update mode.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypeDef *Update)
 {
@@ -137,7 +146,8 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypeDef 
 /**
  * @brief  Reset the timer
  * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_ResetNow(MODULE_TIMER_TypeDef *Timer)
 {
@@ -150,9 +160,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_ResetNow(MODULE_TIMER_TypeDef *Tim
 }
 
 /**
- * @brief  Initializes the TIMER peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_TIMER_EncodeInitTypeDef structure.
- * @retval HAL status
+ * @brief  Initializes the TIMER pause feature.
+ * @param  Init: pointer to a HAL_TIMER_PauseInitTypeDef structure.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or Timer is not TIMER_0..TIMER_7
  */
 HAL_StatusTypeDef HAL_TIMER_PauseInit(HAL_TIMER_PauseInitTypeDef *Init)
 {
@@ -167,9 +178,10 @@ HAL_StatusTypeDef HAL_TIMER_PauseInit(HAL_TIMER_PauseInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the TIMER peripheral according to the specified parameters.
+ * @brief  Initializes the TIMER event trigger feature.
  * @param  Init: pointer to a HAL_TIMER_EventInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or Timer is not TIMER_0..TIMER_7
  */
 HAL_StatusTypeDef HAL_TIMER_EventInit(HAL_TIMER_EventInitTypeDef *Init)
 {
@@ -185,9 +197,10 @@ HAL_StatusTypeDef HAL_TIMER_EventInit(HAL_TIMER_EventInitTypeDef *Init)
 }
 
 /**
- * @brief  Trigger an event
+ * @brief  Trigger an event immediately.
  * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_EventTrig(MODULE_TIMER_TypeDef *Timer)
 {
@@ -202,7 +215,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_EventTrig(MODULE_TIMER_TypeDef *Ti
 /**
  * @brief  Wait timer overflow
  * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
+ * @note   Blocks until overflow flag (TOV) is set, then clears it (TOCLR).
+ *         Caller must not mask the timer interrupt during the call.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitOv(MODULE_TIMER_TypeDef *Timer)
 {
@@ -220,7 +236,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitOv(MODULE_TIMER_TypeDef *Timer
 /**
  * @brief  Wait timer event
  * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
+ * @note   Blocks until event flag (TEF) is set, then clears it (TECLR).
+ *         Caller must not mask the timer interrupt during the call.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitEv(MODULE_TIMER_TypeDef *Timer)
 {
@@ -238,7 +257,9 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitEv(MODULE_TIMER_TypeDef *Timer
 /**
  * @brief  DeInitializes the TIMER peripheral.
  * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
+ * @note   Resets TCON/TECON to 0, clears TARL/TCNT, and clears TOV/TEF flags.
  */
 HAL_StatusTypeDef HAL_TIMER_DeInit(MODULE_TIMER_TypeDef *Timer)
 {
@@ -256,7 +277,9 @@ HAL_StatusTypeDef HAL_TIMER_DeInit(MODULE_TIMER_TypeDef *Timer)
 }
 
 /**
- * @brief  Handles TIMER interrupt request.
+ * @brief  Handles TIMER interrupt request at user side.
+ * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UserIRQ(MODULE_TIMER_TypeDef *Timer)
@@ -266,6 +289,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UserIRQ(MODULE_TIMER_TypeDef *Time
 
 /**
  * @brief  Handles TIMER interrupt request.
+ * @param  Timer: pointer to a MODULE_TIMER_TypeDef structure.
+ * @retval Return value of HAL_TIMER_UserIRQ
+ * @note   Invoked from the global interrupt handler. Clears overflow flag (TOV)
+ *         and event flag (TEF) if set.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_IRQHandler(MODULE_TIMER_TypeDef *Timer)
 {

@@ -37,7 +37,10 @@ static HAL_StatusTypeDef RCM_ClockSwitchWait(void)
 
 /**
  * @brief  Resets the RCM clock configuration to the default reset state.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @note   Writes default values to CLKCON, PLLCON, BPCON, IOSCCON, VTSCON,
+ *         and LVDCON, resets SystemClock to IHOSC, and updates the flash
+ *         clock divider.
  */
 HAL_StatusTypeDef HAL_RCM_DeInit(void)
 {
@@ -58,9 +61,12 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
 }
 
 /**
- * @brief  Initializes the RCM clock according to the specified parameters.
- * @note   DeInit should be called before re-Initialize
- * @retval HAL status
+ * @brief  Initializes the RCM clock according to the configured parameters.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if clock switching times out or no valid PLL config is found
+ * @note   Selects the reference oscillator (XHOSC/XLOSC/ILOSC/CDR as configured),
+ *         configures the PLL if enabled, and updates the flash clock divider.
+ *         On error, calls HAL_RCM_DeInit to restore the default clock state.
  */
 HAL_StatusTypeDef HAL_RCM_Init(void)
 {
@@ -191,8 +197,9 @@ rcm_cfg_err:
 
 #ifdef HAL_USB_ENABLE
 /**
- * @brief  Enable IOSC trim by usb
- * @retval HAL status
+ * @brief  Enables the IOSC trim value controlled by USB.
+ * @param  Trim: the trim enable value (RCM_OSC_TRIM_OFF / RCM_OSC_TRIM_ON)
+ * @retval HAL_OK: always
  */
 HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim)
 {
@@ -201,8 +208,9 @@ HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim)
 }
 
 /**
- * @brief  Enable IOSC trim value lock
- * @retval HAL status
+ * @brief  Enables or disables the IOSC trim value lock.
+ * @param  Lock: the lock enable value (RCM_OSC_TRIM_LOCK_OFF / RCM_OSC_TRIM_LOCK_ON)
+ * @retval HAL_OK: always
  */
 HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCM_OscTrimLockTypedef Lock)
 {
@@ -214,7 +222,7 @@ HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCM_OscTrimLockTypedef Lock)
 
 /**
  * @brief  Gets the system clock frequency.
- * @retval The SYSCLK frequency in Hz.
+ * @retval The current SCLK frequency in Hz (read from the SystemClock variable).
  */
 uint32_t HAL_RCM_GetSysClockFreq(void)
 {
@@ -222,7 +230,8 @@ uint32_t HAL_RCM_GetSysClockFreq(void)
 }
 
 /**
- * @brief  Handles PLL interrupt request.
+ * @brief  Handles PLL frequency-over interrupt request at user side.
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
@@ -231,7 +240,11 @@ HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
 }
 
 /**
- * @brief  Handles PLL interrupt request.
+ * @brief  Handles PLL frequency-over interrupt request.
+ * @retval Return value of HAL_PLL_UserIRQ
+ * @note   Invoked from the global interrupt handler. Falls back to the default
+ *         clock (HAL_RCM_DeInit), clears the PFO flag, then calls
+ *         HAL_PLL_UserIRQ.
  */
 HAL_StatusTypeDef HAL_PLL_IRQHandler(void)
 {

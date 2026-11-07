@@ -17,9 +17,10 @@
 /* Private functions ---------------------------------------------------------*/
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Returns the CCP capture value.
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval capture value
+ * @retval Capture value from CCPCV
+ * @note   Internal helper.
  */
 static inline uint32_t HAL_CCP_CaptureValue(MODULE_CCP_TypeDef *CCP)
 {
@@ -28,9 +29,9 @@ static inline uint32_t HAL_CCP_CaptureValue(MODULE_CCP_TypeDef *CCP)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Updates the CCP duty and gate values for a given CCP.
  * @param  Update: pointer to a HAL_CCP_UpdateTypeDef structure.
- * @retval HAL status
+ * @note   Internal helper; writes CCPCV (duty) and CCPGAT (gate start/end).
  */
 static inline void HAL_CCP_Update(HAL_CCP_UpdateTypeDef *Update)
 {
@@ -42,9 +43,10 @@ static inline void HAL_CCP_Update(HAL_CCP_UpdateTypeDef *Update)
 }
 
 /**
- * @brief  check whether the ccp address right
+ * @brief  check whether the ccp address is valid
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
  */
 HAL_StatusTypeDef CCPModuleCheck(MODULE_CCP_TypeDef *CCP)
 {
@@ -61,9 +63,11 @@ HAL_StatusTypeDef CCPModuleCheck(MODULE_CCP_TypeDef *CCP)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Initializes the CCP peripheral in base mode.
  * @param  Init: pointer to a HAL_CCP_BaseInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or CCP is not CCP_0..CCP_5
+ * @note   Enables the CCP (CCPE=1) as the last step.
  */
 HAL_StatusTypeDef HAL_CCP_Init(HAL_CCP_BaseInitTypeDef *Init)
 {
@@ -83,9 +87,10 @@ HAL_StatusTypeDef HAL_CCP_Init(HAL_CCP_BaseInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Initializes the CCP peripheral in capture mode.
  * @param  Init: pointer to a HAL_CCP_CaptureInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or CCP is not CCP_0..CCP_5
  */
 HAL_StatusTypeDef HAL_CCP_CaptureInit(HAL_CCP_CaptureInitTypeDef *Init)
 {
@@ -100,9 +105,10 @@ HAL_StatusTypeDef HAL_CCP_CaptureInit(HAL_CCP_CaptureInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Initializes the CCP peripheral in compare mode.
  * @param  Init: pointer to a HAL_CCP_CompareInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or CCP is not CCP_0..CCP_5
  */
 HAL_StatusTypeDef HAL_CCP_CompareInit(HAL_CCP_CompareInitTypeDef *Init)
 {
@@ -121,9 +127,10 @@ HAL_StatusTypeDef HAL_CCP_CompareInit(HAL_CCP_CompareInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Initializes the CCP peripheral in PWM mode.
  * @param  Init: pointer to a HAL_CCP_PwmInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or CCP is not CCP_0..CCP_5
  */
 HAL_StatusTypeDef HAL_CCP_PwmInit(HAL_CCP_PwmInitTypeDef *Init)
 {
@@ -142,9 +149,10 @@ HAL_StatusTypeDef HAL_CCP_PwmInit(HAL_CCP_PwmInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Initializes the CCP peripheral in gate mode.
  * @param  Init: pointer to a HAL_CCP_GateInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL or CCP is not CCP_0..CCP_5
  */
 HAL_StatusTypeDef HAL_CCP_GateInit(HAL_CCP_GateInitTypeDef *Init)
 {
@@ -163,9 +171,10 @@ HAL_StatusTypeDef HAL_CCP_GateInit(HAL_CCP_GateInitTypeDef *Init)
 }
 
 /**
- * @brief  Initializes the CCP peripheral according to the specified parameters.
+ * @brief  Initializes the CCP peripheral in force mode.
  * @param  Init: pointer to a HAL_CCP_ForceInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL, CCP is not CCP_0..CCP_5, or ForceChannel is invalid
  */
 HAL_StatusTypeDef HAL_CCP_ForceInit(HAL_CCP_ForceInitTypeDef *Init)
 {
@@ -199,7 +208,7 @@ HAL_StatusTypeDef HAL_CCP_ForceInit(HAL_CCP_ForceInitTypeDef *Init)
 /**
  * @brief  handle capture overflow
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_HandleCov(MODULE_CCP_TypeDef *CCP)
@@ -210,8 +219,11 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_HandleCov(MODULE_CCP_TypeDef *CCP)
 /**
  * @brief  Wait ccp capture/compare/pwm flag
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval HAL status
- * @note   This is a weak implementation that can be overridden by the user.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
+ * @note   Blocks until the CCP flag (CCPCF) is set. If capture overflow (CCPCOV)
+ *         occurred, calls HAL_CCP_HandleCov before clearing the flag (CCPCCLR).
+ *         This is a weak implementation that can be overridden by the user.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitCf(MODULE_CCP_TypeDef *CCP)
 {
@@ -231,8 +243,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitCf(MODULE_CCP_TypeDef *CCP)
 /**
  * @brief  Wait ccp gate flag
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval HAL status
- * @note   This is a weak implementation that can be overridden by the user.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
+ * @note   Blocks until the gate flag (CCPGF) is set, then clears it (CCPGCLR).
+ *         This is a weak implementation that can be overridden by the user.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitGf(MODULE_CCP_TypeDef *CCP)
 {
@@ -250,8 +264,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitGf(MODULE_CCP_TypeDef *CCP)
 /**
  * @brief  Wait ccp force flag
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval HAL status
- * @note   This is a weak implementation that can be overridden by the user.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
+ * @note   Blocks until the force flag (CCPFF) is set, then clears it (CCPFCLR).
+ *         This is a weak implementation that can be overridden by the user.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitFf(MODULE_CCP_TypeDef *CCP)
 {
@@ -269,7 +285,11 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitFf(MODULE_CCP_TypeDef *CCP)
 /**
  * @brief  update the ccp duty and gate value
  * @param  Update: pointer to a HAL_CCP_UpdateTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
+ * @note   Temporarily switches to user-trigger update mode, writes the new
+ *         duty/gate values, triggers a user update (CCPUT), then restores
+ *         the original update mode.
  */
 HAL_StatusTypeDef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypeDef *Update)
 {
@@ -291,7 +311,9 @@ HAL_StatusTypeDef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypeDef *Update)
 /**
  * @brief  DeInitializes the CCP peripheral.
  * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
+ * @note   Resets all CCP registers to 0, then clears capture/gate/force flags.
  */
 HAL_StatusTypeDef HAL_CCP_DeInit(MODULE_CCP_TypeDef *CCP)
 {
@@ -310,7 +332,9 @@ HAL_StatusTypeDef HAL_CCP_DeInit(MODULE_CCP_TypeDef *CCP)
 }
 
 /**
- * @brief  Handles CCP interrupt request.
+ * @brief  Handles CCP interrupt request at user side.
+ * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_UserIRQ(MODULE_CCP_TypeDef *CCP)
@@ -320,7 +344,11 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_UserIRQ(MODULE_CCP_TypeDef *CCP)
 
 /**
  * @brief  Handles CCP interrupt request.
- * @note   This is a weak implementation that can be overridden by the user.
+ * @param  CCP: pointer to a MODULE_CCP_TypeDef structure.
+ * @retval Return value of HAL_CCP_UserIRQ
+ * @note   Invoked from the global interrupt handler. Clears capture/overflow flag
+ *         (CCPCF/CCPCOV → CCPCCLR), gate flag (CCPGF → CCPGCLR), and force flag
+ *         (CCPFF → CCPFCLR) if set.
  */
 __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_IRQHandler(MODULE_CCP_TypeDef *CCP)
 {

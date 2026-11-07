@@ -86,15 +86,22 @@ void *memset(void *dest, int c, uint32_t n)
 
 /**
  * @brief  update DMA channel state
+ * @param  DMAE: current DMA enable state (read from the module's DMA-enable register)
  * @param  DmaCh: DMA channel number
- * @param  Module: DMA module
- * @param  State: DMA state
- * @retval HAL status
+ * @param  Module: DMA module to map to the channel
+ * @param  State: DMA state to record for the channel
+ * @retval HAL_OK: on success (or if DMAE indicates the channel is already enabled)
+ * @retval HAL_ERROR: if DmaCh is invalid or the channel is already busy
  */
-__sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
+__sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
 {
-    /* error if try to set the busy channel */
-    if (State && DMAChState[DmaCh])
+    /* indicates that the DMA is busy now, should not update the state */
+    if (DMAE == HAL_ENABLE)
+        return HAL_OK;
+
+    /* error if try to set the busy channel to busy state 
+    allow only transition: busy -> idle or idle -> busy */
+    if ((State == OC32_DMA_BUSY) && (DMAChState[DmaCh] == OC32_DMA_BUSY))
         return HAL_ERROR;
 
     switch (DmaCh)
@@ -223,7 +230,7 @@ static void request_REGTRIM2(void)
  *       Care must be taken if HAL_Delay() is called from a peripheral ISR process,
  *       The SysTick interrupt must have higher priority (numerically higher)
  *       than the peripheral interrupt. Otherwise the caller ISR process will be blocked.
- * @retval HAL status
+ * @retval HAL_OK: on success
  */
 HAL_StatusTypeDef HAL_TICK_Init(void)
 {
@@ -240,7 +247,10 @@ HAL_StatusTypeDef HAL_TICK_Init(void)
 /**
  * @brief  This function is called to setup global HIC(hardware interrupt controller)
  * @param  Init: pointer to a HAL_HICInitTypeDef structure.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init is NULL
+ * @note   Always enables the WDT channel (vector 17) in HIE so that the
+ *         system tick timer is active, regardless of Init->ChEnable.
  */
 HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
 {
@@ -248,15 +258,13 @@ HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
         return HAL_ERROR;
 
     /* e.g: ChEnable = OC32_HIC_SERR | OC32_HIC_CCP0 | OC32_HIC_TIMER6 .... */
-    WRITE_SR(HIE, Init->ChEnable);
+    /* always set WDT HIE for system tick timer */
+    WRITE_SR(HIE, Init->ChEnable | OC32_HIC_WDT);
 
     /* e.g: ChPriorityBit0 = HPL_Bit0(OC32_HIC_PRI1, OC32_HIC_CH_SERR) | HPL_Bit0(OC32_HIC_PRI0, OC32_HIC_CH_UART1) | .... */
     /* e.g: ChPriorityBit1 = HPL_Bit1(OC32_HIC_PRI1, OC32_HIC_CH_SERR) | HPL_Bit1(OC32_HIC_PRI0, OC32_HIC_CH_UART1) | .... */
     WRITE_SR(HIPL0, Init->ChPriorityBit0);
     WRITE_SR(HIPL1, Init->ChPriorityBit1);
-
-    /* always set WDT HIE (Vector 17) for system tick timer */
-    HIE->V17 = 1U;
 
     return HAL_OK;
 }
@@ -363,7 +371,7 @@ uint32_t HAL_GetRegTrim0w0(void)
 }
 
 /**
- * @brief  Returns the first word of reg trim value 1
+ * @brief  Returns the second word of reg trim value 0
  * @retval Register Trim Value word 1 (from fused __FUSE_REGTRIM0[1])
  * @note   This function should not be used in an interrupt service routine.
  */
@@ -374,8 +382,8 @@ uint32_t HAL_GetRegTrim0w1(void)
 }
 
 /**
- * @brief  Returns the first word of reg trim value 2
- * @retval Register Trim Value word 0 (from fused __FUSE_REGTRIM0[2])
+ * @brief  Returns the third word of reg trim value 0
+ * @retval Register Trim Value word 2 (from fused __FUSE_REGTRIM0[2])
  * @note   This function should not be used in an interrupt service routine.
  */
 uint32_t HAL_GetRegTrim0w2(void)
@@ -385,8 +393,8 @@ uint32_t HAL_GetRegTrim0w2(void)
 }
 
 /**
- * @brief  Returns the first word of reg trim value 3
- * @retval Register Trim Value word 0 (from fused __FUSE_REGTRIM0[3])
+ * @brief  Returns the fourth word of reg trim value 0
+ * @retval Register Trim Value word 3 (from fused __FUSE_REGTRIM0[3])
  * @note   This function should not be used in an interrupt service routine.
  */
 uint32_t HAL_GetRegTrim0w3(void)
@@ -406,6 +414,7 @@ __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
 
 /**
  * @brief  Handles Debug Reset interrupt request.
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
@@ -414,8 +423,11 @@ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
 }
 
 /**
- * @brief  Handles POR interrupt request.
- * @retval HAL status
+ * @brief  Handles HRF(Hardware Reset Flags) interrupt request.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if no recognized reset flag is set
+ * @note   Clears POR/DBGR flags and dispatches to HAL_POR_UserIRQ /
+ *         HAL_DBGR_UserIRQ. Also handles LVD and WDT reset flags.
  */
 HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
 {
@@ -659,24 +671,25 @@ __weak__ int printf(const char *format, ...)
 
 /**
  * @brief  This function is called to setup global debug uart
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if UART init fails
  */
 HAL_StatusTypeDef HAL_DEBUG_Init(void)
 {
     HAL_UART_InitTypeDef Init;
-    #ifdef HAL_UART0_DEBUG
+#ifdef HAL_UART0_DEBUG
     Init.Uart = UART_0;
-    #endif
-    #ifdef HAL_UART1_DEBUG
+#endif
+#ifdef HAL_UART1_DEBUG
     Init.Uart = UART_1;
-    #endif  
+#endif
     Init.Parity = HAL_UART_DEBUG_PARITY;
     Init.Bits = UART_8_BIT_PAR;
     Init.Baud = HAL_UART_DEBUG_BR;
     Init.Duplex = HAL_UART_DEBUG_DUPLEX;
     Init.Pins = HAL_UART_DEBUG_PINS;
     Init.DmaCh = OC32_DMA_CH0;
-    
+
     return HAL_UART_Init(&Init);
 }
 #endif /* HAL_UART_DEBUG_ENABLE */
@@ -684,13 +697,20 @@ HAL_StatusTypeDef HAL_DEBUG_Init(void)
 /**
  * @brief  This function is called to setup global system: clock, tick, debug uart, etc.
  * @note   This function is declared as __weak  to be overwritten  in case of user.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if RCM init, flash verify, debug uart, or tick init fails
  */
 __weak__ HAL_StatusTypeDef HAL_SYS_Init(void)
 {
     /* setup system clock */
     if (HAL_RCM_Init() != HAL_OK)
         return HAL_ERROR;
+
+#ifdef HAL_FLASH_ENABLE
+    /* setup flash */
+    if (HAL_FLASH_Init() != HAL_OK)
+        return HAL_ERROR;
+#endif /* HAL_FLASH_ENABLE */
 
 #ifdef HAL_FLASH_VERIFY_ENABLE
     /* verify flash code integrity */

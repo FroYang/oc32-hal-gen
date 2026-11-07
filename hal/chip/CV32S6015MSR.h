@@ -920,6 +920,21 @@ typedef volatile struct
 #define SPI1RDA  (*(volatile uint32_t *)0x3FF082B0)
 #define SPI1TBC  (*(volatile uint32_t *)0x3FF082B4)
 
+typedef volatile struct
+{
+    SPICON_TypeDef SPICON;
+    uint32_t SPITBUF;
+    uint32_t SPIRBUF;
+    uint32_t SPITDA;
+    uint32_t SPIRDA;
+    uint32_t SPITBC;
+} MODULE_SPI_TypeDef;
+
+#define SPI_0 ((MODULE_SPI_TypeDef *)0x3FF08280)
+#define SPI_1 ((MODULE_SPI_TypeDef *)0x3FF082A0)
+
+
+
 // ---- UART (0x3FF082C0) ----
 typedef volatile struct
 {

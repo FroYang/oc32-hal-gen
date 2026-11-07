@@ -65,7 +65,7 @@ extern "C"
 #define WDT_L_PERIOD_MIN ((4U * 32U * 1000000U) / OC32_ILOSC_FREQ)     /*!< WDT min period at low clock in us*/
 #define WDT_L_PERIOD_MAX ((4U * 262144U * 1000000U) / OC32_ILOSC_FREQ) /*!< WDT max period at low clock in us*/
 
-#define WDT_CLR_KEY 0xA5U /*!< WDT clear/refresh key vaule */
+#define WDT_CLR_KEY 0xA5U /*!< WDT clear/refresh key value */
 
   /**
    * @}

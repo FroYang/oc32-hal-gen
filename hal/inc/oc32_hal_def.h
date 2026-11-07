@@ -22,6 +22,15 @@ extern "C"
 
 
   /* Exported types ------------------------------------------------------*/
+  /**
+   * @brief HAL Enable structure definition
+   */
+  typedef enum
+  {
+    HAL_DISABLE = 0x00U,
+    HAL_ENABLE = 0x01U
+  } HAL_EnableTypeDef;
+
 
   /**
    * @brief HAL Lock structure definition

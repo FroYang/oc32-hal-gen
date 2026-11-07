@@ -19,18 +19,33 @@
 /* Private functions ---------------------------------------------------------*/
 
 /**
- * @brief  Initializes the LVD peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_LVD_InitTypeDef structure that contains
- *         the configuration information for the specified LVD peripheral.
- * @retval HAL status
+ * @brief  DeInitializes the LVD peripheral.
+ * @retval HAL_OK: on success
+ * @note   Disables all LVD actions and clears the flag.
  */
-HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init)
+HAL_StatusTypeDef HAL_LVD_DeInit(void)
 {
-  /* clear all configure */
   LVDCON->LVDRE = 0U;
   LVDCON->LVDWE = 0U;
   LVDCON->LVDIE = 0U;
   LVDCON->LVDE = 0U;
+  LVDCON->LVDECLR = 1U;
+  return HAL_OK;
+}
+
+/**
+ * @brief  Initializes the LVD peripheral according to the specified parameters.
+ * @param  Init: pointer to a HAL_LVD_InitTypeDef structure that contains
+ *         the configuration information for the specified LVD peripheral.
+ * @retval HAL_OK: on success
+ * @note   Disables all LVD actions, sets the trigger voltage, enables LVD,
+ *         clears the stale flag, then configures the action mode (reset /
+ *         interrupt / wake).
+ */
+HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init)
+{
+  /* clear all configure */
+  HAL_LVD_DeInit();
 
   /* setup trigger voltage then enable it */
   LVDCON->LVDVP = Init->TrigV;
@@ -57,24 +72,12 @@ HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init)
   return HAL_OK;
 }
 
-/**
- * @brief  DeInitializes the LVD peripheral.
- * @retval HAL status
- */
-HAL_StatusTypeDef HAL_LVD_DeInit(void)
-{
-  LVDCON->LVDRE = 0U;
-  LVDCON->LVDWE = 0U;
-  LVDCON->LVDIE = 0U;
-  LVDCON->LVDE = 0U;
-  LVDCON->LVDECLR = 1U;
-  return HAL_OK;
-}
 
 #endif /* HAL_LVD_ENABLE */
 
 /**
- * @brief  Handles LVD interrupt request.
+ * @brief  Handles LVD interrupt request at user side.
+ * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
 __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void)
@@ -84,6 +87,9 @@ __weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void)
 
 /**
  * @brief  Handles LVD interrupt request.
+ * @retval Return value of HAL_LVD_UserIRQ
+ * @note   Invoked from the global interrupt handler. DeInitializes the LVD,
+ *         then calls HAL_LVD_UserIRQ.
  */
 HAL_StatusTypeDef HAL_LVD_IRQHandler(void)
 {

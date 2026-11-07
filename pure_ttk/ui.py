@@ -11,7 +11,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
-from tkinter import Tk, Label, Frame, StringVar, BooleanVar, filedialog, messagebox
+from tkinter import Tk, Label, Frame, StringVar, BooleanVar, Canvas, Scrollbar, filedialog, messagebox
 from tkinter import ttk
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -81,16 +81,22 @@ class App(Tk):
     # ------------------------------------------------------------ UI 构建
 
     def _build_ui(self):
-        self.grid_columnconfigure(0, weight=40)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure(2, weight=55)
+        # 左右面板：左=设置区（需要足够宽显示标签+控件），右=功能区
+        # 两侧合计需 ~750px；默认 780x600，保证左右都不被截断
+        self.minsize(760, 550)
+        self.geometry("780x600")
+
+        # 列权重：左 1 / 中 1 / 右 1（等分余量），配合 minsize 保证两侧都不被压
+        self.grid_columnconfigure(0, weight=1, minsize=340)
+        self.grid_columnconfigure(1, weight=1, minsize=10)
+        self.grid_columnconfigure(2, weight=1, minsize=340)
         self.grid_rowconfigure(0, weight=1)
 
-        left = Frame(self, bg=self.COLORS["panel"], width=300)
+        left = Frame(self, bg=self.COLORS["panel"])
         left.grid(row=0, column=0, sticky="nsew", padx=(10, 2), pady=10)
         left.grid_columnconfigure(0, weight=1)
 
-        right = Frame(self, bg=self.COLORS["panel"], width=300)
+        right = Frame(self, bg=self.COLORS["panel"])
         right.grid(row=0, column=2, sticky="nsew", padx=(2, 10), pady=10)
         right.grid_columnconfigure(0, weight=1)
 
@@ -142,20 +148,23 @@ class App(Tk):
                                           self._sys_defaults["cdr"])
         self.cdr_combo.grid(row=0, column=1, sticky="e", padx=(4, 4))
 
-        r = self._row(sys_body, "System Clock (MHz):")
+        r = self._row(sys_body, "System Clock Frequency (MHz):")
         self.sclk_entry = ttk.Entry(r, width=12)
         self.sclk_entry.insert(0, self._sys_defaults["sclk"])
         self.sclk_entry.grid(row=0, column=1, sticky="e", padx=(4, 4))
+        self._restrict_numeric(self.sclk_entry, allow_dot=True)
 
         r = self._row(sys_body, "XHOSC Frequency (MHz):")
         self.xhosc_entry = ttk.Entry(r, width=12)
         self.xhosc_entry.insert(0, self._sys_defaults["xhosc"])
         self.xhosc_entry.grid(row=0, column=1, sticky="e", padx=(4, 4))
+        self._restrict_numeric(self.xhosc_entry, allow_dot=True)
 
         r = self._row(sys_body, "XLOSC Frequency (KHz):")
         self.xlosc_entry = ttk.Entry(r, width=12)
         self.xlosc_entry.insert(0, self._sys_defaults["xlosc"])
         self.xlosc_entry.grid(row=0, column=1, sticky="e", padx=(4, 4))
+        self._restrict_numeric(self.xlosc_entry, allow_dot=True)
 
         r = self._row(sys_body, "Tick Frequency:")
         self.tick_freq_combo = self._make_combo(r, ["10Hz", "100Hz", "1KHz"],
@@ -181,7 +190,7 @@ class App(Tk):
         btn_bar.grid_columnconfigure(2, weight=1)
         ttk.Button(btn_bar, text="Generate", command=self._generate
                    ).grid(row=0, column=0, sticky="ew", padx=3)
-        ttk.Button(btn_bar, text="Default", command=self._reset_all
+        ttk.Button(btn_bar, text="Reset", command=self._reset_all
                    ).grid(row=0, column=1, sticky="ew", padx=3)
         ttk.Button(btn_bar, text="Open Output", command=self._open_output
                    ).grid(row=0, column=2, sticky="ew", padx=3)
@@ -198,12 +207,93 @@ class App(Tk):
                                               self.COLORS["sec_feat"])
         feat_box.pack(side="top", fill="both", expand=True)
 
-        self.feature_scroll = ttk.Frame(feat_body)
-        self.feature_scroll.grid(row=0, column=0, sticky="nsew")
+        # 可滚动的功能模块区：Canvas + 内部 Frame + 右侧滚动条
+        self.feature_canvas = Canvas(feat_body, bd=0, highlightthickness=0)
+        self.feature_scroll = Frame(self.feature_canvas, bg=self.COLORS["panel"])
+        self.feature_canvas_win = self.feature_canvas.create_window(
+            (0, 0), window=self.feature_scroll, anchor="nw")
+        self.feature_scrollbar = Scrollbar(feat_body, orient="vertical",
+                                           command=self.feature_canvas.yview)
+        self.feature_canvas.configure(yscrollcommand=self.feature_scrollbar.set)
+
+        # 布局：Canvas 与滚动条并排，Canvas 占满
+        self.feature_canvas.grid(row=0, column=0, sticky="nsew")
+        self.feature_scrollbar.grid(row=0, column=1, sticky="ns")
         feat_body.grid_rowconfigure(0, weight=1)
         feat_body.grid_columnconfigure(0, weight=1)
 
+        # 内部 Frame 自适应宽度；内容变化时同步滚动区
+        self.feature_scroll.bind("<Configure>",
+                                 self._on_feature_content_configure)
+        self.feature_canvas.bind("<Configure>",
+                                 self._on_feature_canvas_configure)
+        # 滚轮支持（Linux 需 MouseWheel 事件名不同，这里做通用绑定）
+        self._bind_mousewheel(self.feature_canvas)
+
         self._set_uart_block_state(False)
+
+    def _on_feature_content_configure(self, event=None):
+        """内部内容变化时，让 Canvas 的滚动区跟随其实际大小。"""
+        self.feature_canvas.configure(scrollregion=self.feature_canvas.bbox("all"))
+
+    def _on_feature_canvas_configure(self, event=None):
+        """Canvas 尺寸变化时，同步内部 Frame 宽度（避免左右留白/溢出）。"""
+        self.feature_canvas.itemconfigure(self.feature_canvas_win,
+                                          width=event.width)
+
+    def _over(self, canvas, event):
+        """指针是否落在 canvas 或其任一子孙控件上（命中检测）。
+
+        winfo_containing 返回坐标处的控件；再沿 winfo_parent()（返回的是
+        路径名字符串，需 nametowidget 解析）向上走到 canvas 即视为命中。"""
+        w = canvas.winfo_containing(event.x_root, event.y_root)
+        if w is None:
+            return False
+        top = canvas.winfo_toplevel()
+        # 向上走祖先链，若能到 canvas 本身则命中
+        cur = w
+        while cur is not None:
+            if cur is canvas:
+                return True
+            pstr = cur.winfo_parent()
+            if not pstr:
+                break
+            try:
+                cur = top.nametowidget(pstr)
+            except Exception:
+                break
+        return False
+
+    def _bind_mousewheel(self, canvas):
+        """鼠标滚轮滚动：仅当指针在功能模块区上时生效（避免干扰其他区域）。
+
+        Windows 用 <MouseWheel>（delta 为 ±120 的倍数），
+        Linux 用 X11 <Button-4>/<Button-5>。用 bind_all + 命中检测限定范围。"""
+        def _delta_to_steps(delta):
+            # Windows: delta 为 ±120 的整数倍；其他平台兜底 1
+            if delta:
+                return int(-1 * (delta / 120))
+            return -1
+
+        def _win(event):
+            if self._over(canvas, event):
+                steps = _delta_to_steps(event.delta)
+                canvas.yview_scroll(steps, "units")
+
+        def _x11(event):
+            if self._over(canvas, event):
+                # Button-4=向上滚，Button-5=向下滚
+                canvas.yview_scroll(-1 if event.num == 4 else 1, "units")
+
+        try:
+            canvas.bind_all("<MouseWheel>", _win)
+        except Exception:
+            pass
+        try:
+            canvas.bind_all("<Button-4>", _x11)
+            canvas.bind_all("<Button-5>", _x11)
+        except Exception:
+            pass
 
     def _build_uart_block(self, uart_body):
         self.uart_block_widgets = []
@@ -364,6 +454,29 @@ class App(Tk):
                     break
         self._set_uart_block_state(enabled)
 
+    def _restrict_numeric(self, entry, allow_dot=False):
+        """限制输入框只能输入数字（可选允许一个小数点），键入非法字符直接拦截。
+
+        放行编辑类按键（退格/方向键/删除等），只拦"输入非数字字符"的动作。"""
+        allowed = "0123456789" + ("." if allow_dot else "")
+
+        def _on_key(event):
+            ch = event.char
+            key = event.keysym
+            # 编辑类按键放行
+            if key in ("BackSpace", "Delete", "Left", "Right",
+                      "Up", "Down", "Home", "End", "Tab"):
+                return "break" if key == "Tab" else None
+            # 合法数字/小数点
+            if ch and ch in allowed:
+                if allow_dot and ch == "." and entry.get().count(".") >= 1:
+                    return "break"          # 只允许一个小数点
+                return None
+            # 其它字符（字母、符号、粘贴非数字）拦截
+            return "break"
+
+        entry.bind("<Key>", _on_key)
+
     # ------------------------------------------------------------ settings
 
     @staticmethod
@@ -380,15 +493,36 @@ class App(Tk):
         except (TypeError, ValueError):
             return default
 
+    def _validate_numeric_inputs(self):
+        """校验三个数字输入框（System Clock / XHOSC / XLOSC）。
+
+        合法返回 None；非法（非数字、非正数、空）返回错误描述。"""
+        checks = [
+            (self.sclk_entry,  "System Clock Frequency (MHz)", float),
+            (self.xhosc_entry, "XHOSC Frequency (MHz)", float),
+            (self.xlosc_entry, "XLOSC Frequency (kHz)", float),
+        ]
+        for entry, name, cast in checks:
+            raw = entry.get().strip()
+            if raw == "":
+                return f"Empty value for {name} — enter a positive number."
+            try:
+                val = cast(raw)
+            except (TypeError, ValueError):
+                return f"Invalid value '{raw}' for {name} — must be a number."
+            if val <= 0:
+                return f"Value for {name} must be positive (got {raw})."
+        return None
+
     def _collect_settings(self):
         base = {
-            "xhosc_freq": self._safe_int(self.xhosc_entry, 4),
+            "xhosc_freq": self._safe_float(self.xhosc_entry, 4),
             "xlosc_freq": self._safe_float(self.xlosc_entry, 32.768),
             "clk_src": self.clk_src_combo.get(),
             "pll": self.pll_combo.get(),
             "pll_om": self.pll_om_combo.get(),
             "cdr_enable": self.cdr_combo.get() == "Enable",
-            "sclk_mhz": self._safe_int(self.sclk_entry, 99),
+            "sclk_mhz": self._safe_float(self.sclk_entry, 99),
             "tick_freq": self.tick_freq_combo.get(),
             "debug_uart": self.debug_combo.get(),
             "baud_rate": self.baud_combo.get(),
@@ -419,7 +553,25 @@ class App(Tk):
         if not self.chip_config:
             messagebox.showerror("Error", "Please select a chip first")
             return
+        # 数字输入校验：非法则报错中止，不再静默回退默认值
+        err = self._validate_numeric_inputs()
+        if err:
+            messagebox.showerror("Invalid Input", err)
+            return
         settings = self._collect_settings()
+        # 系统时钟超限提示：用户输入超过芯片 sclk_max 时，按上限处理并告知
+        applied_hz, clamped, sclk_max = gen.sclk_clamp_info(self.chip_config, settings)
+        if clamped:
+            messagebox.showwarning(
+                "System Clock Clamped",
+                f"System Clock input {settings.get('sclk_mhz')} MHz exceeds the chip "
+                f"maximum ({sclk_max // 1000000} MHz).\n\n"
+                f"It will be clamped to {sclk_max} Hz in the generated config.",
+            )
+            # 自动把输入框修正为芯片上限，避免下次生成仍用超限值
+            self.sclk_entry.delete(0, "end")
+            self.sclk_entry.insert(0, str(sclk_max // 1000000))
+            settings["sclk_mhz"] = sclk_max // 1000000
         try:
             out = gen.generate_config(self.chip_config, settings, self.var_outdir.get())
         except Exception as exc:

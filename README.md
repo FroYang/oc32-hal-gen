@@ -85,8 +85,8 @@ Linux（同时可选交叉生成 Windows）：
 | PLL | 是否启用 PLL，生成 `OC32_CLK_PLL_XXX` | Enable / Disable |
 | PLL Freq Over Monitor | PLL 频率过监测，生成 `OC32_CLK_PLL_OM_XXX`；仅 PLL 启用时可操作 | Enable / Disable |
 | USB CDR | 启用 USB CDR，生成 `HAL_RCM_CDR_ENABLE` 与 `OC32_CDR_FREQ`；仅当芯片定义了 `cdr_freq` 时可操作 | Enable / Disable |
-| System Clock (MHz) | 系统时钟频率（MHz，用户输入），生成 `OC32_SCLK_FREQ`；仅 PLL 启用时可用 | 默认 99 |
-| XHOSC Frequency (MHz) | 外部高速振荡器频率（MHz，用户输入），生成 `OC32_XHOSC_FREQ`；随芯片 `clk_sources` 是否含 XHOSC 启用/禁用 | 默认 4 |
+| System Clock (MHz) | 系统时钟频率（MHz，用户输入，支持小数），生成 `OC32_SCLK_FREQ`；仅 PLL 启用时可用；**超过芯片 `sclk_max` 时自动按上限处理** | 默认 99 |
+| XHOSC Frequency (MHz) | 外部高速振荡器频率（MHz，用户输入，支持小数），生成 `OC32_XHOSC_FREQ`；随芯片 `clk_sources` 是否含 XHOSC 启用/禁用 | 默认 4 |
 | XLOSC Frequency (kHz) | 外部低速振荡器频率（kHz，用户输入，支持小数），生成 `OC32_XLOSC_FREQ`；随芯片 `clk_sources` 是否含 XLOSC 启用/禁用 | 默认 32.768 |
 | Tick Frequency | 系统滴答频率，决定 `HAL_TICK_FREQ_DEFAULT` | 10Hz / 100Hz / 1KHz |
 

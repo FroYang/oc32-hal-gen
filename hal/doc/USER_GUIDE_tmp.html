@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>USER_GUIDE.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="oc32-hal-用户手册">OC32 HAL 用户手册</h1>
+<p><strong>OC32 HAL</strong> 是面向 CV32S6015 系列 MCU 的硬件抽象层（HAL）驱动库。
+本文档面向<strong>应用开发者</strong>，介绍如何基于 HAL 库开发程序。</p>
+<hr>
+<h2 id="目录">目录</h2>
+<ol>
+<li><a href="#1-%E6%A6%82%E8%BF%B0">概述</a></li>
+<li><a href="#2-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">快速开始</a></li>
+<li><a href="#3-%E7%B3%BB%E7%BB%9F%E5%88%9D%E5%A7%8B%E5%8C%96">系统初始化</a></li>
+<li><a href="#4-%E6%97%B6%E9%92%9F%E7%AE%A1%E7%90%86-rcm">时钟管理 (RCM)</a></li>
+<li><a href="#5-gpio">GPIO</a></li>
+<li><a href="#6-uart">UART</a></li>
+<li><a href="#7-spi">SPI</a></li>
+<li><a href="#8-timer">Timer</a></li>
+<li><a href="#9-ccp">CCP</a></li>
+<li><a href="#10-wdt">WDT</a></li>
+<li><a href="#11-flash">Flash</a></li>
+<li><a href="#12-crc">CRC</a></li>
+<li><a href="#13-lvd">LVD</a></li>
+<li><a href="#14-%E4%B8%AD%E6%96%AD%E7%AE%A1%E7%90%86-hic">中断管理 (HIC)</a></li>
+<li><a href="#15-dma">DMA</a></li>
+<li><a href="#16-%E8%B0%83%E8%AF%95%E8%BE%93%E5%87%BA">调试输出</a></li>
+<li><a href="#17-%E9%94%99%E8%AF%AF%E7%A0%81%E4%B8%8E%E8%BF%94%E5%9B%9E%E7%B1%BB%E5%9E%8B">错误码与返回类型</a></li>
+<li><a href="#18-%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9">注意事项</a></li>
+</ol>
+<hr>
+<h2 id="1-概述">1. 概述</h2>
+<p>HAL 库提供以下外设的驱动函数：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>头文件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统</td>
+<td><code>oc32_hal.h</code> / <code>oc32_hal.c</code></td>
+<td>系统初始化、DMA、Fuse 数据</td>
+</tr>
+<tr>
+<td>时钟 (RCM)</td>
+<td><code>oc32_hal_rcm.h</code> / <code>oc32_hal_rcm.c</code></td>
+<td>时钟源选择、PLL 配置</td>
+</tr>
+<tr>
+<td>GPIO</td>
+<td><code>oc32_hal_gpio.h</code> / <code>oc32_hal_gpio.c</code></td>
+<td>引脚输入/输出/中断</td>
+</tr>
+<tr>
+<td>UART</td>
+<td><code>oc32_hal_uart.h</code> / <code>oc32_hal_uart.c</code></td>
+<td>串口收发（轮询/DMA/中断）</td>
+</tr>
+<tr>
+<td>SPI</td>
+<td><code>oc32_hal_spi.h</code> / <code>oc32_hal_spi.c</code></td>
+<td>SPI 收发（单次/包/DMA/中断）</td>
+</tr>
+<tr>
+<td>Timer</td>
+<td><code>oc32_hal_timer.h</code> / <code>oc32_hal_timer.c</code></td>
+<td>8 路定时器（计数/编码/复位/暂停/事件）</td>
+</tr>
+<tr>
+<td>CCP</td>
+<td><code>oc32_hal_ccp.h</code> / <code>oc32_hal_ccp.c</code></td>
+<td>6 路捕获/比较/PWM/门控/强制</td>
+</tr>
+<tr>
+<td>WDT</td>
+<td><code>oc32_hal_wdt.h</code> / <code>oc32_hal_wdt.c</code></td>
+<td>2 路看门狗</td>
+</tr>
+<tr>
+<td>Flash</td>
+<td><code>oc32_hal_flash.h</code> / <code>oc32_hal_flash.c</code></td>
+<td>SPI Flash 读写/擦除/CRC 校验</td>
+</tr>
+<tr>
+<td>CRC</td>
+<td><code>oc32_hal_crc.h</code> / <code>oc32_hal_crc.c</code></td>
+<td>硬件 CRC 计算</td>
+</tr>
+<tr>
+<td>LVD</td>
+<td><code>oc32_hal_lvd.h</code> / <code>oc32_hal_lvd.c</code></td>
+<td>低压检测</td>
+</tr>
+<tr>
+<td>中断 (HIC)</td>
+<td><code>oc32_hal.c</code> (HIC 部分)</td>
+<td>硬件中断控制器配置</td>
+</tr>
+</tbody>
+</table>
+<p><strong>约定</strong>：</p>
+<ul>
+<li>所有公共 API 返回 <code>HAL_StatusTypeDef</code>（<code>HAL_OK</code> / <code>HAL_ERROR</code> / <code>HAL_TIMEOUT</code>）或 <code>HAL_ResultTypedef</code>（携带数据 + 状态）。</li>
+<li>部分&quot;运行时&quot;操作 API 标记 <code>__sram__</code>（放入 <code>.stext</code> 段，SRAM 执行）。</li>
+<li>配置头 <code>oc32_hal_conf.h</code> 由生成器（<code>OC32 HAL Config Generator</code>）根据芯片型号自动产生，用户一般不需手改。</li>
+</ul>
+<hr>
+<h2 id="2-快速开始">2. 快速开始</h2>
+<p>最小可运行程序（使用 UART0 输出，轮询模式）：</p>
+<pre class="hljs"><code><div><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;oc32_hal.h&quot;</span></span>
+
+<span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>
+{
+    <span class="hljs-comment">/* 系统初始化（时钟 + 校验 + 调试 UART + tick） */</span>
+    <span class="hljs-keyword">if</span> (HAL_SYS_Init() != HAL_OK)
+        <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) ;
+
+    <span class="hljs-comment">/* 初始化 UART1 为 115200 8N1 全双工 */</span>
+    HAL_UART_InitTypeDef uart = {
+        .Uart = UART_1,
+        .Parity = UART_PAR_ODD,
+        .Bits = UART_8_BIT,
+        .Baud = UART_BAUD_115200,
+        .Duplex = UART_FULL_DUPLEX,
+        .Pins = UART_PINS_0,
+        .DmaCh = OC32_DMA_CH0,
+    };
+    HAL_UART_Init(&amp;uart);
+
+    <span class="hljs-type">const</span> <span class="hljs-type">char</span> *msg = <span class="hljs-string">&quot;Hello OC32\r\n&quot;</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">0</span>; msg[i]; i++)
+        HAL_UART_TX_OneByte(UART_1, msg[i]);
+
+    <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) ;
+}
+</div></code></pre>
+<blockquote>
+<p>注意：<code>HAL_SYS_Init</code> 默认会初始化调试 UART（由 <code>oc32_hal_conf.h</code> 的 <code>HAL_UART_DEBUG_*</code> 决定），若该 UART 与业务使用冲突，可在 conf 中关闭。</p>
+</blockquote>
+<hr>
+<h2 id="3-系统初始化">3. 系统初始化</h2>
+<h3 id="hal_sys_init"><code>HAL_SYS_Init</code></h3>
+<p>初始化整个系统：时钟（<code>HAL_RCM_Init</code>）→ Flash 校验（可选）→ 调试 UART（可选）→ tick 定时器。
+返回 <code>HAL_ERROR</code> 时系统时钟或某一步失败，程序无法正常运行。</p>
+<h3 id="hal_tick_init"><code>HAL_TICK_Init</code></h3>
+<p>配置 WDT1 为 1kHz 系统 tick（<code>HAL_TICK_FREQ_DEFAULT</code>），<code>uwTick</code> 每毫秒递增。
+<code>HAL_Delay(ms)</code> 基于 <code>uwTick</code> 实现，<strong>调用 tick 前必须先调用 <code>HAL_TICK_Init</code></strong>。</p>
+<h3 id="hal_hic_init--hal_hic_deinit"><code>HAL_HIC_Init</code> / <code>HAL_HIC_DeInit</code></h3>
+<p>配置硬件中断控制器（HIE / HIPL0 / HIPL1 / HIPRM）。</p>
+<ul>
+<li><code>ChEnable</code>：使能各中断通道位（<code>OC32_HIC_UART0 | OC32_HIC_SPI0 | ...</code>）。</li>
+<li><code>ChPriorityBit0/1</code>：各通道优先级（<code>HPL_Bit0/Bits1(OC32_HIC_PRI0..3, ch)</code>）。</li>
+<li>WDT 通道（vector 17）<strong>始终被使能</strong>作为 tick 定时器，不参与 <code>ChEnable</code> 控制。</li>
+</ul>
+<hr>
+<h2 id="4-时钟管理-rcm">4. 时钟管理 (RCM)</h2>
+<h3 id="hal_rcm_init"><code>HAL_RCM_Init</code></h3>
+<p>按 <code>oc32_hal_conf.h</code> 中定义的时钟源（<code>OC32_CLK_SRC_*</code>）和 PLL 配置系统时钟：</p>
+<ol>
+<li>降速 Flash 时钟（DIV5）防止切换时取指失败；</li>
+<li>选择参考振荡器（XHOSC / XLOSC / ILOSC / CDR）；</li>
+<li>若使能 PLL，计算最优分频系数，等待切换完成；</li>
+<li>更新 Flash 时钟分频。</li>
+</ol>
+<p>失败时自动回退到 <code>HAL_RCM_DeInit</code>（IHOSC 默认时钟）。</p>
+<h3 id="hal_rcm_deinit"><code>HAL_RCM_DeInit</code></h3>
+<p>恢复所有时钟寄存器到复位默认值（IHOSC + 默认 Flash 分频）。</p>
+<h3 id="hal_rcm_getsysclockfreq"><code>HAL_RCM_GetSysClockFreq</code></h3>
+<p>返回当前系统时钟频率（Hz），存储于全局 <code>SystemClock</code>。</p>
+<h3 id="pll-中断oc32_clk_pll_om_enable-时">PLL 中断（<code>OC32_CLK_PLL_OM_ENABLE</code> 时）</h3>
+<p>若使能了 PLL 频率过冲监视（<code>PFOM</code>），过冲时触发 <code>HAL_PLL_IRQHandler</code>，
+该处理函数自动回退到默认时钟并清除 PFO 标志。</p>
+<hr>
+<h2 id="5-gpio">5. GPIO</h2>
+<h3 id="初始化">初始化</h3>
+<pre class="hljs"><code><div>HAL_GPIO_InitTypeDef gpio = {
+    .Port = PORT_A,
+    .Pin = PIN3,
+    .Direction = GPIO_OUTPUT,
+    .State = GPIO_STATE_HI,
+    .Slew = GPIO_SLEW_HI,
+};
+HAL_GPIO_Init(&amp;gpio);
+</div></code></pre>
+<ul>
+<li>输出模式：设引脚电平 + 摆率，拉低上拉，使能 OE。</li>
+<li>输入模式：配置上拉、滤波（LV0~LV2）、中断边沿（RIE/FIE），清除历史标志。</li>
+</ul>
+<h3 id="引脚电平">引脚电平</h3>
+<pre class="hljs"><code><div>PA3 = <span class="hljs-number">1</span>;   <span class="hljs-comment">/* 置高 */</span>
+PA3 = <span class="hljs-number">0</span>;  <span class="hljs-comment">/* 置低 */</span>
+</div></code></pre>
+<h3 id="输入读取">输入读取</h3>
+<pre class="hljs"><code><div><span class="hljs-type">uint32_t</span> port_val = PB;   <span class="hljs-comment">/* 读取整组端口 B */</span>
+<span class="hljs-type">uint32_t</span> pin_val = PB3;   <span class="hljs-comment">/* 读取引脚 B3 */</span>
+</div></code></pre>
+<h3 id="中断">中断</h3>
+<p>配置 <code>.ExInt</code>（<code>GPIO_EI_RISE</code> / <code>GPIO_EI_FALL</code> / <code>GPIO_EI_BOTH</code>）后，
+边沿触发中断由 <code>__int30</code>（PORTA）/ <code>__int31</code>（PORTB）向量处理。</p>
+<hr>
+<h2 id="6-uart">6. UART</h2>
+<p>UART0 和 UART1 共用同一套 API，通过 <code>MODULE_UART_TypeDef *</code> 区分。</p>
+<h3 id="初始化-1">初始化</h3>
+<pre class="hljs"><code><div>HAL_UART_InitTypeDef uart = {
+    .Uart = UART_0,
+    .Parity = UART_PAR_EVEN,
+    .Bits = UART_8_BIT_PAR,
+    .Baud = UART_BAUD_115200,
+    .Duplex = UART_FULL_DUPLEX,
+    .Pins = UART_PINS_0,
+    .DmaCh = OC32_DMA_CH0,
+};
+HAL_UART_Init(&amp;uart);
+</div></code></pre>
+<ul>
+<li><code>Baud</code>：从 <code>HAL_UART_BaudTypedef</code> 枚举选择（9600~1000000）。</li>
+<li>半双工模式（<code>UART_HALF_DUPLEX</code>）下 TX/RX 共享同一引脚，收发前需等待对方方向完成。</li>
+</ul>
+<h3 id="单字节单词收发阻塞">单字节/单词收发（阻塞）</h3>
+<pre class="hljs"><code><div>HAL_UART_TX_OneByte(UART_0, <span class="hljs-string">&#x27;H&#x27;</span>);
+HAL_ResultTypedef r = HAL_UART_RX_OneByte(UART_0);
+<span class="hljs-keyword">if</span> (r.Error == HAL_OK) {
+    <span class="hljs-type">uint32_t</span> byte = r.Data;
+}
+</div></code></pre>
+<ul>
+<li>无 DMA、无中断，调用者同步阻塞直至收发完成。</li>
+<li><code>HAL_UART_RX_OneWord</code> / <code>HAL_UART_TX_OneWord</code> 一次操作 4 字节（32 位）。</li>
+</ul>
+<h3 id="数据包收发dma--中断">数据包收发（DMA / 中断）</h3>
+<pre class="hljs"><code><div>HAL_UART_PacketTypedef pkt = {
+    .Data = tx_buf,
+    .Length = word_count,
+    .IntE = MODULE_INT_OFF,   <span class="hljs-comment">/* 轮询模式 */</span>
+    <span class="hljs-comment">/* 或 IntE = MODULE_INT_ON 使用中断模式 */</span>
+};
+HAL_UART_TX_Packet(UART_0, &amp;pkt);
+</div></code></pre>
+<ul>
+<li><strong>轮询模式</strong>（<code>IntE = OFF</code>）：函数阻塞直至 DMA 完成。</li>
+<li><strong>中断模式</strong>（<code>IntE = ON</code>）：函数立即返回，DMA 完成后触发 <code>__int20</code>（UART0）/ <code>__int21</code>（UART1）向量，最终调用 <code>HAL_UART_IRQHandler</code>，可在 <code>HAL_UART_UserIRQ</code> 中处理用户逻辑。</li>
+<li>数据包长度单位为<strong>字（32 位）</strong>。</li>
+</ul>
+<h3 id="hal_uart_userirq"><code>HAL_UART_UserIRQ</code></h3>
+<p>弱符号，用户可在自己的代码中覆盖以处理 UART 中断。</p>
+<hr>
+<h2 id="7-spi">7. SPI</h2>
+<p>SPI0 和 SPI1 共用同一套 API。</p>
+<h3 id="初始化-2">初始化</h3>
+<pre class="hljs"><code><div>HAL_SPI_InitTypeDef spi = {
+    .Spi = SPI_0,
+    .Mode = SPI_CIL_DSS,       <span class="hljs-comment">/* 时钟空闲低，采样上升沿（Mode 0） */</span>
+    .ClkDiv = <span class="hljs-number">4</span>,               <span class="hljs-comment">/* 分频系数（SPIMCD[3:0]） */</span>
+    .Slave = SPI_MASTER,
+    .CsOut = SPI_CS_OUT_ON,
+    .Duplex = SPI_FULL_DUPLEX,
+    .HalfPin = SPI_HALF_PIN_INDEPENDENT,
+    .FirstBit = SPI_MSB_FIRST,
+    .Pins = SPI_PINS_0,
+    .DmaCh = OC32_DMA_CH0,
+};
+HAL_SPI_Init(&amp;spi);
+</div></code></pre>
+<ul>
+<li><code>Mode</code> 枚举对应 SPI 四种时钟/数据相位：
+<ul>
+<li><code>SPI_CIL_DSS</code>（Mode 0）：CPOL=0, CPHA=0</li>
+<li><code>SPI_CIL_DSF</code>（Mode 1）：CPOL=0, CPHA=1</li>
+<li><code>SPI_CIH_DSS</code>（Mode 2）：CPOL=1, CPHA=0</li>
+<li><code>SPI_CIH_DSF</code>（Mode 3）：CPOL=1, CPHA=1</li>
+</ul>
+</li>
+</ul>
+<h3 id="单次收发阻塞无-dma">单次收发（阻塞，无 DMA）</h3>
+<pre class="hljs"><code><div>HAL_SPI_PacketTypedef pkt = {
+    .HalfRx = SPI_HALF_TX,
+    .TxData = &amp;tx_word,
+    .RxData = <span class="hljs-literal">NULL</span>,          <span class="hljs-comment">/* 可 NULL，结果经 Result.Data 返回 */</span>
+    .Length = <span class="hljs-number">1</span>,             <span class="hljs-comment">/* 单位：字，TransferOnce 最多 4 字 */</span>
+    .IntE = MODULE_INT_OFF,
+};
+HAL_ResultTypedef r = HAL_SPI_TransferOnce(SPI_0, &amp;pkt);
+<span class="hljs-keyword">if</span> (r.Error == HAL_OK) {
+    <span class="hljs-type">uint32_t</span> rx_word = r.Data;   <span class="hljs-comment">/* 读自 SPIRBUF */</span>
+}
+</div></code></pre>
+<ul>
+<li>全双工：同时设置 TxData 和 RxData。</li>
+<li>半双工纯 TX（<code>SPI_HALF_TX</code>）：RxData 可为 NULL。</li>
+<li>半双工纯 RX（<code>SPI_HALF_RX</code>）：TxData 可为 NULL。</li>
+</ul>
+<h3 id="数据包收发dma--中断-1">数据包收发（DMA / 中断）</h3>
+<pre class="hljs"><code><div>HAL_SPI_PacketTypedef pkt = {
+    .HalfRx = SPI_HALF_TX,
+    .TxData = tx_buf,
+    .RxData = rx_buf,
+    .Length = word_count,
+    .IntE = MODULE_INT_ON,   <span class="hljs-comment">/* 中断模式 */</span>
+};
+HAL_SPI_TransferPacket(SPI_0, &amp;pkt);
+</div></code></pre>
+<ul>
+<li>中断完成后由 <code>__int22</code>（SPI0）/ <code>__int23</code>（SPI1）触发 <code>HAL_SPI_IRQHandler</code>。</li>
+<li>轮询模式阻塞直至 DMA 完成。</li>
+</ul>
+<h3 id="hal_spi_userirq"><code>HAL_SPI_UserIRQ</code></h3>
+<p>弱符号，用户可覆盖以处理 SPI 中断。</p>
+<hr>
+<h2 id="8-timer">8. Timer</h2>
+<p>共 8 路定时器（<code>TIMER_0</code> ~ <code>TIMER_7</code>），支持以下模式：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>Init 函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>计数（基础）</td>
+<td><code>HAL_TIMER_Init</code></td>
+<td>上/下/翻转/编码计数</td>
+</tr>
+<tr>
+<td>编码</td>
+<td><code>HAL_TIMER_EncodeInit</code></td>
+<td>2 路编码输入</td>
+</tr>
+<tr>
+<td>复位事件</td>
+<td><code>HAL_TIMER_ResetInit</code></td>
+<td>外部复位源</td>
+</tr>
+<tr>
+<td>暂停</td>
+<td><code>HAL_TIMER_PauseInit</code></td>
+<td>暂停事件</td>
+</tr>
+<tr>
+<td>事件</td>
+<td><code>HAL_TIMER_EventInit</code></td>
+<td>触发事件（如 ADC 触发）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="基础计数初始化示例">基础计数初始化示例</h3>
+<pre class="hljs"><code><div>HAL_TIMER_BaseInitTypeDef timer = {
+    .Timer = TIMER_0,
+    .ReloadVal = <span class="hljs-number">0xFFFF</span>,
+    .PreScaler = <span class="hljs-number">0</span>,
+    .CountVal = <span class="hljs-number">0</span>,
+    .IntE = MODULE_INT_ON,
+    .CountMode = TIMER_COUNT_UP,
+    .StopCon = TIMER_STOP_OVER,
+    .OvfMode = TIMER_OVF_OVER,
+    .CountSource = TIMER_SOURCE_SCLK,
+    .CountExCon = TIMER_EXCON_RISE,
+    .UpdateMode = TIMER_UPDATE_DIR,
+    .ReadReg = TIMER_READ_REG_BUF,
+    .AdcTrig = TIMER_ADC_TRIG_NONE,
+};
+HAL_TIMER_Init(&amp;timer);
+</div></code></pre>
+<h3 id="运行时操作">运行时操作</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">/* 等待溢出 */</span>
+HAL_TIMER_WaitOv(TIMER_0);
+
+<span class="hljs-comment">/* 更新重载值/计数器, 实际更新时机根据UpdateMode设置而定 */</span>
+HAL_TIMER_UpdateTypeDef upd = { .Timer = TIMER_0, .ReloadVal = <span class="hljs-number">0x1000</span>, .PreScaler = <span class="hljs-number">0</span>, .CountVal = <span class="hljs-number">0</span> };
+HAL_TIMER_Update(&amp;upd);
+
+<span class="hljs-comment">/* 立即更新计数器值 */</span>
+HAL_TIMER_UpdateNow(&amp;upd);
+
+<span class="hljs-comment">/* 立即复位 */</span>
+HAL_TIMER_ResetNow(TIMER_0);
+
+<span class="hljs-comment">/* 触发事件 */</span>
+HAL_TIMER_EventTrig(TIMER_0);
+</div></code></pre>
+<h3 id="弱符号">弱符号</h3>
+<p><code>HAL_TIMER_UserIRQ</code>、<code>HAL_TIMER_WaitOv</code>、<code>HAL_TIMER_WaitEv</code>、<code>HAL_TIMER_EventTrig</code>、<code>HAL_TIMER_UpdateNow</code>、<code>HAL_TIMER_ResetNow</code> 均为弱符号，用户可覆盖。</p>
+<hr>
+<h2 id="9-ccp">9. CCP</h2>
+<p>共 6 路 CCP（<code>CCP_0</code> ~ <code>CCP_5</code>），支持以下模式：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>Init 函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基础</td>
+<td><code>HAL_CCP_Init</code></td>
+<td>选择计时器、更新模式</td>
+</tr>
+<tr>
+<td>捕获</td>
+<td><code>HAL_CCP_CaptureInit</code></td>
+<td>边沿捕获</td>
+</tr>
+<tr>
+<td>比较</td>
+<td><code>HAL_CCP_CompareInit</code></td>
+<td>比较输出</td>
+</tr>
+<tr>
+<td>PWM</td>
+<td><code>HAL_CCP_PwmInit</code></td>
+<td>边沿/中心对齐 PWM</td>
+</tr>
+<tr>
+<td>门控</td>
+<td><code>HAL_CCP_GateInit</code></td>
+<td>外部门控计数</td>
+</tr>
+<tr>
+<td>强制</td>
+<td><code>HAL_CCP_ForceInit</code></td>
+<td>强制输出状态</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pwm-示例">PWM 示例</h3>
+<pre class="hljs"><code><div>HAL_CCP_PwmInitTypeDef ccp = {
+    .CCP = CCP_0,
+    .Duty = <span class="hljs-number">0x0800</span>,          <span class="hljs-comment">/* 16 位占空比 */</span>
+    .DeadTime = <span class="hljs-number">0</span>,
+    .PwmCon = CCP_PWM_FLAG_RISE,
+    .PosOutE = CCP_OUTPUT_ON,
+    .PosOutInv = CCP_OUTPUT_INV_OFF,
+    .NegOutE = CCP_OUTPUT_ON,
+    .NegOutInv = CCP_OUTPUT_INV_OFF,
+};
+HAL_CCP_Init(&amp;base);   <span class="hljs-comment">/* 先初始化基础模式 */</span>
+HAL_CCP_PwmInit(&amp;ccp);
+</div></code></pre>
+<h3 id="等待标志阻塞">等待标志（阻塞）</h3>
+<pre class="hljs"><code><div>HAL_CCP_WaitCf(CCP_0);   <span class="hljs-comment">/* 等待捕获/比较/PWM 标志 */</span>
+HAL_CCP_WaitGf(CCP_0);   <span class="hljs-comment">/* 等待门控标志 */</span>
+HAL_CCP_WaitFf(CCP_0);   <span class="hljs-comment">/* 等待强制标志 */</span>
+</div></code></pre>
+<h3 id="运行时更新">运行时更新</h3>
+<pre class="hljs"><code><div>HAL_CCP_UpdateTypeDef upd = { .CCP = CCP_0, .Duty = <span class="hljs-number">0x2000</span>, .GateStart = <span class="hljs-number">0</span>, .GateEnd = <span class="hljs-number">0</span> };
+HAL_CCP_UpdateNow(&amp;upd);
+</div></code></pre>
+<hr>
+<h2 id="10-wdt">10. WDT</h2>
+<p>共 2 路看门狗：<code>WDT_0</code>（业务用）和 <code>WDT_1</code>（系统 tick，由 <code>HAL_TICK_Init</code> 管理）。</p>
+<h3 id="初始化-3">初始化</h3>
+<pre class="hljs"><code><div>HAL_WDT_InitTypeDef wdt = {
+    .Wdt = WDT_0,
+    .Mode = WDT_MODE_RST,        <span class="hljs-comment">/* 溢出时复位 */</span>
+    .Period = <span class="hljs-number">1000</span>,              <span class="hljs-comment">/* 溢出周期（us） */</span>
+};
+HAL_WDT_Init(&amp;wdt);
+</div></code></pre>
+<ul>
+<li>自动选择满足 8-bit 重载值约束的最快预分频器。</li>
+<li><code>Period</code> 必须在对应时钟档位的有效范围内（见 <code>WDT_H_PERIOD_MIN/MAX</code>）。</li>
+</ul>
+<h3 id="喂狗">喂狗</h3>
+<pre class="hljs"><code><div>HAL_WDT_Clear(WDT_0);   <span class="hljs-comment">/* 必须在 Period 内调用，否则溢出 */</span>
+</div></code></pre>
+<h3 id="模式说明">模式说明</h3>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WDT_MODE_RST</code></td>
+<td>溢出时系统复位</td>
+</tr>
+<tr>
+<td><code>WDT_MODE_INT</code></td>
+<td>溢出时触发 <code>__int17</code> 中断</td>
+</tr>
+<tr>
+<td><code>WDT_MODE_WAKE</code></td>
+<td>溢出时唤醒（从低功耗）</td>
+</tr>
+<tr>
+<td><code>WDT_MODE_INT_AND_WAKE</code></td>
+<td>中断 + 唤醒</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="11-flash">11. Flash</h2>
+<p><code>HAL_FLASH_*</code> 操作 SPI Flash（通过 flashloader 外设 + DMA）。</p>
+<h3 id="初始化-4">初始化</h3>
+<p><code>HAL_FLASH_Init</code> 在 <code>HAL_SYS_Init</code> 中自动调用，无需手动。</p>
+<h3 id="读">读</h3>
+<pre class="hljs"><code><div>HAL_Flash_PacketTypeDef pkt = {
+    .Data = buf,
+    .Address = <span class="hljs-number">0x001000</span>,
+    .Length = <span class="hljs-number">256</span>,   <span class="hljs-comment">/* 字数 */</span>
+    .DmaCh = OC32_DMA_CH0,
+};
+HAL_FLASH_Read(&amp;pkt);
+</div></code></pre>
+<ul>
+<li>满足条件时（Length 是 16 的倍数、buf 4 字节对齐、lines 为 2 的幂次）自动走 DMA 快读，否则逐字读。</li>
+</ul>
+<h3 id="写编程">写（编程）</h3>
+<pre class="hljs"><code><div>HAL_Flash_PacketTypeDef pkt = {
+    .Data = &amp;word,
+    .Address = <span class="hljs-number">0x002000</span>,
+    .Length = <span class="hljs-number">1</span>,
+    .DmaCh = OC32_DMA_CH0,
+};
+HAL_FLASH_Program(&amp;pkt);
+</div></code></pre>
+<ul>
+<li>所有数据必须在同一 256 字节页内。</li>
+</ul>
+<h3 id="擦除">擦除</h3>
+<pre class="hljs"><code><div>HAL_Flash_PacketTypeDef pkt = {
+    .Data = <span class="hljs-literal">NULL</span>,
+    .Address = <span class="hljs-number">0x002000</span>,
+    .Length = FLASH_PAGE_SIZE,   <span class="hljs-comment">/* 256 字节，页对齐 */</span>
+    .DmaCh = OC32_DMA_CH0,
+};
+HAL_FLASH_Erase(&amp;pkt);
+</div></code></pre>
+<ul>
+<li>地址和长度必须页对齐（256 B），自动选择 4 KB 扇区擦除或 256 B 页擦除。</li>
+</ul>
+<h3 id="crc-校验与自动恢复">CRC 校验与自动恢复</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">/* 生成器使能 HAL_FLASH_VERIFY_ENABLE 时可用 */</span>
+HAL_FLASH_VerifyCode();   <span class="hljs-comment">/* 校验 4 个区（Bank0/1 × Zone0/1），出错时自动从好 bank 复制 */</span>
+</div></code></pre>
+<ul>
+<li>需要 ~1 KB 静态 buffer，<strong>调用时不得运行其他 DMA/CRC 操作</strong>。</li>
+</ul>
+<hr>
+<h2 id="12-crc">12. CRC</h2>
+<p>硬件 CRC 支持 5/8/16/32 位多项式，输入/输出 bit 反转，补码。</p>
+<h3 id="初始化-5">初始化</h3>
+<pre class="hljs"><code><div>HAL_CRC_InitTypeDef crc = {
+    .Poly = <span class="hljs-number">0x04C11DB7U</span>,
+    .InitVal = <span class="hljs-number">0xFFFFFFFFU</span>,
+    .Bits = CRC_32_BIT,
+    .RefIn = <span class="hljs-number">1U</span>,
+    .RefOut = <span class="hljs-number">1U</span>,
+    .CplOut = <span class="hljs-number">1U</span>,
+    .Rvb = <span class="hljs-number">0</span>,
+    .DmaCh = OC32_DMA_CH0,
+};
+HAL_CRC_Init(&amp;crc);
+</div></code></pre>
+<h3 id="单值计算阻塞">单值计算（阻塞）</h3>
+<pre class="hljs"><code><div><span class="hljs-type">uint32_t</span> crc_byte  = HAL_CRC_OneByte(<span class="hljs-number">0x12</span>);
+<span class="hljs-type">uint32_t</span> crc_word  = HAL_CRC_OneWord(<span class="hljs-number">0x1234</span>);
+</div></code></pre>
+<h3 id="包计算">包计算</h3>
+<pre class="hljs"><code><div>HAL_CRC_PacketTypedef pkt = {
+    .Data = buf,
+    .Length = <span class="hljs-number">1024</span>,
+    .IntE = MODULE_INT_OFF,
+    .IDM = CRC_IDM_READ_DMA,   <span class="hljs-comment">/* DMA 读取 */</span>
+};
+HAL_ResultTypedef r = HAL_CRC_Packet(&amp;pkt);
+<span class="hljs-type">uint32_t</span> crc32 = r.Data;
+</div></code></pre>
+<ul>
+<li><code>CRC_IDM_READ_DMA</code>：DMA 读取 buf，结果经 <code>r.Data</code> 返回。</li>
+<li><code>CRC_IDM_WRITE_CRCIN</code>：写入模式（供 Flashloader 等内部使用）。</li>
+</ul>
+<hr>
+<h2 id="13-lvd">13. LVD</h2>
+<p>低压检测，电压低于阈值时触发告警。</p>
+<h3 id="初始化-6">初始化</h3>
+<pre class="hljs"><code><div>HAL_LVD_InitTypeDef lvd = {
+    .Mode = LVD_MODE_INT,
+    .TrigV = LVD_TRIG_V2800,   <span class="hljs-comment">/* 2.8V 触发 */</span>
+};
+HAL_LVD_Init(&amp;lvd);
+</div></code></pre>
+<ul>
+<li>触发后由 <code>__int0</code> 向量（HRF）处理，自动调用 <code>HAL_LVD_IRQHandler</code>。</li>
+</ul>
+<hr>
+<h2 id="14-中断管理-hic">14. 中断管理 (HIC)</h2>
+<p>OC32 使用<strong>硬件中断控制器（HIC）</strong>，而非传统 NVIC。中断向量 0~31 固定映射到各外设（见 <code>oc32_hal_int.c</code>）：</p>
+<table>
+<thead>
+<tr>
+<th>向量</th>
+<th>外设</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>HRF（POR/LVD/PLL 错误）</td>
+</tr>
+<tr>
+<td>1~8</td>
+<td>CMP0/CMP1、CCP0~5</td>
+</tr>
+<tr>
+<td>9~16</td>
+<td>TIMER0~7</td>
+</tr>
+<tr>
+<td>17</td>
+<td>WDT0/WDT1</td>
+</tr>
+<tr>
+<td>18~19</td>
+<td>ADC0/ADC1</td>
+</tr>
+<tr>
+<td>20~21</td>
+<td>UART0/UART1</td>
+</tr>
+<tr>
+<td>22~23</td>
+<td>SPI0/SPI1</td>
+</tr>
+<tr>
+<td>24</td>
+<td>IIC</td>
+</tr>
+<tr>
+<td>25~27</td>
+<td>MPWM0~2</td>
+</tr>
+<tr>
+<td>28</td>
+<td>DAC</td>
+</tr>
+<tr>
+<td>29</td>
+<td>Flash（恒关）/ CRC</td>
+</tr>
+<tr>
+<td>30~31</td>
+<td>PORTA / PORTB</td>
+</tr>
+</tbody>
+</table>
+<h3 id="配置步骤">配置步骤</h3>
+<ol>
+<li><code>HAL_HIC_Init</code> 中通过 <code>ChEnable</code> 使能需要的中断通道位（<code>OC32_HIC_*</code>）；</li>
+<li>各外设自身的 <code>IntE</code> 标志（如 <code>Packet-&gt;IntE</code>、<code>Init-&gt;IntE</code>）决定是否让外设产生中断；</li>
+<li>外设 IRQ 处理函数（如 <code>HAL_SPI_IRQHandler</code>）由对应向量自动调用，用户逻辑写在 <code>HAL_XXX_UserIRQ</code>（弱符号）中。</li>
+</ol>
+<h3 id="抢占">抢占</h3>
+<p><code>HIPRM</code> 寄存器允许高优先级中断抢占当前中断。<code>oc32_hal_int.c</code> 中各 handler 已保存/恢复 <code>EIA</code>（返回地址）以支持抢占。</p>
+<hr>
+<h2 id="15-dma">15. DMA</h2>
+<p>共 4 路 DMA 通道（<code>OC32_DMA_CH0~3</code>），通过 <code>DMAChState[]</code> 全局数组跟踪各通道占用状态。</p>
+<ul>
+<li>各模块（UART/SPI/CRC/Flash）的 <code>DmaCh</code> 字段指定使用哪个 DMA 通道。</li>
+<li><code>HAL_DMA_Update</code> 在传输前将通道映射到目标模块（<code>OC32_DMA_*</code>），传输结束后置为 <code>OC32_DMA_IDLE</code>。</li>
+<li>避免让多个模块共享同一 DMA 通道同时传输，否则会导致数据错乱。</li>
+</ul>
+<blockquote>
+<p>注意：<code>FLASH</code>、<code>CRC</code> 等内部操作默认占用 <code>OC32_DMA_CH0</code>，业务模块使用时需避开冲突。</p>
+</blockquote>
+<hr>
+<h2 id="16-调试输出">16. 调试输出</h2>
+<p><code>oc32_hal_conf.h</code> 中 <code>HAL_UART_DEBUG_ENABLE</code> 使能后，提供轻量级 <code>puts</code> / <code>printf</code>（weak）：</p>
+<pre class="hljs"><code><div><span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;boot ok\r\n&quot;</span>);
+<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;sclk=%u crc=%x\r\n&quot;</span>, SystemClock, crc32);
+</div></code></pre>
+<ul>
+<li>支持的格式符：<code>%d %u %x %X %s %c %p %%</code>。</li>
+<li>输出到 <code>oc32_hal_conf.h</code> 指定的调试 UART（<code>HAL_UART0_DEBUG</code> / <code>HAL_UART1_DEBUG</code>）。</li>
+<li>仅支持<strong>非负整数与 32 位值</strong>，无浮点、无字符串长度检查（<code>%s</code> 假定 <code>\0</code> 结尾）。</li>
+</ul>
+<hr>
+<h2 id="17-错误码与返回类型">17. 错误码与返回类型</h2>
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">enum</span> {</span>
+    HAL_OK      = <span class="hljs-number">0x00U</span>,
+    HAL_ERROR   = <span class="hljs-number">0x01U</span>,
+    HAL_BUSY    = <span class="hljs-number">0x02U</span>,
+    HAL_TIMEOUT = <span class="hljs-number">0x03U</span>
+} HAL_StatusTypeDef;
+
+<span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span>
+    <span class="hljs-type">uint32_t</span> Data;           <span class="hljs-comment">/* 数据 */</span>
+    HAL_StatusTypeDef Error; <span class="hljs-comment">/* 状态 */</span>
+} HAL_ResultTypedef;
+</div></code></pre>
+<table>
+<thead>
+<tr>
+<th>返回类型</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HAL_StatusTypeDef</code></td>
+<td>纯操作类 API（Init/DeInit/Transfer/Clear...）</td>
+</tr>
+<tr>
+<td><code>HAL_ResultTypedef</code></td>
+<td>需返回数据的 API（<code>_OneByte</code>/<code>_OneWord</code>/<code>TransferOnce</code>/<code>CRC_Packet</code>）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="18-注意事项">18. 注意事项</h2>
+<ol>
+<li><strong>不要改动 <code>hal/inc/</code> 与 <code>hal/src/</code> 的核心逻辑</strong>，业务逻辑放在应用层；需扩展时用 <code>HAL_XXX_UserIRQ</code> 等弱符号覆盖。</li>
+<li><strong>阻塞类 API</strong>（<code>WaitOv</code>/<code>WaitEv</code>/<code>TransferOnce</code>/轮询 <code>TransferPacket</code>）在调用期间<strong>必须保证对应外设中断不被屏蔽</strong>，否则 busy-wait 无法结束。</li>
+<li><strong>中断模式</strong>的 <code>TransferPacket</code> 立即返回，需通过 <code>HAL_XXX_UserIRQ</code> 获取完成通知；<code>_OneByte</code>/<code>_OneWord</code> 无中断模式。</li>
+<li><strong>Length 单位</strong>：UART/SPI 的 <code>Packet.Length</code> 与 <code>CRC</code> 的 <code>Length</code> 均为<strong>字（32 位）或按各自约定</strong>，SPI <code>TransferOnce</code> 限制 ≤4 字。</li>
+<li><strong>DMA 通道独占</strong>：同一通道不要并发服务两个模块；<code>FLASH</code>/<code>CRC</code> 内部默认占 CH0。</li>
+<li><strong><code>HAL_FLASH_VerifyCode</code></strong> 会覆盖 DMA/CRC 配置且需 1KB buffer，调用时不得运行其他 DMA/CRC 操作。</li>
+<li><strong><code>SystemClock</code></strong> 全局变量在 <code>HAL_RCM_Init</code> 后有效，<code>HAL_FLASH_ClkUpdate</code> 依赖它调整 Flash 分频。</li>
+<li><strong>时钟源/Flash 分区/模块使能</strong>由 <code>oc32_hal_conf.h</code>（生成器产出）决定，切换芯片时重新生成而非手改。</li>
+</ol>
+<hr>
+<p><em>文档版本与 HAL 源码同步维护。若 API 有变更，请同步更新本手册。</em></p>
+
+</body>
+</html>

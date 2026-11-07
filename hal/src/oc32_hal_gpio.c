@@ -20,7 +20,11 @@
  * @brief  Initializes the GPIO peripheral.
  * @param  Init: pointer to a HAL_GPIO_InitTypeDef structure that contains
  *         the configuration information for the specified GPIO peripheral.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init->Port is not PORT_A/PORT_B
+ * @note   For output mode: sets data, slew rate, and output enable.
+ *         For input mode: configures pull, noise filter, and interrupt
+ *         edge detection (RIE/FIE), and clears stale interrupt flags (IFC).
  */
 HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init)
 {
@@ -115,7 +119,9 @@ HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init)
  * @brief  DeInitializes the GPIO peripheral.
  * @param  Init: pointer to a HAL_GPIO_InitTypeDef structure that contains
  *         the configuration information for the specified GPIO peripheral.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Init->Port is not PORT_A/PORT_B
+ * @note   Disables output, pull, interrupt, and filter for the specified pin.
  */
 HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIO_InitTypeDef *Init)
 {

@@ -42,6 +42,7 @@ $PYTHON_CMD -m PyInstaller --onefile --windowed \
     --name "OC32_HAL_Config_Generator" \
     --add-data "chips:chips" \
     --add-data "hal:hal" \
+    --add-data "hal/doc:hal/doc" \
     --add-data "pure_ttk:pure_ttk" \
     pure_ttk/ui.py --noconfirm
 
@@ -63,6 +64,7 @@ if command -v wine >/dev/null 2>&1 && [ -f "$WINE_PYTHON" ]; then
         --name "OC32_HAL_Config_Generator" \
         --add-data "chips;chips" \
         --add-data "hal;hal" \
+        --add-data "hal/doc;hal/doc" \
         --add-data "pure_ttk;pure_ttk" \
         pure_ttk/ui.py --noconfirm
     if [ -f "dist/OC32_HAL_Config_Generator.exe" ]; then

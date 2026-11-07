@@ -198,7 +198,7 @@ extern "C"
    */
   typedef enum
   {
-    TIMER_EXPAUSE_HI = 0,
+    TIMER_EXPAUSE_HI = 0U,
     TIMER_EXPAUSE_LO = 1U
   } HAL_TIMER_ExPauseConTypedef;
 
@@ -294,7 +294,7 @@ extern "C"
     MODULE_TIMER_TypeDef *Timer;        /*!< Specifies the timer */
     HAL_TIMER_ResetGenTypedef GenEvent; /*!< Specifies the reset event generation */
     HAL_TIMER_ExResetTypedef ExSource;  /*!< Specifies the reset ex-source */
-    HAL_TIMER_ExResetConTypedef ExCon;  /*!< Specifies the reset ex-source conditon */
+    HAL_TIMER_ExResetConTypedef ExCon;  /*!< Specifies the reset ex-source condition */
   } HAL_TIMER_ResetInitTypeDef;
 
   /**
@@ -305,7 +305,7 @@ extern "C"
     MODULE_TIMER_TypeDef *Timer;        /*!< Specifies the timer */
     HAL_TIMER_PauseGenTypedef GenEvent; /*!< Specifies the pause event generation */
     HAL_TIMER_ExPauseTypedef ExSource;  /*!< Specifies the reset ex-source */
-    HAL_TIMER_ExPauseConTypedef ExCon;  /*!< Specifies the reset ex-source conditon */
+    HAL_TIMER_ExPauseConTypedef ExCon;  /*!< Specifies the reset ex-source condition */
   } HAL_TIMER_PauseInitTypeDef;
 
   /**

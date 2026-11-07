@@ -1,6 +1,7 @@
 {
     "name": "CV32S6015",
     "clk_sources": ["IHOSC", "ILOSC", "XHOSC"],
+    "sclk_max": 99000000,
     "ilosc_real": false,
     "ihosc_freq": 24000000,
     "ilosc_freq": 4000,
@@ -78,7 +79,7 @@
         },
         {
             "key": "FLASH_VERIFY",
-            "description": "Verify Flash Code",
+            "description": "Verify Flash Data Integrity",
             "always": false,
             "macro_name": "FLASH_VERIFY",
             "dependencies": [
@@ -87,18 +88,13 @@
             ]
         },
         {
-            "key": "LVD",
-            "description": "Low Voltage Detector",
-            "always": false
-        },
-        {
             "key": "UART",
-            "description": "UART",
+            "description": "Universal Asynchronous Receiver/Transmitter",
             "always": false
         },
         {
             "key": "TIMER",
-            "description": "Timer",
+            "description": "Counter/Timer",
             "always": false
         },
         {
@@ -108,6 +104,51 @@
             "dependencies": [
                 "TIMER"
             ]
+        },
+        {
+            "key": "SPI",
+            "description": "Serial Peripheral Interface",
+            "always": false
+        },
+        {
+            "key": "IIC",
+            "description": "Inter-Integrated Circuit",
+            "always": false
+        },
+        {
+            "key": "MPWM",
+            "description": "Multiway PWM",
+            "always": false
+        },
+        {
+            "key": "LVD",
+            "description": "Low Voltage Detector",
+            "always": false
+        },
+        {
+            "key": "ADC",
+            "description": "Analog to Digital Converter",
+            "always": false
+        },
+        {
+            "key": "DAC",
+            "description": "Digital to Analog Converter",
+            "always": false
+        },
+        {
+            "key": "CMP",
+            "description": "Analog Comparator",
+            "always": false
+        },
+        {
+            "key": "AMP",
+            "description": "Analog Amplifier",
+            "always": false
+        },
+        {
+            "key": "VTS",
+            "description": "Voltage Internal Temperature Sensor",
+            "always": false
         },
         {
             "key": "DEBUG",

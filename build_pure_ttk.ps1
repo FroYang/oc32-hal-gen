@@ -33,6 +33,7 @@ python -m PyInstaller --onefile --windowed `
     --name "OC32_HAL_Config_Generator" `
     --add-data "chips;chips" `
     --add-data "hal;hal" `
+    --add-data "hal\doc;hal\doc" `
     --add-data "pure_ttk;pure_ttk" `
     pure_ttk/ui.py --noconfirm
 

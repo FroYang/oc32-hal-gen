@@ -43,7 +43,8 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_ClkUpdate(void)
 
 /**
  * @brief  Kickstart flashloader operation
- * @retval HAL_OK on success, HAL_ERROR on timeout
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: on timeout
  */
 __sram__ HAL_StatusTypeDef FlashKick(void)
 {
@@ -60,8 +61,9 @@ __sram__ HAL_StatusTypeDef FlashKick(void)
 }
 
 /**
- * @brief  set SPI flash Write Enable
- * @retval HAL_OK on success, HAL_ERROR on timeout
+ * @brief  Sets SPI flash Write Enable
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: on timeout
  */
 __sram__ HAL_StatusTypeDef FlashWREN(void)
 {
@@ -71,10 +73,14 @@ __sram__ HAL_StatusTypeDef FlashWREN(void)
 }
 
 /**
- * @brief  Read lines of data(4 word per line) from the specified address.
- * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
- *         the configuration information for data packet.
- * @retval HAL status
+ * @brief  Reads lines of data (4 words per line) from the specified address using DMA.
+ * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ *         the configuration information for the data packet.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if flashloader operation times out
+ * @note   Internal helper; reads into Packet->Data via DMA flash channel.
+ *         Packet->Length must be a multiple of 16 words and Packet->Data
+ *         must be 32-bit aligned.
  */
 __sram__ HAL_StatusTypeDef FlashReadLines(HAL_Flash_PacketTypeDef *Packet)
 {
@@ -89,7 +95,7 @@ __sram__ HAL_StatusTypeDef FlashReadLines(HAL_Flash_PacketTypeDef *Packet)
     /* using core-accessing config, no need to config at user side*/
     FLUCON->FLURUCS = 1;
 
-    HAL_DMA_Update(Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_BUSY);
+    HAL_DMA_Update(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_BUSY);
 
     /* DMA mode */
     FLUCON->FLURRE = 1;
@@ -103,19 +109,22 @@ __sram__ HAL_StatusTypeDef FlashReadLines(HAL_Flash_PacketTypeDef *Packet)
 
     FLUCON->FLURUCS = 0;
     FLUCON->FLURRE = 0;
-    HAL_DMA_Update(Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
+    HAL_DMA_Update(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
     return HAL_OK;
 
 error:
     FLUCON->FLURUCS = 0;
     FLUCON->FLURRE = 0;
-    HAL_DMA_Update(Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
+    HAL_DMA_Update(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
     return HAL_ERROR;
 }
 
 /**
- * @brief  setup SPI flash Quad-Read mode for CPU instruction read
- * @retval HAL status
+ * @brief  Sets up SPI flash Quad-Read mode for CPU instruction fetch
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: on timeout
+ * @note   Writes the QE bit in Status Register 2, then configures the
+ *         core-accessing flash controller for 4-line (Quad) reads.
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_CPUQuadRead(void)
 {
@@ -151,7 +160,10 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_CPUQuadRead(void)
 
 /**
  * @brief  Initializes the FLASH peripheral.
- * @retval HAL status
+ * @retval HAL_OK: on success
+ * @note   Disables all interrupts (HAL_HIC_DeInit), configures the flashloader
+ *         for standard read mode, updates the flash clock divider based on
+ *         SystemClock, and sets default read latency / data length / operation type.
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void)
 {
@@ -183,10 +195,14 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void)
 }
 
 /**
- * @brief  Read data from the specified address.
- * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
- *         the configuration information for data packet.
- * @retval HAL status
+ * @brief  Reads data from the specified flash address.
+ * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ *         the configuration information for the data packet.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Packet/Data/Length is invalid, address out of range,
+ *         or flashloader operation times out
+ * @note   Uses DMA for aligned multi-line reads; falls back to byte-by-byte
+ *         user-accessing reads for small or unaligned transfers.
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_Flash_PacketTypeDef *Packet)
 {
@@ -249,10 +265,13 @@ error:
 }
 
 /**
- * @brief  Program word at the specified address.
- * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
- *         the configuration information for data packet.
- * @retval HAL status
+ * @brief  Programs a word at the specified flash address.
+ * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ *         the configuration information for the data packet.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Packet/Data is NULL, data spans multiple pages,
+ *         or flashloader operation times out
+ * @note   All data in Packet->Data must reside within a single 256-byte page.
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_Flash_PacketTypeDef *Packet)
 {
@@ -308,10 +327,14 @@ error:
 }
 
 /**
- * @brief  Erase the specified address range.
- * @param  Packet: pointer to HAL_Flash_PacketTypeDef structure that contains
- *         the configuration information for data packet.
- * @retval HAL status
+ * @brief  Erases the specified flash address range.
+ * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ *         the configuration information for the data packet.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Packet is NULL, address/length is not page-aligned,
+ *         range is out of bounds, or flashloader operation times out
+ * @note   Uses sector erase (4 KB) wherever possible, falling back to
+ *         page erase (256 B) for partial sectors.
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet)
 {
@@ -361,7 +384,9 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet)
 }
 
 /**
- * @brief  CRC init for flash
+ * @brief  CRC init for flash operations
+ * @note   Internal helper; configures the CRC peripheral with default
+ *         settings for flash integrity checking.
  */
 void FlashCrcInit(void)
 {
@@ -379,10 +404,16 @@ void FlashCrcInit(void)
 }
 
 /**
- * @brief  Read a flash zone and update the crc
- * @param  Zone: pointer to HAL_Flash_ZoneTypeDef structure that contains
- *         the configuration information for zone.
- * @retval HAL status
+ * @brief  Reads a flash zone and updates the CRC32 stored at the zone boundary.
+ * @param  Zone: pointer to a HAL_Flash_ZoneTypeDef structure that contains
+ *         the bank/zone configuration.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Zone is NULL, a read/CRC error occurs, or the
+ *         CRC program write fails
+ * @note   Reads the zone in 1 KB blocks via DMA, computes the running CRC,
+ *         then programs the final CRC value into the last 4 bytes of the zone
+ *         (offset 1020). Uses a 1 KB static DMA buffer; caller must ensure
+ *         sufficient memory before calling.
  */
 HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
 {
@@ -460,10 +491,13 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
 
 #ifdef HAL_FLASH_VERIFY_ENABLE
 /**
- * @brief  Read a flash region into the given buffer
- * @param  Address: Zone Address
- * @param  Size: Zone size
- * @retval HAL status
+ * @brief  Reads a flash region and verifies CRC in 1 KB blocks.
+ * @param  Address: starting address of the region
+ * @param  Size: size of the region in bytes
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if a read or CRC operation fails
+ * @note   Internal helper; uses a 1 KB static DMA buffer. The final CRC result
+ *         is discarded (caller inspects CRCOUT directly after each block).
  */
 HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
 {
@@ -502,11 +536,14 @@ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
 }
 
 /**
- * @brief  copy zone from good bank to bad bank
- * @param  Bank0Err: Bank0 error flag
- * @param  Bank1Err: Bank1 error flag
- * @param  Size: Zone size
- * @retval HAL status
+ * @brief  Copies a zone from the good bank to the bad bank.
+ * @param  Bank0Err: non-zero if bank 0 has an error
+ * @param  Bank1Err: non-zero if bank 1 has an error
+ * @param  Size: zone size in bytes (OC32_CODE_ZONE0_SIZE or OC32_CODE_ZONE1_SIZE)
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if both or neither bank has an error, or a read/program fails
+ * @note   Erases the destination zone, then copies the source zone page-by-page
+ *         (256 B per page) into the destination. Uses a static DMA buffer.
  */
 __sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, uint32_t Size)
 {
@@ -575,14 +612,16 @@ __sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, u
 }
 
 /**
- * @brief  Verify the CRC of user program code in flash, recover it if error.
- * @retval HAL status
+ * @brief  Verifies the CRC of user program code in flash; recovers it if error.
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if CRC error is detected and cannot be recovered after
+ *         HAL_FLASH_VERIFY_RETRY attempts
  *
  * NOTICE:
- * RUN THIS FUNCTION WITHOUT ANY OTHER HARDWARE MODULE FUNCTION RUNNING
- * IT WILL OVERRIDE THE DMA & CRC CONFIG WITHOUT ANY RECOVERY
- * IT WILL REQUEST 1K DATA BUFFER FOR FLASH OPERATION, PLEASE MAKE SURE
- * ENOUGH MEMORY BEFORE CALLING IT
+ * RUN THIS FUNCTION WITHOUT ANY OTHER HARDWARE MODULE FUNCTION RUNNING.
+ * IT WILL OVERRIDE THE DMA & CRC CONFIG WITHOUT ANY RECOVERY.
+ * IT WILL REQUEST 1K DATA BUFFER FOR FLASH OPERATION; PLEASE MAKE SURE
+ * ENOUGH MEMORY IS AVAILABLE BEFORE CALLING IT.
  */
 __sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void)
 {
