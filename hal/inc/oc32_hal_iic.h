@@ -135,7 +135,7 @@ extern "C"
   {
     HAL_IIC_AddrModeTypedef AddrMode; /*!< Specifies address bit width */
     uint32_t ClkDiv;                  /*!< Specifies the IIC master clock divider */
-    HAL_IIC_StretchTypedef Stretch;   /*!< Specifies Clock-Stretching enable (slave) */
+    HAL_EnableTypeDef Stretch;        /*!< Specifies Clock-Stretching enable (slave) */
     HAL_IIC_PinsTypedef Pins;         /*!< Specifies the pins */
     HAL_DMA_ChTypedef DmaCh;          /*!< Specifies the DMA channel for transfers */
   } HAL_IIC_InitTypeDef;

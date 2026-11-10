@@ -14,7 +14,7 @@ extern "C"
 {
 #endif
 
-#include "CV32S6015UMSR.h"
+#include "CV32S6015MSR.h"
 
 /* Exported types ------------------------------------------------------*/
 

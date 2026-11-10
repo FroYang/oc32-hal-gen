@@ -84,6 +84,7 @@ extern "C"
 #include "oc32_hal_timer.h"
 #include "oc32_hal_ccp.h"
 #include "oc32_hal_spi.h"
+#include "oc32_hal_iic.h"
 
 #ifdef HAL_UART_DEBUG_ENABLE
   __weak__ int puts(const char *s);
