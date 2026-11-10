@@ -99,7 +99,7 @@ extern "C"
     HAL_UART_BaudTypedef Baud;     /*!< Specifies the Baudrate */
     HAL_UART_DuplexTypedef Duplex; /*!< Specifies the Half-duplex */
     HAL_UART_PinsTypedef Pins;     /*!< Specifies the pins */
-    HAL_DMA_ChTypedef DmaCh;       /*!< Specifies DMA channel for transfer */
+    HAL_DMA_ChTypedef DmaCh;       /*!< Specifies DMA channel for transfer, requisite if Interrupt is enabled */
   } HAL_UART_InitTypeDef;
 
   /**
@@ -109,7 +109,7 @@ extern "C"
   {
     uint32_t *Data;            /*!< Specifies Data buffer */
     uint32_t Length;           /*!< Specifies Data Length in bytes */
-    HAL_MODULE_INTTypedef IntE; /*!< Specifies the interrupt */
+    HAL_EnableTypeDef IntE; /*!< Specifies the interrupt */
   } HAL_UART_PacketTypedef;
 
   /**
@@ -122,12 +122,8 @@ extern "C"
 #ifdef HAL_UART_ENABLE
   HAL_StatusTypeDef HAL_UART_Init(HAL_UART_InitTypeDef *Init);
   HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart);
-  __sram__ HAL_StatusTypeDef HAL_UART_TX_OneByte(MODULE_UART_TypeDef *Uart, uint32_t Data);
-  __sram__ HAL_StatusTypeDef HAL_UART_TX_OneWord(MODULE_UART_TypeDef *Uart, uint32_t Data);
-  __sram__ HAL_StatusTypeDef HAL_UART_TX_Packet(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet);
-  __sram__ HAL_ResultTypedef HAL_UART_RX_OneByte(MODULE_UART_TypeDef *Uart);
-  __sram__ HAL_ResultTypedef HAL_UART_RX_OneWord(MODULE_UART_TypeDef *Uart);
-  __sram__ HAL_StatusTypeDef HAL_UART_RX_Packet(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypeDef HAL_UART_TX(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypeDef HAL_UART_RX(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet);
   __sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(MODULE_UART_TypeDef *Uart);
   __sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(MODULE_UART_TypeDef *Uart);
 #endif /* HAL_UART_ENABLE */

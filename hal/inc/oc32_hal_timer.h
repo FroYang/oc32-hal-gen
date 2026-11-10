@@ -263,7 +263,7 @@ extern "C"
     uint32_t ReloadVal;                       /*!< Specifies the reload value */
     uint32_t PreScaler;                       /*!< Specifies the prescaler */
     uint32_t CountVal;                        /*!< Specifies the counter value */
-    HAL_MODULE_INTTypedef IntE;               /*!< Specifies the interrupt mode */
+    HAL_EnableTypeDef IntE;               /*!< Specifies the interrupt mode */
     HAL_TIMER_CountModeTypedef CountMode;     /*!< Specifies the count mode */
     HAL_TIMER_StopConTypedef StopCon;         /*!< Specifies the stop condition */
     HAL_TIMER_OvflagModeTypedef OvfMode;      /*!< Specifies the overflow flag mode */
@@ -315,7 +315,7 @@ extern "C"
   {
     MODULE_TIMER_TypeDef *Timer;         /*!< Specifies the timer */
     uint32_t OvfPost;                    /*!< Specifies the overflag event post counter */
-    HAL_MODULE_INTTypedef IntE;          /*!< Specifies the event interrupt mode */
+    HAL_EnableTypeDef IntE;          /*!< Specifies the event interrupt mode */
     HAL_TIMER_EventSourceTypedef Source; /*!< Specifies the event source */
     HAL_TIMER_ExEventConTypedef ExCon;   /*!< Specifies the event ex-source condition */
   } HAL_TIMER_EventInitTypeDef;

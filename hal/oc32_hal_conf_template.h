@@ -30,12 +30,6 @@ extern "C"
 
 /* Exported constants ----------------------------------------------------*/
 
-  typedef enum
-  {
-    MODULE_INT_OFF = 0x0U,
-    MODULE_INT_ON = 0x1U
-  } HAL_MODULE_INTTypedef;
-
 /** @defgroup HAL_Clocks HAL Clocks
  * @{
  */
@@ -128,7 +122,6 @@ __HAL_CONFIG_CDR_LINES__
   } HAL_TICK_FreqTypeDef;
 
   extern volatile uint32_t uwTick;
-  extern HAL_TICK_FreqTypeDef uwTickFreq;
 
   __HAL_CONFIG_UART_DEBUG_BLOCK__
 

@@ -32,12 +32,21 @@
  * @{
  */
 volatile uint32_t uwTick;
-HAL_TICK_FreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT; /* 1KHz */
 
 /* Syscall request buffer: filled by __syscall_handler via SYSC instruction */
 static uint32_t requestbuf[4];
 
-/* DMA Channel State */
+/* DMA Channel State
+ *
+ * Per-channel busy/idle bookkeeping for the shared DMA hardware. Each
+ * peripheral declares the DMA channel it wants via its Init struct's DmaCh
+ * field (set by the user at init time). The HAL layer does NOT arbitrate
+ * channel ownership between modules: the user is responsible for assigning
+ * non-conflicting channels and for serializing access to any channel that
+ * two modules both claim. DMAChState[] only tracks whether the channel is
+ * currently in use so that HAL_DMA_Update() can reject a second BUSY claim
+ * on the same channel. Flash operations are exclusive with respect to the
+ * DMA/CRC configuration (see HAL_FLASH_VerifyCode). */
 uint32_t DMAChState[OC32_DMA_CH_TOTAL];
 
 /* Fuse data symbols defined in crti-hw.S (.boot section), linked by compiler */
@@ -57,8 +66,13 @@ extern const uint32_t __FUSE_REGTRIM2[4];
 
 /**
  * @brief  Minimal memcpy for bare-metal (-nostdlib) environments.
+ * @note   Compiled only when NO_STDLIB is defined (pass -DNO_STDLIB for
+ *         bare-metal builds that do not link the C library). Marked weak so
+ *         that a stronger definition (e.g. from a hand-rolled runtime or a
+ *         later-stage library) automatically overrides this one.
  */
-void *memcpy(void *dest, const void *src, uint32_t n)
+#ifdef NO_STDLIB
+__weak__ void *memcpy(void *dest, const void *src, uint32_t n)
 {
     uint8_t *d = (uint8_t *)dest;
     const uint8_t *s = (const uint8_t *)src;
@@ -68,11 +82,17 @@ void *memcpy(void *dest, const void *src, uint32_t n)
     }
     return dest;
 }
+#endif /* NO_STDLIB */
 
 /**
  * @brief  Minimal memset for bare-metal (-nostdlib) environments.
+ * @note   Compiled only when NO_STDLIB is defined (pass -DNO_STDLIB for
+ *         bare-metal builds that do not link the C library). Marked weak so
+ *         that a stronger definition (e.g. from a hand-rolled runtime or a
+ *         later-stage library) automatically overrides this one.
  */
-void *memset(void *dest, int c, uint32_t n)
+#ifdef NO_STDLIB
+__weak__ void *memset(void *dest, int c, uint32_t n)
 {
     uint8_t *d = (uint8_t *)dest;
 
@@ -83,6 +103,7 @@ void *memset(void *dest, int c, uint32_t n)
 
     return dest;
 }
+#endif /* NO_STDLIB */
 
 /**
  * @brief  update DMA channel state
@@ -92,6 +113,14 @@ void *memset(void *dest, int c, uint32_t n)
  * @param  State: DMA state to record for the channel
  * @retval HAL_OK: on success (or if DMAE indicates the channel is already enabled)
  * @retval HAL_ERROR: if DmaCh is invalid or the channel is already busy
+ *
+ * @note   This helper only tracks per-channel busy/idle and maps a channel to
+ *         one module. It does NOT arbitrate ownership between modules: the
+ *         caller (user) assigns which channel each module uses and is
+ *         responsible for keeping a channel from being claimed by two modules
+ *         at the same time. Flash/CRC internal operations default to CH0,
+ *         so user-configured modules that also use CH0 must not run them
+ *         concurrently (see HAL_FLASH_VerifyCode's exclusivity note).
  */
 __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
 {
@@ -99,8 +128,8 @@ __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChType
     if (DMAE == HAL_ENABLE)
         return HAL_OK;
 
-    /* error if try to set the busy channel to busy state 
-    allow only transition: busy -> idle or idle -> busy */
+    /* error if try to set the busy channel to busy state
+    allow: busy -> idle; idle -> idle/busy */
     if ((State == OC32_DMA_BUSY) && (DMAChState[DmaCh] == OC32_DMA_BUSY))
         return HAL_ERROR;
 
@@ -127,9 +156,11 @@ __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChType
 }
 
 /**
- * @brief  System trap handler invoked by crtihw.S when SYSC instruction is executed.
- *         Reads fused data from the appropriate source into requestbuf[4].
- * @retval 0 on success, -1 on invalid number
+ * @brief  System trap handler invoked by crti-hw.S when the SYSC trap vector
+ *         is taken. This is a temporary placeholder: it performs no action and
+ *         just returns 0. (The fused-data read into requestbuf[4] is actually
+ *         handled by __syscall_handler, not here.)
+ * @retval 0 on success
  */
 int __systrap_handler(void)
 {
@@ -271,6 +302,10 @@ HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
 
 /**
  * @brief  This function is called to setup global HIC(hardware interrupt controller)
+ * @note   Clears HIE entirely, including the WDT bit. As a result the system
+ *         tick (WDT interrupt, see HAL_HIC_Init) is disabled and HAL_Delay
+ *         stops advancing. Re-enable via HAL_HIC_Init after this call if the
+ *         tick is needed again.
  */
 void HAL_HIC_DeInit(void)
 {
@@ -432,32 +467,32 @@ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
 HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
 {
     /* clear flag */
-    if (HRF->PORF)
+    if (HRF->PORF == HAL_FLAG_VALID)
     {
-        HRF->PORFCLR = 1U;
+        HRF->PORFCLR = HAL_ENABLE;
         return HAL_POR_UserIRQ();
     }
 
-    if (HRF->DBGRF)
+    if (HRF->DBGRF == HAL_FLAG_VALID)
     {
-        HRF->DBGRFCLR = 1U;
+        HRF->DBGRFCLR = HAL_ENABLE;
         return HAL_DBGR_UserIRQ();
     }
 
     /* lvd reset flag or lvd event */
 #ifdef HAL_LVD_ENABLE
-    if (HRF->LVDRF)
+    if (HRF->LVDRF == HAL_FLAG_VALID)
         return HAL_LVD_IRQHandler();
 #endif /* HAL_LVD_ENABLE */
 
 #ifdef HAL_WDT_ENABLE
-    if (HRF->WDT0RF)
+    if (HRF->WDT0RF == HAL_FLAG_VALID)
         return HAL_WDT_IRQHandler();
     /* WDT1 is tick timer, reset disable */
 #endif /* HAL_WDT_ENABLE */
 
 #ifdef HAL_VTS_ENABLE
-    if (HRF->VTSAF)
+    if (HRF->VTSAF == HAL_FLAG_VALID)
         return HAL_VTS_IRQHandler();
 #endif /* HAL_VTS_ENABLE */
 
@@ -470,12 +505,16 @@ HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
  */
 void uart_tx_char(char c)
 {
+    HAL_UART_PacketTypedef Packet;
+    Packet.Length = 1U;
+    Packet.Data = &c;
+    Packet.IntE = HAL_DISABLE;
 #ifdef HAL_UART0_DEBUG
-    HAL_UART_TX_OneByte(UART_0, c);
+    HAL_UART_TX(UART_0, &Packet);
 #endif
 
 #ifdef HAL_UART1_DEBUG
-    HAL_UART_TX_OneByte(UART_1, c);
+    HAL_UART_TX(UART_1, &Packet);
 #endif
 }
 
@@ -604,6 +643,13 @@ static int txptr(void *ptr)
     return count;
 }
 
+/**
+ * @brief  Minimal printf for bare-metal (-nostdlib) environments.
+ * @note   Supported conversion specifiers: %d, %u, %x, %X, %s, %c, %p, %%.
+ *         All values are taken as 32-bit (int / unsigned int / pointer).
+ *         64-bit types (int64_t/uint64_t) and length modifiers (%ld, %hd,
+ *         %ll, etc.) are NOT supported and will print incorrect results.
+ */
 __weak__ int printf(const char *format, ...)
 {
     va_list args;
@@ -725,6 +771,10 @@ __weak__ HAL_StatusTypeDef HAL_SYS_Init(void)
 #endif /* HAL_UART_DEBUG_ENABLE */
 
     /* setup tick timer */
+    /* NOTE: HAL_TICK_Init only configures the WDT (INT mode) tick parameters
+     * and does NOT enable the WDT interrupt in HIE. The system tick only
+     * actually runs once the user calls HAL_HIC_Init() (which sets the WDT
+     * HIE bit). Until then, uwTick stays 0 and HAL_Delay will not advance. */
     if (HAL_TICK_Init() != HAL_OK)
         return HAL_ERROR;
 

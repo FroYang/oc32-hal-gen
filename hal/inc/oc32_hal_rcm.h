@@ -28,23 +28,6 @@ extern "C"
 
     /* Exported types ------------------------------------------------------*/
 
-    /**
-     * @brief  RCM Oscillator trim definition
-     */
-    typedef enum
-    {
-        RCM_OSC_TRIM_OFF = 0x0U,
-        RCM_OSC_TRIM_ON = 0x1U,
-    } HAL_RCM_OscTrimTypedef;
-
-    /**
-     * @brief  RCM Oscillator trim lock definition
-     */
-    typedef enum
-    {
-        RCM_OSC_TRIM_LOCK_OFF = 0x0U,
-        RCM_OSC_TRIM_LOCK_ON = 0x1U,
-    } HAL_RCM_OscTrimLockTypedef;
 
 
 /**
@@ -60,7 +43,24 @@ extern "C"
 /** @defgroup RCM_ClockSwitch_timeout
  * @{
  */
-#define RCM_CLOCKSWITCH_TIMEOUT ((uint32_t)100U)
+/**
+ * RCM_ClockSwitchWait() busy-loop timeout constant.
+ *
+ * Number of volatile CSF poll iterations before returning HAL_TIMEOUT.
+ * Scaled for the oscillator the system clock can still run on when
+ * RCM_ClockSwitchWait() is invoked from HAL_RCM_Init(), i.e. before
+ * HAL_TICK_Init() has started the WDT tick (uwTick == 0).
+ *
+ * Nominal target:
+ *   @ 24 MHz (IHOSC)  ~200 ms   (the wait always begins on IHOSC, before
+ *   any source switch, so the 24 MHz figure is the sizing reference)
+ *
+ * 200 ms comfortably covers a normal PLL/oscillator switch; the legacy
+ * tick-based RCM_CLOCKSWITCH_TIMEOUT (100 ticks at 1 kHz = 100 ms) was
+ * unusable before the tick interrupt was up and running, and this value
+ * supersedes it as a software safety net against a stuck CSF.
+ */
+#define RCM_CSWAIT_LOOP_MAX ((uint32_t)4800000U)
 /**
  * @}
  */
@@ -131,8 +131,8 @@ extern "C"
     __weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void);
 
 #ifdef HAL_USB_ENABLE
-    HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim);
-    HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCM_OscTrimLockTypedef Lock);
+    HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_EnableTypeDef Trim);
+    HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_EnableTypeDef Lock);
 #endif
 
     /* Frequency query functions */

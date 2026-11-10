@@ -77,30 +77,30 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init)
       break;
     }
   }
-  
-  if (counter > 256 ) 
+
+  if (counter > 256)
     return HAL_ERROR;
 
   if (Init->Mode == WDT_MODE_RST)
   {
 
-    Init->Wdt->WDTCON.WDTRE = 1U;
+    Init->Wdt->WDTCON.WDTRE = HAL_ENABLE;
   }
   else
   {
     if ((Init->Mode == WDT_MODE_INT) || (Init->Mode == WDT_MODE_INT_AND_WAKE))
     {
-      Init->Wdt->WDTCON.WDTIE = 1U;
+      Init->Wdt->WDTCON.WDTIE = HAL_ENABLE;
     }
 
     if ((Init->Mode == WDT_MODE_WAKE) || (Init->Mode == WDT_MODE_INT_AND_WAKE))
     {
-      Init->Wdt->WDTCON.WDTWE = 1U;
+      Init->Wdt->WDTCON.WDTWE = HAL_ENABLE;
     }
   }
 
   /* enable the timer */
-  Init->Wdt->WDTCON.WDTE = 1U;
+  Init->Wdt->WDTCON.WDTE = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -119,7 +119,7 @@ __sram__ HAL_StatusTypeDef HAL_WDT_Clear(MODULE_WDT_TypeDef *Wdt)
     return HAL_ERROR;
 
   Wdt->WDTCON.WDTCLR = WDT_CLR_KEY;
-  while (Wdt->WDTCON.WDTTO)
+  while (Wdt->WDTCON.WDTTO == HAL_FLAG_VALID)
     ;
   return HAL_OK;
 }
@@ -137,11 +137,11 @@ HAL_StatusTypeDef HAL_WDT_DeInit(MODULE_WDT_TypeDef *Wdt)
   if (Wdt != WDT_0 && Wdt != WDT_1)
     return HAL_ERROR;
 
-  Wdt->WDTCON.WDTRE = 0;
-  Wdt->WDTCON.WDTWE = 0;
-  Wdt->WDTCON.WDTIE = 0;
+  Wdt->WDTCON.WDTRE = HAL_DISABLE;
+  Wdt->WDTCON.WDTWE = HAL_DISABLE;
+  Wdt->WDTCON.WDTIE = HAL_DISABLE;
   HAL_WDT_Clear(Wdt);
-  Wdt->WDTCON.WDTE = 0;
+  Wdt->WDTCON.WDTE = HAL_DISABLE;
   return HAL_OK;
 }
 

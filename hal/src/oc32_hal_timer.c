@@ -75,7 +75,7 @@ HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init)
   Init->Timer->TECON.TCSC = Init->StopCon;
 
   /* enable the timer */
-  Init->Timer->TCON.TE = 1U;
+  Init->Timer->TCON.TE = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -136,7 +136,7 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypeDef 
   /* switch to user trigger mode */
   Update->Timer->TCON.TUM = TIMER_UPDATE_TRIG;
   HAL_TIMER_Update(Update);
-  Update->Timer->TCON.TUT = 1U;
+  Update->Timer->TCON.TUT = HAL_ENABLE;
   /* switch back to the original update mode */
   Update->Timer->TCON.TUM = updatemode;
 
@@ -154,7 +154,7 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_ResetNow(MODULE_TIMER_TypeDef *Tim
   if (TimerModuleCheck(Timer) != HAL_OK)
     return HAL_ERROR;
 
-  Timer->TCON.TRS = 1U;
+  Timer->TCON.TRS = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -207,7 +207,7 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_EventTrig(MODULE_TIMER_TypeDef *Ti
   if (TimerModuleCheck(Timer) != HAL_OK)
     return HAL_ERROR;
 
-  Timer->TECON.TET = 1U;
+  Timer->TECON.TET = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -225,10 +225,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitOv(MODULE_TIMER_TypeDef *Timer
   if (TimerModuleCheck(Timer) != HAL_OK)
     return HAL_ERROR;
 
-  while (!Timer->TCON.TOV)
+  while (Timer->TCON.TOV == HAL_FLAG_INVALID)
     ;
 
-  Timer->TCON.TOCLR = 1U;
+  Timer->TCON.TOCLR = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -246,10 +246,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitEv(MODULE_TIMER_TypeDef *Timer
   if (TimerModuleCheck(Timer) != HAL_OK)
     return HAL_ERROR;
 
-  while (!Timer->TECON.TEF)
+  while (Timer->TECON.TEF == HAL_FLAG_INVALID)
     ;
 
-  Timer->TECON.TECLR = 1U;
+  Timer->TECON.TECLR = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -270,8 +270,8 @@ HAL_StatusTypeDef HAL_TIMER_DeInit(MODULE_TIMER_TypeDef *Timer)
   *(volatile uint32_t *)&Timer->TECON = 0U;
   Timer->TARL = 0U;
   Timer->TCNT = 0U;
-  Timer->TCON.TOCLR = 1U;
-  Timer->TECON.TECLR = 1U;
+  Timer->TCON.TOCLR = HAL_ENABLE;
+  Timer->TECON.TECLR = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -298,11 +298,11 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_IRQHandler(MODULE_TIMER_TypeDef *T
 {
   HAL_StatusTypeDef status = HAL_TIMER_UserIRQ(Timer);
 
-  if (Timer->TCON.TOV)
-    Timer->TCON.TOCLR = 1U;
+  if (Timer->TCON.TOV == HAL_FLAG_VALID)
+    Timer->TCON.TOCLR = HAL_ENABLE;
 
-  if (Timer->TECON.TEF)
-    Timer->TECON.TECLR = 1U;
+  if (Timer->TECON.TEF == HAL_FLAG_VALID)
+    Timer->TECON.TECLR = HAL_ENABLE;
 
   return status;
 }

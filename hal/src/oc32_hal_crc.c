@@ -25,7 +25,7 @@ static HAL_DMA_ChTypedef CrcDmaCh;
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL
  */
-HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
+__sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -70,9 +70,9 @@ __sram__ uint32_t CrcOnce(uint32_t Data)
   /* kick start */
   CRCCON->CRCKS = 1U;
   /* wait calculating */
-  while (!CRCCON->CRCCF)
+  while (CRCCON->CRCCF == HAL_FLAG_INVALID)
     ;
-  CRCCON->CRCCCLR = 1U;
+  CRCCON->CRCCCLR = HAL_ENABLE;
   return READ_SR(CRCOUT);
 }
 
@@ -85,7 +85,7 @@ __sram__ uint32_t CrcOnce(uint32_t Data)
 __sram__ uint32_t HAL_CRC_OneByte(uint32_t Data)
 {
   /* wait previous packet ends */
-  while (CRCCON->CRCIE)
+  while (CRCCON->CRCIE == HAL_ENABLE)
     ;
 
   WRITE_SR(CRCBC, 1U);
@@ -101,7 +101,7 @@ __sram__ uint32_t HAL_CRC_OneByte(uint32_t Data)
 __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data)
 {
   /* wait previous packet ends */
-  while (CRCCON->CRCIE)
+  while (CRCCON->CRCIE == HAL_ENABLE)
     ;
 
   WRITE_SR(CRCBC, 4U);
@@ -125,24 +125,27 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
     return Result;
 
   /* wait previous packet ends */
-  while (CRCCON->CRCIE)
+  while (CRCCON->CRCIE == HAL_ENABLE)
     ;
 
   /* setup interrupt */
   CRCCON->CRCIE = Packet->IntE;
 
-
   if (Packet->IDM == CRC_IDM_READ_DMA)
   {
-
+    /* READ_DMA: CRC acts as the initiating peripheral. The channel is bound
+     * in the DMA controller (OC32_DMA_CRC role) and the source address in
+     * CRCDA. CRCPDC is NOT used in this mode. */
     if (HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_BUSY) != HAL_OK)
       return Result;
 
-    /* setup DMA address */
+    /* setup DMA source address */
     WRITE_SR(CRCDA, (uint32_t)Packet->Data);
   }
   else
   {
+    /* CAPTURE_DMAIN/OUT: CRC passively monitors a DMA channel; CRCPDC
+     * selects which channel's data it listens to. */
     CRCCON->CRCPDC = CrcDmaCh;
   }
 
@@ -154,16 +157,16 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
 
   /* if interrupt mode, return value is not the correct result, user should get it in IRQ
    * if normal mode, return value is the crc result */
-  if (CRCCON->CRCIE)
+  if (CRCCON->CRCIE == HAL_ENABLE)
   {
     Result.Error = HAL_OK;
     return Result;
   }
-    
+
   /* wait calculating */
-  while (!CRCCON->CRCCF)
+  while (CRCCON->CRCCF == HAL_FLAG_INVALID)
     ;
-  CRCCON->CRCCCLR = 1U;
+  CRCCON->CRCCCLR = HAL_ENABLE;
   Result.Error = HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   Result.Data = HAL_CRC_GetResult();
   return Result;
@@ -188,8 +191,8 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
 __sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void)
 {
   HAL_StatusTypeDef status = HAL_CRC_UserIRQ();
-  CRCCON->CRCCCLR = 1U;
-  CRCCON->CRCIE = 0;
+  CRCCON->CRCCCLR = HAL_ENABLE;
+  CRCCON->CRCIE = HAL_DISABLE;
   HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   return status;
 }

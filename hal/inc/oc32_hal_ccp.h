@@ -247,7 +247,7 @@ extern "C"
   typedef struct
   {
     MODULE_CCP_TypeDef *CCP;              /*!< Specifies the CCP */
-    HAL_MODULE_INTTypedef IntE;           /*!< Specifies the interrupt mode */
+    HAL_EnableTypeDef IntE;           /*!< Specifies the interrupt mode */
     HAL_CCP_ModeTypedef Mode;             /*!< Specifies the ccp mode */
     HAL_CCP_BaseTimerTypedef Timer;       /*!< Specifies the base timer */
     HAL_CCP_UpdateModeTypedef UpdateMode; /*!< Specifies the update mode */

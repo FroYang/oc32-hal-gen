@@ -27,7 +27,7 @@ class App(Tk):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.title("OC32 HAL Config Generator (pure tkinter+ttk experiment)")
+        self.title("OC32 HAL Config Generator")
         self.geometry("670x570")
         self.minsize(560, 480)
         style = ttk.Style()

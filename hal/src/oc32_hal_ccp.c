@@ -75,13 +75,14 @@ HAL_StatusTypeDef HAL_CCP_Init(HAL_CCP_BaseInitTypeDef *Init)
     return HAL_ERROR;
 
   /* setup the ccp */
+  Init->CCP->CCPCON.CCPIE = Init->IntE;
   Init->CCP->CCPCON.CCPM = Init->Mode;
   Init->CCP->CCPCON.CCPT = Init->Timer;
   Init->CCP->CCPCON.CCPUM = Init->UpdateMode;
   Init->CCP->CCPOUT.CCPSBR = Init->ReadReg;
 
   /* enable the ccp */
-  Init->CCP->CCPCON.CCPE = 1U;
+  Init->CCP->CCPCON.CCPE = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -236,7 +237,7 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitCf(MODULE_CCP_TypeDef *CCP)
   if (CCP->CCPCON.CCPCOV)
     HAL_CCP_HandleCov(CCP);
 
-  CCP->CCPCON.CCPCCLR = 1U;
+  CCP->CCPCON.CCPCCLR = HAL_ENABLE;
   return HAL_OK;
 }
 
@@ -256,7 +257,7 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitGf(MODULE_CCP_TypeDef *CCP)
   while (!CCP->CCPCON.CCPGF)
     ;
 
-  CCP->CCPCON.CCPGCLR = 1U;
+  CCP->CCPCON.CCPGCLR = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -274,10 +275,10 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_WaitFf(MODULE_CCP_TypeDef *CCP)
   if (CCPModuleCheck(CCP) != HAL_OK)
     return HAL_ERROR;
 
-  while (!CCP->CCPCON.CCPFF)
+  while (CCP->CCPCON.CCPFF == HAL_FLAG_INVALID)
     ;
 
-  CCP->CCPCON.CCPFCLR = 1U;
+  CCP->CCPCON.CCPFCLR = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -324,9 +325,9 @@ HAL_StatusTypeDef HAL_CCP_DeInit(MODULE_CCP_TypeDef *CCP)
   *(volatile uint32_t *)&CCP->CCPVAL = 0U;
   *(volatile uint32_t *)&CCP->CCPOUT = 0U;
   *(volatile uint32_t *)&CCP->CCPGAT = 0U;
-  CCP->CCPCON.CCPCCLR = 1U;
-  CCP->CCPCON.CCPGCLR = 1U;
-  CCP->CCPCON.CCPFCLR = 1U;
+  CCP->CCPCON.CCPCCLR = HAL_ENABLE;
+  CCP->CCPCON.CCPGCLR = HAL_ENABLE;
+  CCP->CCPCON.CCPFCLR = HAL_ENABLE;
 
   return HAL_OK;
 }
@@ -354,14 +355,14 @@ __weak__ __sram__ HAL_StatusTypeDef HAL_CCP_IRQHandler(MODULE_CCP_TypeDef *CCP)
 {
   HAL_StatusTypeDef status = HAL_CCP_UserIRQ(CCP);
 
-  if ((CCP->CCPCON.CCPCF) || (CCP->CCPCON.CCPCOV))
-    CCP->CCPCON.CCPCCLR = 1U;
+  if ((CCP->CCPCON.CCPCF == HAL_FLAG_VALID) || (CCP->CCPCON.CCPCOV == HAL_FLAG_VALID))
+    CCP->CCPCON.CCPCCLR = HAL_ENABLE;
 
-  if (CCP->CCPCON.CCPGF)
-    CCP->CCPCON.CCPGCLR = 1U;
+  if (CCP->CCPCON.CCPGF == HAL_FLAG_VALID)
+    CCP->CCPCON.CCPGCLR = HAL_ENABLE;
 
-  if (CCP->CCPCON.CCPFF)
-    CCP->CCPCON.CCPFCLR = 1U;
+  if (CCP->CCPCON.CCPFF == HAL_FLAG_VALID)
+    CCP->CCPCON.CCPFCLR = HAL_ENABLE;
 
   return status;
 }

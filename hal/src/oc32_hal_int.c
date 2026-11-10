@@ -22,8 +22,15 @@
  * @brief  Handles HRF(Hardware Reset Flags), LVD and PLL interrupt request.
  * @note   These interrupts mean that some kind of error occurs, thus it
  *         should not be preempted.
+ * @note   Intentionally NOT marked __sram__: this vector fires on physical
+ *         environment faults (LVD / VTS / PLL over-frequency) where SRAM is
+ *         less reliable than Flash. __asm_int0 already switches the clock
+ *         back to a stable oscillator, so the handler is meant to be fetched
+ *         from Flash for fast, reliable recovery. Other vectors (__int1..31)
+ *         are fired by ordinary peripheral faults with Flash fetch intact,
+ *         so they live in .stext (SRAM).
  */
-int __int0()
+void __int0(void)
 {
 
     /* power-on reset flag */
@@ -31,295 +38,295 @@ int __int0()
         HAL_HRF_IRQHandler();
 
 #ifdef HAL_LVD_ENABLE
-    if (LVDCON->LVDIE && LVDCON->LVDEF)
+    if ((LVDCON->LVDIE == HAL_ENABLE) && (LVDCON->LVDEF == HAL_FLAG_ERROR))
         HAL_LVD_IRQHandler();
 #endif /* HAL_LVD_ENABLE */
 
     /* pll frequency over */
-    if (PLLCON->PFO)
+    if ((PLLCON->PFO == HAL_FLAG_ERROR))
         HAL_PLL_IRQHandler();
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int1()
+__sram__ __weak__ void __int1(void)
 {
 #ifdef HAL_CMP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V1 = 1U;
+    HIPRM->V1 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V1 = 0U;
+    HIPRM->V1 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CMP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int2()
+__sram__ __weak__ void __int2(void)
 {
 #ifdef HAL_CMP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V2 = 1U;
+    HIPRM->V2 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V2 = 0U;
+    HIPRM->V2 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CMP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int3()
+__sram__ __weak__ void __int3(void)
 {
 #ifdef HAL_CCP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V3 = 1U;
+    HIPRM->V3 = HAL_ENABLE;
 
     /* handler function */
     HAL_CCP_IRQHandler(CCP_0);
 
-    HIPRM->V3 = 0U;
+    HIPRM->V3 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CCP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int4()
+__sram__ __weak__ void __int4(void)
 {
 #ifdef HAL_CCP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V4 = 1U;
+    HIPRM->V4 = HAL_ENABLE;
 
     /* handler function */
     HAL_CCP_IRQHandler(CCP_1);
 
-    HIPRM->V4 = 0U;
+    HIPRM->V4 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CCP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int5()
+__sram__ __weak__ void __int5(void)
 {
 #ifdef HAL_CCP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V5 = 1U;
+    HIPRM->V5 = HAL_ENABLE;
 
     /* handler function */
     HAL_CCP_IRQHandler(CCP_2);
 
-    HIPRM->V5 = 0U;
+    HIPRM->V5 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CCP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int6()
+__sram__ __weak__ void __int6(void)
 {
 #ifdef HAL_CCP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V6 = 1U;
+    HIPRM->V6 = HAL_ENABLE;
 
     /* handler function */
     HAL_CCP_IRQHandler(CCP_3);
 
-    HIPRM->V6 = 0U;
+    HIPRM->V6 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CCP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int7()
+__sram__ __weak__ void __int7(void)
 {
 #ifdef HAL_CCP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V7 = 1U;
+    HIPRM->V7 = HAL_ENABLE;
 
     /* handler function */
     HAL_CCP_IRQHandler(CCP_4);
 
-    HIPRM->V7 = 0U;
+    HIPRM->V7 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CCP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int8()
+__sram__ __weak__ void __int8(void)
 {
 #ifdef HAL_CCP_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V8 = 1U;
+    HIPRM->V8 = HAL_ENABLE;
 
     /* handler function */
     HAL_CCP_IRQHandler(CCP_5);
 
-    HIPRM->V8 = 0U;
+    HIPRM->V8 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CCP_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int9()
+__sram__ __weak__ void __int9(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V9 = 1U;
+    HIPRM->V9 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_0);
 
-    HIPRM->V9 = 0U;
+    HIPRM->V9 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int10()
+__sram__ __weak__ void __int10(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V10 = 1U;
+    HIPRM->V10 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_1);
 
-    HIPRM->V10 = 0U;
+    HIPRM->V10 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int11()
+__sram__ __weak__ void __int11(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V11 = 1U;
+    HIPRM->V11 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_2);
 
-    HIPRM->V11 = 0U;
+    HIPRM->V11 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int12()
+__sram__ __weak__ void __int12(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V12 = 1U;
+    HIPRM->V12 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_3);
 
-    HIPRM->V12 = 0U;
+    HIPRM->V12 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int13()
+__sram__ __weak__ void __int13(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V13 = 1U;
+    HIPRM->V13 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_4);
 
-    HIPRM->V13 = 0U;
+    HIPRM->V13 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int14()
+__sram__ __weak__ void __int14(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V14 = 1U;
+    HIPRM->V14 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_5);
 
-    HIPRM->V14 = 0U;
+    HIPRM->V14 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int15()
+__sram__ __weak__ void __int15(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V15 = 1U;
+    HIPRM->V15 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_6);
 
-    HIPRM->V15 = 0U;
+    HIPRM->V15 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int16()
+__sram__ __weak__ void __int16(void)
 {
 #ifdef HAL_TIMER_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V16 = 1U;
+    HIPRM->V16 = HAL_ENABLE;
 
     /* handler function */
     HAL_TIMER_IRQHandler(TIMER_7);
 
-    HIPRM->V16 = 0U;
+    HIPRM->V16 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_TIMER_ENABLE */
 
-    return 0;
+    return;
 }
 
 /**
  * @brief  Handles WDT interrupt request.
  */
-__sram__ __weak__ int __int17()
+__sram__ __weak__ void __int17(void)
 {
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V17 = 1U;
+    HIPRM->V17 = HAL_ENABLE;
 
     /* handler function */
 
@@ -337,236 +344,237 @@ __sram__ __weak__ int __int17()
         HAL_TICK_Inc();
     }
 
-    HIPRM->V17 = 0U;
+    HIPRM->V17 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int18()
+__sram__ __weak__ void __int18(void)
 {
 #ifdef HAL_ADC_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V18 = 1U;
+    HIPRM->V18 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V18 = 0U;
+    HIPRM->V18 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_ADC_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int19()
+__sram__ __weak__ void __int19(void)
 {
 #ifdef HAL_ADC_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V19 = 1U;
+    HIPRM->V19 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V19 = 0U;
+    HIPRM->V19 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_ADC_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int20()
+__sram__ __weak__ void __int20(void)
 {
 #ifdef HAL_UART_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V20 = 1U;
+    HIPRM->V20 = HAL_ENABLE;
 
     /* handler function */
     HAL_UART_IRQHandler(UART_0);
 
-    HIPRM->V20 = 0U;
+    HIPRM->V20 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_UART_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int21()
+__sram__ __weak__ void __int21(void)
 {
 #ifdef HAL_UART_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V21 = 1U;
+    HIPRM->V21 = HAL_ENABLE;
 
     /* handler function */
     HAL_UART_IRQHandler(UART_1);
 
-    HIPRM->V21 = 0U;
+    HIPRM->V21 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_UART_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int22()
+__sram__ __weak__ void __int22(void)
 {
 #ifdef HAL_SPI_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V22 = 1U;
+    HIPRM->V22 = HAL_ENABLE;
 
     /* handler function */
     HAL_SPI_IRQHandler(SPI_0);
 
-    HIPRM->V22 = 0U;
+    HIPRM->V22 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_SPI_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int23()
+__sram__ __weak__ void __int23(void)
 {
 #ifdef HAL_SPI_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V23 = 1U;
+    HIPRM->V23 = HAL_ENABLE;
 
     /* handler function */
     HAL_SPI_IRQHandler(SPI_1);
 
-    HIPRM->V23 = 0U;
+    HIPRM->V23 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_SPI_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int24()
+__sram__ __weak__ void __int24(void)
 {
 #ifdef HAL_IIC_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V24 = 1U;
+    HIPRM->V24 = HAL_ENABLE;
 
     /* handler function */
+    HAL_IIC_IRQHandler();
 
-    HIPRM->V24 = 0U;
+    HIPRM->V24 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_IIC_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int25()
+__sram__ __weak__ void __int25(void)
 {
 #ifdef HAL_MPWM_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V25 = 1U;
+    HIPRM->V25 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V25 = 0U;
+    HIPRM->V25 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_MPWM_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int26()
+__sram__ __weak__ void __int26(void)
 {
 #ifdef HAL_MPWM_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V26 = 1U;
+    HIPRM->V26 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V26 = 0U;
+    HIPRM->V26 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_MPWM_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int27()
+__sram__ __weak__ void __int27(void)
 {
 #ifdef HAL_MPWM_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V27 = 1U;
+    HIPRM->V27 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V27 = 0U;
+    HIPRM->V27 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_MPWM_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int28()
+__sram__ __weak__ void __int28(void)
 {
 #ifdef HAL_DAC_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V28 = 1U;
+    HIPRM->V28 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V28 = 0U;
+    HIPRM->V28 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_DAC_ENABLE */
 
-    return 0;
+    return;
 }
 
 /**
  * @brief  Handles Flash(always off in HAL) and CRC interrupt request.
  */
-__sram__ __weak__ int __int29()
+__sram__ __weak__ void __int29(void)
 {
 #ifdef HAL_CRC_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V29 = 1U;
+    HIPRM->V29 = HAL_ENABLE;
 
     /* handler function */
     HAL_CRC_IRQHandler();
 
-    HIPRM->V29 = 0U;
+    HIPRM->V29 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_CRC_ENABLE */
 
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int30()
+__sram__ __weak__ void __int30(void)
 {
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V30 = 1U;
+    HIPRM->V30 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V30 = 0U;
+    HIPRM->V30 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
-    return 0;
+    return;
 }
 
-__sram__ __weak__ int __int31()
+__sram__ __weak__ void __int31(void)
 {
 #ifdef HAL_PORTB_ENABLE
     uint32_t eia;
     __asm__ __volatile__("MOV %0, EIA" : "=r"(eia));
-    HIPRM->V31 = 1U;
+    HIPRM->V31 = HAL_ENABLE;
 
     /* handler function */
 
-    HIPRM->V31 = 0U;
+    HIPRM->V31 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
 #endif /* HAL_PORTB_ENABLE */
 
-    return 0;
+    return;
 }

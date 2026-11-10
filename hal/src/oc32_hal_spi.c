@@ -18,6 +18,56 @@ static HAL_DMA_ChTypedef Spi0DmaCh = 0U;
 static HAL_DMA_ChTypedef Spi1DmaCh = 0U;
 
 /* Private function prototypes -----------------------------------------------*/
+
+/**
+ * @brief  SPI Tx Setup
+ * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Length: length of data in bytes
+ * @param  Data: pointer to the tx data buffer (must not be NULL on the tx path)
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
+ * @note   Blocks until any pending SPI interrupt (SPIIE) has completed.
+ */
+__sram__ HAL_StatusTypeDef SpiTxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, uint32_t *Data)
+{
+
+  if (Spi != SPI_0 && Spi != SPI_1)
+    return HAL_ERROR;
+
+  while (Spi->SPICON.SPIIE == HAL_ENABLE)
+    ;
+  Spi->SPITBC = Length;
+  Spi->SPITBUF = *Data;
+  Spi->SPITDA = (uint32_t)Data;
+
+  return HAL_OK;
+}
+
+/**
+ * @brief  SPI RX Setup
+ * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Length: length of data in bytes
+ * @param  Data: pointer to the rx data buffer (may be NULL; in that case
+ *               SPIRDA is set to 0, which is harmless when DMA is not enabled,
+ *               e.g. for short (<= 4 byte) transfers where rx result is read
+ *               back from SPIRBUF instead of via DMA)
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
+ * @note   Blocks until any pending SPI interrupt (SPIIE) has completed.
+ */
+__sram__ HAL_StatusTypeDef SpiRxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, uint32_t *Data)
+{
+  if (Spi != SPI_0 && Spi != SPI_1)
+    return HAL_ERROR;
+
+  while (Spi->SPICON.SPIIE == HAL_ENABLE)
+    ;
+  Spi->SPITBC = Length;
+  Spi->SPIRDA = (uint32_t)Data;
+
+  return HAL_OK;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -88,106 +138,11 @@ HAL_StatusTypeDef HAL_SPI_DeInit(MODULE_SPI_TypeDef *Spi)
     return HAL_ERROR;
 
   *(volatile uint32_t *)&Spi->SPICON = 0U;
-  Spi->SPICON.SPITCLR = 1U;
+  Spi->SPICON.SPITCLR = HAL_ENABLE;
+  HAL_DMA_ChTypedef DmaCh = (Spi == SPI_0) ? Spi0DmaCh : Spi1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
+  HAL_DMA_Update(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   return HAL_OK;
-}
-
-/**
- * @brief  SPI Tx Setup
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
- * @param  Length: length of data in 32-bit words (max 4; TransferOnce enforces this)
- * @param  Data: pointer to the tx data buffer (must not be NULL on the tx path)
- * @retval HAL_OK: on success
- * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
- * @note   Blocks until any pending SPI interrupt (SPIIE) has completed.
- */
-__sram__ HAL_StatusTypeDef SpiTxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, uint32_t *Data)
-{
-
-  if (Spi != SPI_0 && Spi != SPI_1)
-    return HAL_ERROR;
-
-  while (Spi->SPICON.SPIIE)
-    ;
-  Spi->SPITBC = Length;
-  Spi->SPITBUF = *Data;
-  Spi->SPITDA = (uint32_t)Data;
-
-  return HAL_OK;
-}
-
-/**
- * @brief  SPI RX Setup
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
- * @param  Length: length of data in 32-bit words
- * @param  Data: pointer to the rx data buffer (may be NULL; in that case
- *               SPIRDA is set to 0, which is harmless when DMA is not enabled,
- *               e.g. inside HAL_SPI_TransferOnce where rx result is read back
- *               from SPIRBUF instead of via DMA)
- * @retval HAL_OK: on success
- * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
- * @note   Blocks until any pending SPI interrupt (SPIIE) has completed.
- */
-__sram__ HAL_StatusTypeDef SpiRxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, uint32_t *Data)
-{
-  if (Spi != SPI_0 && Spi != SPI_1)
-    return HAL_ERROR;
-
-  while (Spi->SPICON.SPIIE)
-    ;
-  Spi->SPITBC = Length;
-  Spi->SPIRDA = (uint32_t)Data;
-
-  return HAL_OK;
-}
-
-
-/**
- * @brief  full/half duplex transfer once
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
- * @param  Data: pointer to a HAL_SPI_PacketTypedef structure, specifies the data packet.
- *               Data->RxData may be NULL; rx result is returned via Result.Data (read from SPIRBUF).
- * @retval HAL_ResultTypedef:
- *         .Data  = received rx data word (in full/half-duplex rx path), 0 otherwise
- *         .Error = HAL_OK on success, HAL_ERROR on failure
- * @note   This function blocks until transfer completes (no DMA, no interrupt).
- *         Caller must not mask the SPI interrupt during the call, or the busy-wait
- *         on SPITBV will not terminate.
- */
-__sram__ HAL_ResultTypedef HAL_SPI_TransferOnce(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Data)
-{
-  HAL_ResultTypedef Result = {0U, HAL_ERROR};
-
-  if (Data == NULL || (Spi != SPI_0 && Spi != SPI_1))
-    return Result;  
-
-  /* setup tx config */
-  if ((Spi->SPICON.SPIHD == SPI_HALF_DUPLEX && Data->HalfRx == SPI_HALF_TX) || (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX))
-  {
-    if ((SpiTxSetup(Spi, Data->Length, Data->TxData) != HAL_OK) || (Data->Length > 4U) || Data->TxData == NULL)
-    {
-      return Result;
-    }
-  } 
-  
-  /* setup rx config */
-  if ((Spi->SPICON.SPIHD == SPI_HALF_DUPLEX && Data->HalfRx == SPI_HALF_RX) || (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX))
-  {
-    if ((SpiRxSetup(Spi, Data->Length, Data->RxData) != HAL_OK) || (Data->Length > 4U))
-    {
-      return Result;
-    }
-  }
-
-  /* kick start */
-  Spi->SPICON.SPIKS = 1;
-  while (Spi->SPICON.SPITBV == 0)
-    ;
-  /* clear done flag */
-  Spi->SPICON.SPITCLR = 1;
-  Result.Data = Spi->SPIRBUF;
-  Result.Error = HAL_OK;
-  return Result;
 }
 
 /**
@@ -203,27 +158,29 @@ __sram__ HAL_ResultTypedef HAL_SPI_TransferOnce(MODULE_SPI_TypeDef *Spi, HAL_SPI
  *         Caller must not mask the SPI interrupt during the call, or the busy-wait
  *         on SPIDMAE / SPITBV will not terminate.
  */
-__sram__ HAL_StatusTypeDef HAL_SPI_TransferPacket(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Packet)
+__sram__ HAL_StatusTypeDef HAL_SPI_Transfer(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Packet)
 {
-  if (Packet == NULL || 
-     (Packet->TxData == NULL && (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX || Packet->HalfRx == SPI_HALF_TX)) || 
-     (Packet->RxData == NULL && (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX || Packet->HalfRx == SPI_HALF_RX)) || 
-     (Spi != SPI_0 && Spi != SPI_1))
+  if (Packet == NULL ||
+      (Packet->TxData == NULL && (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX || Packet->HalfRx == SPI_HALF_TX)) ||
+      (Packet->RxData == NULL && (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX || Packet->HalfRx == SPI_HALF_RX)) ||
+      (Spi != SPI_0 && Spi != SPI_1))
     return HAL_ERROR;
 
   /* wait previous packet ends */
   while (Spi->SPICON.SPIDMAE)
     ;
 
+  /* setup dma if length is greater than 4 bytes */
   HAL_DMA_ChTypedef DmaCh = (Spi == SPI_0) ? Spi0DmaCh : Spi1DmaCh;
   HAL_DMA_MapTypedef DmaModule = (Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
-  if (HAL_DMA_Update(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_BUSY) != HAL_OK)
-    return HAL_ERROR;
+  if ((Packet->Length > 4U) || (Packet->IntE == HAL_ENABLE))
+  {
+    if (HAL_DMA_Update(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_BUSY) != HAL_OK)
+      return HAL_ERROR;
 
-  Spi->SPICON.SPIIE = Packet->IntE;
-
-  /* setup dma */
-  Spi->SPICON.SPIDMAE = 1U;
+    /* setup dma */
+    Spi->SPICON.SPIDMAE = HAL_ENABLE;
+  }
 
   if (SpiTxSetup(Spi, Packet->Length, Packet->TxData) != HAL_OK)
     return HAL_ERROR;
@@ -234,23 +191,30 @@ __sram__ HAL_StatusTypeDef HAL_SPI_TransferPacket(MODULE_SPI_TypeDef *Spi, HAL_S
   /* setup half duplex tx/rx */
   Spi->SPICON.SPIHDR = Packet->HalfRx;
 
-  /* kick start tx */
-  Spi->SPICON.SPIKS = 1U;
+  /* setup interrupt enable */
+  Spi->SPICON.SPIIE = Packet->IntE;
+
+  /* kick start */
+  Spi->SPICON.SPIKS = HAL_ENABLE;
 
   /* return if it is interrupt mode */
-  if (Spi->SPICON.SPIIE)
+  if (Spi->SPICON.SPIIE == HAL_ENABLE)
   {
     return HAL_OK;
   }
-  else
-  {
-    while (Spi->SPICON.SPITBV == 0)
-      ;
-    /* clear done flag */
-    Spi->SPICON.SPITCLR = 1U;
-    Spi->SPICON.SPIDMAE = 0U;
-    return HAL_DMA_Update(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
-  }
+
+  /* if interrupt disabled, wait for data transfer to complete */
+  while (Spi->SPICON.SPITBV == HAL_FLAG_INVALID)
+    ;
+
+  /* copy the rx data in buffer for non-dma mode */
+  if (Spi->SPICON.SPIDMAE == HAL_DISABLE)
+    Packet->RxData[0] = Spi->SPIRBUF;
+
+  /* clear done flag */
+  Spi->SPICON.SPITCLR = HAL_ENABLE;
+  Spi->SPICON.SPIDMAE = HAL_DISABLE;
+  return HAL_DMA_Update(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
 }
 
 /**
@@ -282,16 +246,16 @@ __sram__ HAL_StatusTypeDef HAL_SPI_IRQHandler(MODULE_SPI_TypeDef *Spi)
   HAL_DMA_MapTypedef DmaModule = (Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
   HAL_StatusTypeDef status = HAL_OK;
 
-  if (Spi->SPICON.SPITBV)
+  if (Spi->SPICON.SPITBV == HAL_FLAG_VALID)
   {
     status = HAL_SPI_UserIRQ(Spi);
-    Spi->SPICON.SPITCLR = 1U;
-    Spi->SPICON.SPIDMAE = 0U;
+    Spi->SPICON.SPITCLR = HAL_ENABLE;
+    Spi->SPICON.SPIDMAE = HAL_DISABLE;
     HAL_DMA_Update(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   }
 
   if (DMAChState[DmaCh] == OC32_DMA_IDLE)
-    Spi->SPICON.SPIIE = 0U;
+    Spi->SPICON.SPIIE = HAL_DISABLE;
 
   return status;
 }

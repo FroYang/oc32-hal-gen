@@ -56,7 +56,7 @@ HAL 库提供以下外设的驱动函数：
 
 ## 2. 快速开始
 
-最小可运行程序（使用 UART0 输出，轮询模式）：
+最小可运行程序（使用 UART1 输出，轮询模式）：
 
 ```c
 #include "oc32_hal.h"
@@ -66,6 +66,14 @@ int main(void)
     /* 系统初始化（时钟 + 校验 + 调试 UART + tick） */
     if (HAL_SYS_Init() != HAL_OK)
         while (1) ;
+
+    /* 使能中断控制器（WDT tick 位也在此置位，系统 tick 从这里开始运行） */
+    HAL_HIC_InitTypeDef hic = {
+        .ChEnable = OC32_HIC_UART1,
+        .ChPriorityBit0 = 0,
+        .ChPriorityBit1 = 0,
+    };
+    HAL_HIC_Init(&hic);
 
     /* 初始化 UART1 为 115200 8N1 全双工 */
     HAL_UART_InitTypeDef uart = {
@@ -81,7 +89,11 @@ int main(void)
 
     const char *msg = "Hello OC32\r\n";
     for (size_t i = 0; msg[i]; i++)
-        HAL_UART_TX_OneByte(UART_1, msg[i]);
+    {
+        uint32_t byte = (uint8_t)msg[i];
+        HAL_UART_PacketTypedef upkt = { .Data = &byte, .Length = 1U, .IntE = HAL_DISABLE };
+        HAL_UART_TX(UART_1, &upkt);
+    }
 
     while (1) ;
 }
@@ -98,14 +110,17 @@ int main(void)
 返回 `HAL_ERROR` 时系统时钟或某一步失败，程序无法正常运行。
 
 ### `HAL_TICK_Init`
-配置 WDT1 为 1kHz 系统 tick（`HAL_TICK_FREQ_DEFAULT`），`uwTick` 每毫秒递增。
-`HAL_Delay(ms)` 基于 `uwTick` 实现，**调用 tick 前必须先调用 `HAL_TICK_Init`**。
+配置 WDT1 为 1 kHz 系统 tick（`HAL_TICK_FREQ_DEFAULT`），`uwTick` 每毫秒递增。
+**注意**：`HAL_TICK_Init` 仅配置 WDT tick 参数，不会使能 WDT 中断位；tick 只有在用户调用 `HAL_HIC_Init` 之后才真正运行，在此之前 `uwTick` 恒为 0、`HAL_Delay` 不推进。
 
 ### `HAL_HIC_Init` / `HAL_HIC_DeInit`
 配置硬件中断控制器（HIE / HIPL0 / HIPL1 / HIPRM）。
 - `ChEnable`：使能各中断通道位（`OC32_HIC_UART0 | OC32_HIC_SPI0 | ...`）。
 - `ChPriorityBit0/1`：各通道优先级（`HPL_Bit0/Bits1(OC32_HIC_PRI0..3, ch)`）。
 - WDT 通道（vector 17）**始终被使能**作为 tick 定时器，不参与 `ChEnable` 控制。
+
+> **重要**：`HAL_HIC_DeInit` 会清 HIE 全部位，包括 WDT 位——调用后系统 tick 失效，`HAL_Delay` 无法推进。若需在 DeInit 后恢复 tick，须重新调用 `HAL_HIC_Init`。
+> `HAL_FLASH_Init` 内部调用 `HAL_HIC_DeInit`（关闭全部中断）；完成 flash 初始化后如需 tick，请重新 `HAL_HIC_Init`。
 
 ---
 
@@ -152,13 +167,14 @@ HAL_GPIO_Init(&gpio);
 
 ### 引脚电平
 ```c
-PA3 = 1;   /* 置高 */
-PA3 = 0;  /* 置低 */
+PA3 = 1;   /* 单独某pin置高 */
+PA3 = 0;  /* 单独某pin置低 */
+WRITE_SR(PA, 0); /* 写入整组端口 A */
 ```
 
 ### 输入读取
 ```c
-uint32_t port_val = PB;   /* 读取整组端口 B */
+uint32_t port_val = READ_SR(PB);   /* 读取整组端口 B */
 uint32_t pin_val = PB3;   /* 读取引脚 B3 */
 ```
 
@@ -190,32 +206,34 @@ HAL_UART_Init(&uart);
 - `Baud`：从 `HAL_UART_BaudTypedef` 枚举选择（9600~1000000）。
 - 半双工模式（`UART_HALF_DUPLEX`）下 TX/RX 共享同一引脚，收发前需等待对方方向完成。
 
-### 单字节/单词收发（阻塞）
+### 单字节收发（阻塞）
 ```c
-HAL_UART_TX_OneByte(UART_0, 'H');
-HAL_ResultTypedef r = HAL_UART_RX_OneByte(UART_0);
-if (r.Error == HAL_OK) {
-    uint32_t byte = r.Data;
-}
+HAL_UART_PacketTypedef pkt = {
+    .Data = &one_byte,   /* uint32_t*；低 8 位为发送/接收字节 */
+    .Length = 1U,        /* 字节数 */
+    .IntE = HAL_DISABLE,
+};
+HAL_UART_TX(UART_0, &pkt);
+HAL_UART_RX(UART_0, &pkt);   /* 结果读回 Packet->Data（或经 SPIRBUF/UTRBUF 语义） */
 ```
 
 - 无 DMA、无中断，调用者同步阻塞直至收发完成。
-- `HAL_UART_RX_OneWord` / `HAL_UART_TX_OneWord` 一次操作 4 字节（32 位）。
+- `Length` 单位为**字节**；`Length ≤ 4` 走逐字（≤4 B 的寄存器写）快路径，`Length > 4` 自动启用 DMA。
 
 ### 数据包收发（DMA / 中断）
 ```c
 HAL_UART_PacketTypedef pkt = {
     .Data = tx_buf,
-    .Length = word_count,
-    .IntE = MODULE_INT_OFF,   /* 轮询模式 */
-    /* 或 IntE = MODULE_INT_ON 使用中断模式 */
+    .Length = 128,               /* 字节数 */
+    .IntE = HAL_DISABLE,      /* 轮询模式 */
+    /* 或 IntE = HAL_ENABLE 使用中断模式 */
 };
-HAL_UART_TX_Packet(UART_0, &pkt);
+HAL_UART_TX(UART_0, &pkt);
 ```
 
 - **轮询模式**（`IntE = OFF`）：函数阻塞直至 DMA 完成。
 - **中断模式**（`IntE = ON`）：函数立即返回，DMA 完成后触发 `__int20`（UART0）/ `__int21`（UART1）向量，最终调用 `HAL_UART_IRQHandler`，可在 `HAL_UART_UserIRQ` 中处理用户逻辑。
-- 数据包长度单位为**字（32 位）**。
+- 数据包长度单位为**字节**。
 
 ### `HAL_UART_UserIRQ`
 弱符号，用户可在自己的代码中覆盖以处理 UART 中断。
@@ -235,7 +253,7 @@ HAL_SPI_InitTypeDef spi = {
     .Slave = SPI_MASTER,
     .CsOut = SPI_CS_OUT_ON,
     .Duplex = SPI_FULL_DUPLEX,
-    .HalfPin = SPI_HALF_PIN_INDEPENDENT,
+    .HalfPin = SPI_HALF_PIN_SEPARATE,
     .FirstBit = SPI_MSB_FIRST,
     .Pins = SPI_PINS_0,
     .DmaCh = OC32_DMA_CH0,
@@ -254,19 +272,17 @@ HAL_SPI_Init(&spi);
 HAL_SPI_PacketTypedef pkt = {
     .HalfRx = SPI_HALF_TX,
     .TxData = &tx_word,
-    .RxData = NULL,          /* 可 NULL，结果经 Result.Data 返回 */
-    .Length = 1,             /* 单位：字，TransferOnce 最多 4 字 */
-    .IntE = MODULE_INT_OFF,
+    .RxData = NULL,          /* 可 NULL */
+    .Length = 4,             /* 字节数 */
+    .IntE = HAL_DISABLE,
 };
-HAL_ResultTypedef r = HAL_SPI_TransferOnce(SPI_0, &pkt);
-if (r.Error == HAL_OK) {
-    uint32_t rx_word = r.Data;   /* 读自 SPIRBUF */
-}
+HAL_SPI_Transfer(SPI_0, &pkt);
 ```
 
 - 全双工：同时设置 TxData 和 RxData。
 - 半双工纯 TX（`SPI_HALF_TX`）：RxData 可为 NULL。
 - 半双工纯 RX（`SPI_HALF_RX`）：TxData 可为 NULL。
+- `Length ≤ 4` 走寄存器快路径（不启用 DMA），`Length > 4` 自动启用 DMA。
 
 ### 数据包收发（DMA / 中断）
 ```c
@@ -274,14 +290,15 @@ HAL_SPI_PacketTypedef pkt = {
     .HalfRx = SPI_HALF_TX,
     .TxData = tx_buf,
     .RxData = rx_buf,
-    .Length = word_count,
-    .IntE = MODULE_INT_ON,   /* 中断模式 */
+    .Length = 128,           /* 字节数 */
+    .IntE = HAL_ENABLE,   /* 中断模式 */
 };
-HAL_SPI_TransferPacket(SPI_0, &pkt);
+HAL_SPI_Transfer(SPI_0, &pkt);
 ```
 
 - 中断完成后由 `__int22`（SPI0）/ `__int23`（SPI1）触发 `HAL_SPI_IRQHandler`。
 - 轮询模式阻塞直至 DMA 完成。
+- **DMA 管理说明**：`HAL_SPI_Transfer` 内部在 `Length > 4` 时统一通过 `HAL_DMA_Update` 管理 DMA 通道；`Length ≤ 4` 走纯寄存器路径，不涉及 DMA。
 
 ### `HAL_SPI_UserIRQ`
 弱符号，用户可覆盖以处理 SPI 中断。
@@ -308,7 +325,7 @@ HAL_TIMER_BaseInitTypeDef timer = {
     .ReloadVal = 0xFFFF,
     .PreScaler = 0,
     .CountVal = 0,
-    .IntE = MODULE_INT_ON,
+    .IntE = HAL_ENABLE,
     .CountMode = TIMER_COUNT_UP,
     .StopCon = TIMER_STOP_OVER,
     .OvfMode = TIMER_OVF_OVER,
@@ -404,7 +421,7 @@ HAL_WDT_Init(&wdt);
 ```
 
 - 自动选择满足 8-bit 重载值约束的最快预分频器。
-- `Period` 必须在对应时钟档位的有效范围内（见 `WDT_H_PERIOD_MIN/MAX`）。
+- `Period` 必须在对应时钟档位的有效范围内（`WDT_H_PERIOD_MIN`/`MAX` 或 `WDT_L_PERIOD_MIN`/`MAX`，单位为 us）。范围边界各外扩 1 us（`WDT_PERIOD_LIMIT_MARGIN`）以避免 8-bit 重载值取整为 0。
 
 ### 喂狗
 ```c
@@ -433,7 +450,7 @@ HAL_WDT_Clear(WDT_0);   /* 必须在 Period 内调用，否则溢出 */
 HAL_Flash_PacketTypeDef pkt = {
     .Data = buf,
     .Address = 0x001000,
-    .Length = 256,   /* 字数 */
+    .Length = 256,   /* 字节数，必须是 16 的倍数才走 DMA 快读 */
     .DmaCh = OC32_DMA_CH0,
 };
 HAL_FLASH_Read(&pkt);
@@ -451,7 +468,8 @@ HAL_Flash_PacketTypeDef pkt = {
 };
 HAL_FLASH_Program(&pkt);
 ```
-- 所有数据必须在同一 256 字节页内。
+- 所有数据必须在同一 256 字节页内，跨页返回 `HAL_ERROR`。
+- `Data` 为 `uint32_t*`（word 数组）；数据流按 **LSB-first 字节序**传输，完整的 4B word 用快路径，余下的 1..3 字节逐字节补发。
 
 ### 擦除
 ```c
@@ -468,7 +486,7 @@ HAL_FLASH_Erase(&pkt);
 ### CRC 校验与自动恢复
 ```c
 /* 生成器使能 HAL_FLASH_VERIFY_ENABLE 时可用 */
-HAL_FLASH_VerifyCode();   /* 校验 4 个区（Bank0/1 × Zone0/1），出错时自动从好 bank 复制 */
+HAL_FLASH_VerifyCode();   /* 校验 2 bank × 2 zone（Boot/User），出错时自动从好 bank 复制 */
 ```
 - 需要 ~1 KB 静态 buffer，**调用时不得运行其他 DMA/CRC 操作**。
 
@@ -504,15 +522,16 @@ uint32_t crc_word  = HAL_CRC_OneWord(0x1234);
 HAL_CRC_PacketTypedef pkt = {
     .Data = buf,
     .Length = 1024,
-    .IntE = MODULE_INT_OFF,
+    .IntE = HAL_DISABLE,
     .IDM = CRC_IDM_READ_DMA,   /* DMA 读取 */
 };
 HAL_ResultTypedef r = HAL_CRC_Packet(&pkt);
 uint32_t crc32 = r.Data;
 ```
 
-- `CRC_IDM_READ_DMA`：DMA 读取 buf，结果经 `r.Data` 返回。
+- `CRC_IDM_READ_DMA`：CRC 主动发起 DMA 读，通道由 DMA control 指定（`OC32_DMA_CRC` 角色），`CRCDA` 给源地址，结果经 `r.Data` 返回。**不用 `CRCPDC`**。
 - `CRC_IDM_WRITE_CRCIN`：写入模式（供 Flashloader 等内部使用）。
+- `CRC_IDM_CAPTURE_DMAIN/OUT`：CRC 被动监听 DMA 通道，通过 `CRCPDC` 指定监听目标通道。
 
 ---
 
@@ -560,6 +579,8 @@ OC32 使用**硬件中断控制器（HIC）**，而非传统 NVIC。中断向量
 
 ### 抢占
 `HIPRM` 寄存器允许高优先级中断抢占当前中断。`oc32_hal_int.c` 中各 handler 已保存/恢复 `EIA`（返回地址）以支持抢占。
+
+> **注意**：向量 1/2（CMP0/1）、18/19（ADC0/1）、25~27（MPWM0~2）、28（DAC）的 `__int` 体目前为骨架占位（`HAL_*_IRQHandler` 调用槽保留但 handler 尚未实现），这些模块的硬件中断通路尚未在 HAL 中完整落地。
 
 ---
 
@@ -609,16 +630,16 @@ typedef struct {
 | 返回类型 | 使用场景 |
 |----------|----------|
 | `HAL_StatusTypeDef` | 纯操作类 API（Init/DeInit/Transfer/Clear...） |
-| `HAL_ResultTypedef` | 需返回数据的 API（`_OneByte`/`_OneWord`/`TransferOnce`/`CRC_Packet`） |
+| `HAL_ResultTypedef` | 需返回数据的 API（`CRC_Packet` 等） |
 
 ---
 
 ## 18. 注意事项
 
 1. **不要改动 `hal/inc/` 与 `hal/src/` 的核心逻辑**，业务逻辑放在应用层；需扩展时用 `HAL_XXX_UserIRQ` 等弱符号覆盖。
-2. **阻塞类 API**（`WaitOv`/`WaitEv`/`TransferOnce`/轮询 `TransferPacket`）在调用期间**必须保证对应外设中断不被屏蔽**，否则 busy-wait 无法结束。
-3. **中断模式**的 `TransferPacket` 立即返回，需通过 `HAL_XXX_UserIRQ` 获取完成通知；`_OneByte`/`_OneWord` 无中断模式。
-4. **Length 单位**：UART/SPI 的 `Packet.Length` 与 `CRC` 的 `Length` 均为**字（32 位）或按各自约定**，SPI `TransferOnce` 限制 ≤4 字。
+2. **阻塞类 API**（`WaitOv`/`WaitEv`/轮询 `HAL_UART_TX`/`HAL_UART_RX`/`HAL_SPI_Transfer`）在调用期间**必须保证对应外设中断不被屏蔽**，否则 busy-wait 无法结束。
+3. **中断模式**的 `HAL_UART_TX`/`HAL_UART_RX`/`HAL_SPI_Transfer`（`IntE = ON`）立即返回，需通过 `HAL_XXX_UserIRQ` 获取完成通知；阻塞类单字节 API 无中断模式。
+4. **Length 单位**：整个 MCU 环境默认按**字节**计数。`UART`/`SPI`/`Flash`/`CRC` 的 `Packet.Length` 均为**字节**。
 5. **DMA 通道独占**：同一通道不要并发服务两个模块；`FLASH`/`CRC` 内部默认占 CH0。
 6. **`HAL_FLASH_VerifyCode`** 会覆盖 DMA/CRC 配置且需 1KB buffer，调用时不得运行其他 DMA/CRC 操作。
 7. **`SystemClock`** 全局变量在 `HAL_RCM_Init` 后有效，`HAL_FLASH_ClkUpdate` 依赖它调整 Flash 分频。

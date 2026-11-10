@@ -46,8 +46,8 @@ extern "C"
    */
   typedef struct
   {
-    MODULE_WDT_TypeDef *Wdt;   /*!< Specifies the watchdogtimer */
-    HAL_WDT_ModeTypedef Mode;  /*!< Specifies the Mode: INT or None */
+    MODULE_WDT_TypeDef *Wdt;  /*!< Specifies the watchdogtimer */
+    HAL_WDT_ModeTypedef Mode; /*!< Specifies the Mode: INT or None */
     uint32_t Period;          /*!< Specifies the overflow period (us) */
   } HAL_WDT_InitTypeDef;
 
@@ -60,10 +60,11 @@ extern "C"
 /**
  * @brief This is the HAL system configuration section
  */
-#define WDT_H_PERIOD_MIN ((4U * 32U * 1000000U) / OC32_IHOSC_FREQ)     /*!< WDT min period at high clock in us*/
-#define WDT_H_PERIOD_MAX ((4U * 262144U * 1000000U) / OC32_IHOSC_FREQ) /*!< WDT max period at high clock in us*/
-#define WDT_L_PERIOD_MIN ((4U * 32U * 1000000U) / OC32_ILOSC_FREQ)     /*!< WDT min period at low clock in us*/
-#define WDT_L_PERIOD_MAX ((4U * 262144U * 1000000U) / OC32_ILOSC_FREQ) /*!< WDT max period at low clock in us*/
+#define WDT_PERIOD_LIMIT_MARGIN 1U                                                                 /*!< WDT period limit margin: 1us for safety boundary check */
+#define WDT_H_PERIOD_MIN (((4U * 32U * 1000000U) / OC32_IHOSC_FREQ) + WDT_PERIOD_LIMIT_MARGIN)     /*!< WDT min period at high clock in us*/
+#define WDT_H_PERIOD_MAX (((4U * 262144U * 1000000U) / OC32_IHOSC_FREQ) - WDT_PERIOD_LIMIT_MARGIN) /*!< WDT max period at high clock in us*/
+#define WDT_L_PERIOD_MIN (((4U * 32U * 1000000U) / OC32_ILOSC_FREQ) + WDT_PERIOD_LIMIT_MARGIN)     /*!< WDT min period at low clock in us*/
+#define WDT_L_PERIOD_MAX (((4U * 262144U * 1000000U) / OC32_ILOSC_FREQ) - WDT_PERIOD_LIMIT_MARGIN) /*!< WDT max period at low clock in us*/
 
 #define WDT_CLR_KEY 0xA5U /*!< WDT clear/refresh key value */
 

@@ -1086,6 +1086,11 @@ typedef volatile struct
 #define IICDA    (*(volatile uint32_t *)0x3FF08310)
 #define IICBC    (*(volatile uint32_t *)0x3FF08314)
 
+#define IICKS_POS (1U<<1U)
+#define IICTCLR_POS (1U<<28U)
+#define IICRCLR_POS (1U<<30U)
+
+
 
 // ---- CRC (0x3FF08320) ----
 typedef volatile struct

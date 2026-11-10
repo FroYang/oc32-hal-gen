@@ -18,9 +18,6 @@ extern "C"
 #include <stddef.h>
 #include <stdint.h>
 
-
-
-
   /* Exported types ------------------------------------------------------*/
   /**
    * @brief HAL Enable structure definition
@@ -31,15 +28,35 @@ extern "C"
     HAL_ENABLE = 0x01U
   } HAL_EnableTypeDef;
 
-
   /**
-   * @brief HAL Lock structure definition
+   * @brief  Flag error/valid type definitions.
+   *
+   * Two separate 2-value enums are used deliberately to keep register
+   * semantics readable at the call site:
+   *  - HAL_FlagErrorTypeDef   (GOOD=0 / ERROR=1) is for error-type
+   *    status flags (e.g. IICHNACK, IICCLTO, HRF->PORF):
+   *    `X == HAL_FLAG_ERROR` reads as "error condition present".
+   *  - HAL_FlagValidTypeDef   (INVALID=0 / VALID=1) is for operation
+   *    done/busy flags (e.g. IICTBV, IICRBV, CRCCF, FLUOPF):
+   *    `X == HAL_FLAG_INVALID` reads as "not done yet".
+   *
+   * Both enums have value 0 as the first member, but they are intended
+   * to be used in their respective contexts only — do not mix them.
    */
   typedef enum
   {
-    HAL_UNLOCKED = 0x00U,
-    HAL_LOCKED = 0x01U
-  } HAL_LockTypeDef;
+    HAL_FLAG_GOOD = 0x00U,
+    HAL_FLAG_ERROR = 0x01U
+  } HAL_FlagErrorTypeDef;
+
+  /**
+   * @brief  Flag valid/invalid type definition (operation done/busy flags).
+   */
+  typedef enum
+  {
+    HAL_FLAG_INVALID = 0x00U,
+    HAL_FLAG_VALID = 0x01U
+  } HAL_FlagValidTypeDef;
 
   /**
    * @brief HAL Status structure definition
@@ -72,8 +89,8 @@ extern "C"
 /** @defgroup HAL_INT_Priority_Macros HAL Private Macros
  * @{
  */
-#define HPL_Bit0(val, ch) ((val & 0x1) << ch)        /* get int priority config bit 0 */
-#define HPL_Bit1(val, ch) (((val & 0x2) >> 1) << ch) /* get int priority config bit 1 */
+#define HPL_Bit0(pri, ch) ((pri & 0x1) << ch)        /* get int priority config bit 0 */
+#define HPL_Bit1(pri, ch) (((pri & 0x2) >> 1) << ch) /* get int priority config bit 1 */
 
 /**
  * @}
@@ -83,7 +100,7 @@ extern "C"
  * @{
  */
 #define __weak__ __attribute__((weak))
-#define __sram__ __attribute__((section(".stext")))
+#define __sram__ __attribute__((section(".stext"))) /*!< Place it in SRAM, stext(sram text) is OC32 specific */
 
   /**
    * @}

@@ -29,10 +29,10 @@ extern "C"
    */
   typedef enum
   {
-    SPI_CIH_DSS = 0U,
-    SPI_CIL_DSS = 1U,
-    SPI_CIH_DSF = 2U,
-    SPI_CIL_DSF = 3U
+    SPI_CIH_DSS = 0U, /*!< Clock idle high, data sample from second edge */
+    SPI_CIL_DSS = 1U, /*!< Clock idle low, data sample from second edge */
+    SPI_CIH_DSF = 2U, /*!< Clock idle high, data sample from first edge */
+    SPI_CIL_DSF = 3U  /*!< Clock idle low, data sample from first edge */
   } HAL_SPI_ModeTypedef;
 
   /**
@@ -49,8 +49,8 @@ extern "C"
    */
   typedef enum
   {
-    SPI_CS_OUT_OFF = 0x0U,
-    SPI_CS_OUT_ON = 0x1U
+    SPI_CS_OUT_OFF = 0x0U, /*!< Master mode CS output disabled, user should manually control the CS by software. */
+    SPI_CS_OUT_ON = 0x1U, /*!< Master mode CS output enabled */
   } HAL_SPI_CsOutTypedef;
 
   /**
@@ -58,8 +58,8 @@ extern "C"
    */
   typedef enum
   {
-    SPI_FULL_DUPLEX = 0x0U,
-    SPI_HALF_DUPLEX = 0x1U
+    SPI_FULL_DUPLEX = 0x0U, /*!< tx and rx at the same clock */
+    SPI_HALF_DUPLEX = 0x1U  /*!< tx or rx only */
   } HAL_SPI_DuplexTypedef;
 
   /**
@@ -76,8 +76,8 @@ extern "C"
    */
   typedef enum
   {
-    SPI_HALF_PIN_INDEPENDENT = 0x0U,
-    SPI_HALF_PIN_SHARE = 0x1U
+    SPI_HALF_PIN_SEPARATE = 0x0U, /*!< separate tx pin and rx pin */
+    SPI_HALF_PIN_SHARE = 0x1U     /*!< enable tx pin only, tx and rx use the same one */
   } HAL_SPI_HalfPinTypedef;
 
   /**
@@ -99,15 +99,6 @@ extern "C"
   } HAL_SPI_PinsTypedef;
 
   /**
-   * @brief  SPI Buffer State definition
-   */
-  typedef enum
-  {
-    SPI_BUF_NONE = 0x0U,
-    SPI_BUF_VALID = 0x1U
-  } HAL_SPI_BufStateTypedef;
-
-  /**
    * @brief  SPI Init structure definition
    */
   typedef struct
@@ -124,7 +115,6 @@ extern "C"
     HAL_DMA_ChTypedef DmaCh;          /*!< Specifies DMA channel for transfer */
   } HAL_SPI_InitTypeDef;
 
-
   /**
    * @brief  SPI packet structure definition
    */
@@ -134,7 +124,7 @@ extern "C"
     uint32_t *TxData;               /*!< Specifies the tx data buffer */
     uint32_t *RxData;               /*!< Specifies the rx data buffer */
     uint32_t Length;                /*!< Specifies Data Length in bytes */
-    HAL_MODULE_INTTypedef IntE;     /*!< Specifies the interrupt */
+    HAL_EnableTypeDef IntE;     /*!< Specifies the interrupt */
   } HAL_SPI_PacketTypedef;
 
   /**
@@ -147,8 +137,7 @@ extern "C"
 #ifdef HAL_SPI_ENABLE
   HAL_StatusTypeDef HAL_SPI_Init(HAL_SPI_InitTypeDef *Init);
   HAL_StatusTypeDef HAL_SPI_DeInit(MODULE_SPI_TypeDef *Spi);
-  __sram__ HAL_ResultTypedef HAL_SPI_TransferOnce(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Data);
-  __sram__ HAL_StatusTypeDef HAL_SPI_TransferPacket(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypeDef HAL_SPI_Transfer(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Packet);
   __sram__ HAL_StatusTypeDef HAL_SPI_IRQHandler(MODULE_SPI_TypeDef *Spi);
   __sram__ __weak__ HAL_StatusTypeDef HAL_SPI_UserIRQ(MODULE_SPI_TypeDef *Spi);
 #endif /* HAL_SPI_ENABLE */

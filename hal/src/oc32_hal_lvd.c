@@ -25,11 +25,11 @@
  */
 HAL_StatusTypeDef HAL_LVD_DeInit(void)
 {
-  LVDCON->LVDRE = 0U;
-  LVDCON->LVDWE = 0U;
-  LVDCON->LVDIE = 0U;
-  LVDCON->LVDE = 0U;
-  LVDCON->LVDECLR = 1U;
+  LVDCON->LVDRE = HAL_DISABLE;
+  LVDCON->LVDWE = HAL_DISABLE;
+  LVDCON->LVDIE = HAL_DISABLE;
+  LVDCON->LVDE = HAL_DISABLE;
+  LVDCON->LVDECLR = HAL_ENABLE;
   return HAL_OK;
 }
 
@@ -49,29 +49,28 @@ HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init)
 
   /* setup trigger voltage then enable it */
   LVDCON->LVDVP = Init->TrigV;
-  LVDCON->LVDE = 1U;
+  LVDCON->LVDE = HAL_ENABLE;
 
   /* clear stale flag may caused by noise before */
-  LVDCON->LVDECLR = 1U;
+  LVDCON->LVDECLR = HAL_ENABLE;
 
   if (Init->Mode == LVD_MODE_RST)
   {
-    LVDCON->LVDRE = 1U;
+    LVDCON->LVDRE = HAL_ENABLE;
   }
   else
   {
     if ((Init->Mode == LVD_MODE_INT) || (Init->Mode == LVD_MODE_INT_AND_WAKE))
     {
-      LVDCON->LVDIE = 1U;
+      LVDCON->LVDIE = HAL_ENABLE;
     }
 
     if ((Init->Mode == LVD_MODE_WAKE) || (Init->Mode == LVD_MODE_INT_AND_WAKE))
-      LVDCON->LVDWE = 1U;
+      LVDCON->LVDWE = HAL_ENABLE;
   }
 
   return HAL_OK;
 }
-
 
 #endif /* HAL_LVD_ENABLE */
 

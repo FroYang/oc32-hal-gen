@@ -72,7 +72,7 @@ extern "C"
   {
     uint32_t *Data;          /*!< Specifies Data buffer */
     uint32_t Length;         /*!< Specifies Data Length in bytes */
-    HAL_MODULE_INTTypedef IntE; /*!< Specifies the int mode */
+    HAL_EnableTypeDef IntE; /*!< Specifies the int mode */
     HAL_CRC_IDMTypedef IDM;   /*!< Specifies the input data mode */
   } HAL_CRC_PacketTypedef;
 

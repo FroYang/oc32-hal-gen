@@ -18,20 +18,32 @@ uint32_t SystemClock = OC32_IHOSC_FREQ;
 
 /* Private function prototypes -----------------------------------------------*/
 
+/* Wait for the clock switch to complete (CSF set).
+ *
+ * Uses a local busy-loop counter, NOT the system tick (uwTick): this function
+ * is invoked from HAL_RCM_Init, which runs before HAL_TICK_Init has enabled
+ * the WDT tick interrupt, so uwTick is still 0 and a tick-based timeout would
+ * never fire (deadlock on CSF==0 when the PLL/osc switch fails).
+ *
+ * RCM_CSWAIT_LOOP_MAX (4 800 000) is a ~200 ms software safety net at the
+ * IHOSC 24 MHz clock the system still runs on when this wait is invoked from
+ * HAL_RCM_Init (before any oscillator source switch):
+ *   @ 24 MHz  -> 4 800 000 loops ~= 200 ms
+ * The loop reads the volatile CSF each iteration, so the constant is a
+ * conservative upper bound on loop count, not an exact cycle count.
+ */
 static HAL_StatusTypeDef RCM_ClockSwitchWait(void)
 {
-    /* Wait till clock switch is ready */
-    uint32_t tickstart = HAL_TICK_GetVal();
-    while (CLKCON->CSF == 0)
+    uint32_t loops = 0U;
+    while (CLKCON->CSF == HAL_FLAG_INVALID)
     {
-        if ((HAL_TICK_GetVal() - tickstart) > RCM_CLOCKSWITCH_TIMEOUT)
+        if (++loops > RCM_CSWAIT_LOOP_MAX)
         {
             return HAL_TIMEOUT;
         }
     }
     return HAL_OK;
 }
-
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -83,7 +95,7 @@ HAL_StatusTypeDef HAL_RCM_Init(void)
     SystemClock = OC32_IHOSC_FREQ;
 
 #ifdef HAL_RCM_CDR_ENABLE
-    CLKCON->UXCDRE = 1U;
+    CLKCON->UXCDRE = HAL_ENABLE;
     reffreq = OC32_CDR_FREQ;
     /* CDR requires the system to run on IHOSC. Skip the oscillator switch
        blocks (they would select a different source) and jump straight to
@@ -94,23 +106,24 @@ HAL_StatusTypeDef HAL_RCM_Init(void)
 /* Real ILOSC hardware oscillator — reserved for future chips.
    Only compiles when the part actually supports ILOSC as a real source. */
 #if defined(OC32_CLK_SRC_ILOSC) && defined(OC32_CLK_ILOSC_REAL)
-    CLKCON->ILOSCE = 1U;
+    CLKCON->ILOSCE = HAL_ENABLE;
     reffreq = OC32_ILOSC_FREQ;
 #endif // OC32_CLK_SRC_ILOSC && OC32_CLK_ILOSC_REAL
 
 /* reserved for future chips. */
 #ifdef OC32_CLK_SRC_XLOSC
-    CLKCON->XLOSCE = 1U;
+    CLKCON->XLOSCE = HAL_ENABLE;
     reffreq = OC32_XLOSC_FREQ;
 #endif // OC32_CLK_SRC_XLOSC
 
 #ifdef OC32_CLK_SRC_XHOSC
-    CLKCON->XHOSCE = 1U;
+    CLKCON->XHOSCE = HAL_ENABLE;
     reffreq = OC32_XHOSC_FREQ;
 #endif // OC32_CLK_SRC_XHOSC
 
 #if defined(OC32_CLK_SRC_XHOSC) || defined(OC32_CLK_SRC_XLOSC) || defined(OC32_CLK_ILOSC_REAL)
-    if (RCM_ClockSwitchWait() != HAL_OK) goto rcm_cfg_err;
+    if (RCM_ClockSwitchWait() != HAL_OK)
+        goto rcm_cfg_err;
 #endif // OC32_CLK_SRC_XHOSC || OC32_CLK_SRC_XLOSC || OC32_CLK_ILOSC_REAL
 
 /* Fake ILOSC — low-frequency mode of IHOSC (no separate oscillator).
@@ -120,6 +133,10 @@ HAL_StatusTypeDef HAL_RCM_Init(void)
     reffreq = OC32_ILOSC_FREQ;
 #endif // OC32_CLK_SRC_ILOSC && OC32_CLK_ILOSC_FAKE
 
+/* Convergence point for the PLL stage. Reached either normally (after the
+   oscillator-switch blocks above) or via `goto pll_cfg` from the CDR path
+   (which skips those blocks because CDR must run on IHOSC). SystemClock is
+   updated here from whichever reference the earlier blocks selected. */
 /* system may use pll clock */
 pll_cfg:
     SystemClock = reffreq;
@@ -127,7 +144,7 @@ pll_cfg:
 #ifdef OC32_CLK_PLL_ENABLE
     /* Pll div factor */
     static const uint32_t plldf[] = {1U, 2U, 4U, 8U, 16U, 32U, 63U, 128U};
-    uint32_t pllfreq = 0U;   /* actual chosen PLL output frequency, set by the loop */
+    uint32_t pllfreq = 0U; /* actual chosen PLL output frequency, set by the loop */
 
     /* Find optimal plldf and pllmf (closest to OutFreq) */
     uint32_t best_plldf_idx = 0U;
@@ -148,10 +165,11 @@ pll_cfg:
             best_error = error;
             best_plldf_idx = i;
             best_pllmf = pllmf;
-            pllfreq = cand_freq;   /* keep outer pllfreq in sync with the winner */
+            pllfreq = cand_freq; /* keep outer pllfreq in sync with the winner */
         }
     }
-    if (best_error == UINT32_MAX) goto rcm_cfg_err; /* no valid pll config found */
+    if (best_error == UINT32_MAX)
+        goto rcm_cfg_err; /* no valid pll config found */
 
     /* PLL output monitor */
 #ifdef OC32_CLK_PLL_OM_ENABLE
@@ -160,7 +178,7 @@ pll_cfg:
     if (pfoval > 0U && pfoval <= PFCNT_MAX)
     {
         PLLCON->PFCNT = pfoval - pfoval / 16U; /* 15/16 expected count */
-        PLLCON->PFOM = 1U;
+        PLLCON->PFOM = HAL_ENABLE;
     }
     else
     {
@@ -174,12 +192,14 @@ pll_cfg:
     CLKCON->PLLM = 0U;
     PLLCON->PFD = best_plldf_idx;
     PLLCON->PFM = best_pllmf;
-    CLKCON->PLLE = 1U;
-    if (RCM_ClockSwitchWait() != HAL_OK) goto rcm_cfg_err;
+    CLKCON->PLLE = HAL_ENABLE;
+    if (RCM_ClockSwitchWait() != HAL_OK)
+        goto rcm_cfg_err;
 
     /* check pll freq over or not */
 #ifdef OC32_CLK_PLL_OM_ENABLE
-    if (PLLCON->PFO) goto rcm_cfg_err;
+    if (PLLCON->PFO)
+        goto rcm_cfg_err;
 #endif // OC32_CLK_PLL_OM_ENABLE
 
     /* update system clock */
@@ -198,10 +218,10 @@ rcm_cfg_err:
 #ifdef HAL_USB_ENABLE
 /**
  * @brief  Enables the IOSC trim value controlled by USB.
- * @param  Trim: the trim enable value (RCM_OSC_TRIM_OFF / RCM_OSC_TRIM_ON)
+ * @param  Trim: the trim enable value (HAL_ENABLE / HAL_DISABLE)
  * @retval HAL_OK: always
  */
-HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim)
+HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_EnableTypeDef Trim)
 {
     CLKCON->IOSCUTE = Trim;
     return HAL_OK;
@@ -209,10 +229,10 @@ HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_RCM_OscTrimTypedef Trim)
 
 /**
  * @brief  Enables or disables the IOSC trim value lock.
- * @param  Lock: the lock enable value (RCM_OSC_TRIM_LOCK_OFF / RCM_OSC_TRIM_LOCK_ON)
+ * @param  Lock: the lock enable value (HAL_ENABLE / HAL_DISABLE)
  * @retval HAL_OK: always
  */
-HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_RCM_OscTrimLockTypedef Lock)
+HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_EnableTypeDef Lock)
 {
 
     CLKCON->IOSCUTL = Lock;
@@ -252,6 +272,6 @@ HAL_StatusTypeDef HAL_PLL_IRQHandler(void)
     HAL_RCM_DeInit();
 
     /* clear flag */
-    PLLCON->PFOCLR = 1U;
+    PLLCON->PFOCLR = HAL_ENABLE;
     return HAL_PLL_UserIRQ();
 }
