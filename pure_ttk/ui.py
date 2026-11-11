@@ -32,7 +32,7 @@ class App(Tk):
         self.minsize(560, 480)
         style = ttk.Style()
         try:
-            style.theme_use("clam")
+            style.theme_use("default")
         except Exception:
             pass
         self._cfg = style.configure
@@ -200,8 +200,15 @@ class App(Tk):
     def _build_right(self, right):
         uart_box, uart_body = self._section(right, "Debug UART Options",
                                               self.COLORS["sec_uart"])
-        uart_box.pack(side="bottom", fill="x")
         self._build_uart_block(uart_body)
+        # 锁住 UART 区块高度，避免 feature 区 expand 把它挤没（Windows 高行渲染问题）。
+        # 高度 = 标题 + 行数 × 行高 + 内边距。
+        row_count = len(self.uart_block_widgets)
+        uart_h = 24 + row_count * 30 + 8
+        uart_box.pack(side="bottom", fill="x")
+        uart_box.pack_propagate(False)
+        uart_body.pack_propagate(False)
+        uart_box.configure(height=uart_h)
 
         feat_box, feat_body = self._section(right, "Feature Configure",
                                               self.COLORS["sec_feat"])
@@ -431,15 +438,60 @@ class App(Tk):
             for idx, mod in enumerate(optional):
                 var = BooleanVar(value=False)
                 label = f"{mod['key']}:  {mod.get('description', '')}"
-                if mod["key"] == "DEBUG":
-                    cb = ttk.Checkbutton(self.feature_scroll, text=label,
-                                         variable=var, command=self._toggle_uart_block)
-                else:
-                    cb = ttk.Checkbutton(self.feature_scroll, text=label, variable=var)
+                # 所有 feature 复选框统一走 _on_feature_toggled：
+                #  1) 自动勾选 dependencies（含传递依赖）
+                #  2) 若该 feature 是 DEBUG，则额外开/关 Debug UART 选项区
+                cb = ttk.Checkbutton(self.feature_scroll, text=label, variable=var,
+                                     command=lambda i=idx: self._on_feature_toggled(i))
                 cb.pack(fill="x", pady=2, anchor="e")
                 self._feature_checkboxes.append(cb)
                 self.module_vars[f"mod_{idx}"] = var
             self._set_uart_block_state(False)
+
+    def _on_feature_toggled(self, idx):
+        """任一 feature 被切换时：自动勾选其声明的依赖（传递），并同步 DEBUG 的 UART 区。"""
+        if not self.chip_config:
+            return
+        optional = [m for m in self.chip_config["features"]
+                    if not m.get("always", False)]
+        try:
+            mod = optional[idx]
+        except IndexError:
+            return
+
+        # 1) 传递性自动勾选依赖
+        if self.module_vars[f"mod_{idx}"].get():
+            for dep in mod.get("dependencies", []):
+                for j, other in enumerate(optional):
+                    if other["key"] == dep:
+                        v = self.module_vars.get(f"mod_{j}")
+                        if v is not None and not v.get():
+                            v.set(True)
+                            self._on_feature_toggled(j)
+        else:
+            # 2a) 取消某 feature 时，自动取消所有（传递）依赖它的 feature
+            #      例：取消 UART -> 取消 DEBUG（因为 DEBUG 依赖 UART）
+            self._uncheck_dependents(idx, optional)
+
+        # 2b) 若当前 feature 是 DEBUG，联动 Debug UART 选项区开/关
+        if mod["key"] == "DEBUG":
+            self._toggle_uart_block()
+
+    def _uncheck_dependents(self, idx, optional):
+        """取消 optional[idx] 时，递归取消所有直接或间接依赖它的 feature。"""
+        key = optional[idx]["key"]
+        for j, other in enumerate(optional):
+            if j == idx:
+                continue
+            if key in other.get("dependencies", []):
+                v = self.module_vars.get(f"mod_{j}")
+                if v is not None and v.get():
+                    v.set(False)
+                    # 若被自动取消的是 DEBUG，联动关闭 Debug UART 选项区
+                    if other["key"] == "DEBUG":
+                        self._toggle_uart_block()
+                    # 被取消的 feature 自己的依赖者也要一并取消
+                    self._uncheck_dependents(j, optional)
 
     def _toggle_uart_block(self):
         key = self.chip_combo.get()
