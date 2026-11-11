@@ -6,11 +6,14 @@
  ******************************************************************************
  */
 
+
+
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_spi.h"
 
 #ifdef HAL_SPI_ENABLE
-/* Private typedef -----------------------------------------------------------*/
+
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -21,14 +24,14 @@ static HAL_DMA_ChTypedef Spi1DmaCh = 0U;
 
 /**
  * @brief  SPI Tx Setup
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
  * @param  Length: length of data in bytes
  * @param  Data: pointer to the tx data buffer (must not be NULL on the tx path)
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
  * @note   Blocks until any pending SPI interrupt (SPIIE) has completed.
  */
-__sram__ HAL_StatusTypeDef SpiTxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, uint32_t *Data)
+__sram__ HAL_StatusTypedef SpiTxSetup(MODULE_SPI_Typedef *Spi, uint32_t Length, uint32_t *Data)
 {
 
   if (Spi != SPI_0 && Spi != SPI_1)
@@ -45,7 +48,7 @@ __sram__ HAL_StatusTypeDef SpiTxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, 
 
 /**
  * @brief  SPI RX Setup
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
  * @param  Length: length of data in bytes
  * @param  Data: pointer to the rx data buffer (may be NULL; in that case
  *               SPIRDA is set to 0, which is harmless when DMA is not enabled,
@@ -55,7 +58,7 @@ __sram__ HAL_StatusTypeDef SpiTxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, 
  * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
  * @note   Blocks until any pending SPI interrupt (SPIIE) has completed.
  */
-__sram__ HAL_StatusTypeDef SpiRxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, uint32_t *Data)
+__sram__ HAL_StatusTypedef SpiRxSetup(MODULE_SPI_Typedef *Spi, uint32_t Length, uint32_t *Data)
 {
   if (Spi != SPI_0 && Spi != SPI_1)
     return HAL_ERROR;
@@ -72,11 +75,11 @@ __sram__ HAL_StatusTypeDef SpiRxSetup(MODULE_SPI_TypeDef *Spi, uint32_t Length, 
 
 /**
  * @brief  Initializes the SPI peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_SPI_InitTypeDef structure.
+ * @param  Init: pointer to a HAL_SPI_Inittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL or Init->Spi is not SPI_0/SPI_1
  */
-HAL_StatusTypeDef HAL_SPI_Init(HAL_SPI_InitTypeDef *Init)
+HAL_StatusTypedef HAL_SPI_Init(HAL_SPI_InitTypedef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -108,13 +111,13 @@ HAL_StatusTypeDef HAL_SPI_Init(HAL_SPI_InitTypeDef *Init)
   Init->Spi->SPICON.SPIS = Init->Slave;
 
   /* setup master CS output or not */
-  Init->Spi->SPICON.SPIMSOE = Init->CsOut;
+  Init->Spi->SPICON.SPIMSOE = Init->CsOutE;
 
   /* setup duplex mode */
   Init->Spi->SPICON.SPIHD = Init->Duplex;
 
   /* select half-duplex pin */
-  Init->Spi->SPICON.SPISIOP = Init->HalfPin;
+  Init->Spi->SPICON.SPISIOP = Init->HalfPinShareE;
 
   /* setup first bit */
   Init->Spi->SPICON.SPILF = Init->FirstBit;
@@ -127,17 +130,17 @@ HAL_StatusTypeDef HAL_SPI_Init(HAL_SPI_InitTypeDef *Init)
 
 /**
  * @brief  DeInitializes the SPI peripheral.
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
  * @note   Resets SPICON to 0 then clears the TX busy flag.
  */
-HAL_StatusTypeDef HAL_SPI_DeInit(MODULE_SPI_TypeDef *Spi)
+HAL_StatusTypedef HAL_SPI_DeInit(MODULE_SPI_Typedef *Spi)
 {
   if (Spi != SPI_0 && Spi != SPI_1)
     return HAL_ERROR;
 
-  *(volatile uint32_t *)&Spi->SPICON = 0U;
+  WRITE_SR(&Spi->SPICON, 0U);
   Spi->SPICON.SPITCLR = HAL_ENABLE;
   HAL_DMA_ChTypedef DmaCh = (Spi == SPI_0) ? Spi0DmaCh : Spi1DmaCh;
   HAL_DMA_MapTypedef DmaModule = (Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
@@ -147,8 +150,8 @@ HAL_StatusTypeDef HAL_SPI_DeInit(MODULE_SPI_TypeDef *Spi)
 
 /**
  * @brief  Tx/Rx packet
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
- * @param  Packet: pointer to a HAL_SPI_PacketTypedef structure, specifies the tx/rx data packet.
+ * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
+ * @param  Packet: pointer to a HAL_SPI_Packettypedef structure, specifies the tx/rx data packet.
  *                 Packet->TxData may be NULL only when TX is not active (half-duplex RX only).
  *                 Packet->RxData may be NULL only when RX is not active (half-duplex TX only).
  * @retval HAL_OK: on success (in both polling and interrupt mode)
@@ -158,7 +161,7 @@ HAL_StatusTypeDef HAL_SPI_DeInit(MODULE_SPI_TypeDef *Spi)
  *         Caller must not mask the SPI interrupt during the call, or the busy-wait
  *         on SPIDMAE / SPITBV will not terminate.
  */
-__sram__ HAL_StatusTypeDef HAL_SPI_Transfer(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef HAL_SPI_Transfer(MODULE_SPI_Typedef *Spi, HAL_SPI_PacketTypedef *Packet)
 {
   if (Packet == NULL ||
       (Packet->TxData == NULL && (Spi->SPICON.SPIHD == SPI_FULL_DUPLEX || Packet->HalfRx == SPI_HALF_TX)) ||
@@ -219,32 +222,32 @@ __sram__ HAL_StatusTypeDef HAL_SPI_Transfer(MODULE_SPI_TypeDef *Spi, HAL_SPI_Pac
 
 /**
  * @brief  Handles SPI interrupt request at user side.
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_SPI_UserIRQ(MODULE_SPI_TypeDef *Spi)
+__sram__ __weak__ HAL_StatusTypedef HAL_SPI_UserIRQ(MODULE_SPI_Typedef *Spi)
 {
   return HAL_OK;
 }
 
 /**
  * @brief  Handles SPI interrupt request.
- * @param  Spi: pointer to a MODULE_SPI_TypeDef structure, specifies which SPI
+ * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
  * @note   Invoked from the global interrupt handler. On transfer completion (SPITBV set),
  *         clears SPITCLR, disables DMA (SPIDMAE=0), and updates the DMA channel state to IDLE.
  *         Disables SPIIE when the DMA channel is idle, allowing the next transfer to proceed.
  */
-__sram__ HAL_StatusTypeDef HAL_SPI_IRQHandler(MODULE_SPI_TypeDef *Spi)
+__sram__ HAL_StatusTypedef HAL_SPI_IRQHandler(MODULE_SPI_Typedef *Spi)
 {
   if (Spi != SPI_0 && Spi != SPI_1)
     return HAL_ERROR;
 
   HAL_DMA_ChTypedef DmaCh = (Spi == SPI_0) ? Spi0DmaCh : Spi1DmaCh;
   HAL_DMA_MapTypedef DmaModule = (Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
-  HAL_StatusTypeDef status = HAL_OK;
+  HAL_StatusTypedef status = HAL_OK;
 
   if (Spi->SPICON.SPITBV == HAL_FLAG_VALID)
   {

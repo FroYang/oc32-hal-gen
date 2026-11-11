@@ -18,6 +18,10 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
+  /* extern ------------------------------------------------------------*/
+  extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+
   /** @addtogroup OC32_HAL_Driver
    * @{
    */
@@ -50,7 +54,7 @@ extern "C"
   typedef enum
   {
     SPI_CS_OUT_OFF = 0x0U, /*!< Master mode CS output disabled, user should manually control the CS by software. */
-    SPI_CS_OUT_ON = 0x1U, /*!< Master mode CS output enabled */
+    SPI_CS_OUT_ON = 0x1U,  /*!< Master mode CS output enabled */
   } HAL_SPI_CsOutTypedef;
 
   /**
@@ -103,17 +107,17 @@ extern "C"
    */
   typedef struct
   {
-    MODULE_SPI_TypeDef *Spi;          /*!< Specifies the SPI */
+    MODULE_SPI_Typedef *Spi;          /*!< Specifies the SPI */
     HAL_SPI_ModeTypedef Mode;         /*!< Specifies the SPI mode */
     uint32_t ClkDiv;                  /*!< Specifies the SPI clock divider */
     HAL_SPI_SlaveTypedef Slave;       /*!< Specifies the SPI slave */
-    HAL_SPI_CsOutTypedef CsOut;       /*!< Specifies the SPI cs out */
+    HAL_EnableTypedef CsOutE;       /*!< Specifies the SPI cs out enable */
     HAL_SPI_DuplexTypedef Duplex;     /*!< Specifies the Half-duplex */
-    HAL_SPI_HalfPinTypedef HalfPin;   /*!< Specifies the Half-Pin */
+    HAL_EnableTypedef HalfPinShareE;   /*!< Specifies the Half-duplex pin share enable */
     HAL_SPI_FirstBitTypedef FirstBit; /*!< Specifies the First Bit */
     HAL_SPI_PinsTypedef Pins;         /*!< Specifies the pins */
     HAL_DMA_ChTypedef DmaCh;          /*!< Specifies DMA channel for transfer */
-  } HAL_SPI_InitTypeDef;
+  } HAL_SPI_InitTypedef;
 
   /**
    * @brief  SPI packet structure definition
@@ -124,7 +128,7 @@ extern "C"
     uint32_t *TxData;               /*!< Specifies the tx data buffer */
     uint32_t *RxData;               /*!< Specifies the rx data buffer */
     uint32_t Length;                /*!< Specifies Data Length in bytes */
-    HAL_EnableTypeDef IntE;     /*!< Specifies the interrupt */
+    HAL_EnableTypedef IntE;         /*!< Specifies the interrupt */
   } HAL_SPI_PacketTypedef;
 
   /**
@@ -135,11 +139,11 @@ extern "C"
    * @{
    */
 #ifdef HAL_SPI_ENABLE
-  HAL_StatusTypeDef HAL_SPI_Init(HAL_SPI_InitTypeDef *Init);
-  HAL_StatusTypeDef HAL_SPI_DeInit(MODULE_SPI_TypeDef *Spi);
-  __sram__ HAL_StatusTypeDef HAL_SPI_Transfer(MODULE_SPI_TypeDef *Spi, HAL_SPI_PacketTypedef *Packet);
-  __sram__ HAL_StatusTypeDef HAL_SPI_IRQHandler(MODULE_SPI_TypeDef *Spi);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_SPI_UserIRQ(MODULE_SPI_TypeDef *Spi);
+  HAL_StatusTypedef HAL_SPI_Init(HAL_SPI_InitTypedef *Init);
+  HAL_StatusTypedef HAL_SPI_DeInit(MODULE_SPI_Typedef *Spi);
+  __sram__ HAL_StatusTypedef HAL_SPI_Transfer(MODULE_SPI_Typedef *Spi, HAL_SPI_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypedef HAL_SPI_IRQHandler(MODULE_SPI_Typedef *Spi);
+  __sram__ __weak__ HAL_StatusTypedef HAL_SPI_UserIRQ(MODULE_SPI_Typedef *Spi);
 #endif /* HAL_SPI_ENABLE */
   /**
    * @}

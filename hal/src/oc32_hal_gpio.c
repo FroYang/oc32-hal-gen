@@ -7,9 +7,9 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_gpio.h"
 
-/* Private typedef -----------------------------------------------------------*/
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -18,7 +18,7 @@
 
 /**
  * @brief  Initializes the GPIO peripheral.
- * @param  Init: pointer to a HAL_GPIO_InitTypeDef structure that contains
+ * @param  Init: pointer to a HAL_GPIO_Inittypedef structure that contains
  *         the configuration information for the specified GPIO peripheral.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init->Port is not PORT_A/PORT_B
@@ -26,7 +26,7 @@
  *         For input mode: configures pull, noise filter, and interrupt
  *         edge detection (RIE/FIE), and clears stale interrupt flags (IFC).
  */
-HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init)
+HAL_StatusTypedef HAL_GPIO_Init(HAL_GPIO_InitTypedef *Init)
 {
     if (Init->Port != PORT_A && Init->Port != PORT_B)
         return HAL_ERROR;
@@ -117,13 +117,13 @@ HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init)
 
 /**
  * @brief  DeInitializes the GPIO peripheral.
- * @param  Init: pointer to a HAL_GPIO_InitTypeDef structure that contains
+ * @param  Init: pointer to a HAL_GPIO_Inittypedef structure that contains
  *         the configuration information for the specified GPIO peripheral.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init->Port is not PORT_A/PORT_B
  * @note   Disables output, pull, interrupt, and filter for the specified pin.
  */
-HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIO_InitTypeDef *Init)
+HAL_StatusTypedef HAL_GPIO_DeInit(HAL_GPIO_InitTypedef *Init)
 {
     if (Init->Port != PORT_A && Init->Port != PORT_B)
         return HAL_ERROR;
@@ -140,4 +140,30 @@ HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIO_InitTypeDef *Init)
     Init->Port->FS1 = Init->Port->FS1 & ~(Init->Pin);
     Init->Port->IFC = Init->Pin;
     return HAL_OK;
+}
+
+/**
+ * @brief  Handles GPIO interrupt request at user side.
+ * @retval HAL_OK: on success
+ * @note   This is a weak implementation that can be overridden by the user.
+ * 
+ * NOTICE: USER MUST OVERRIDE THIS FUNCTION, AND CLEAR THE INTERRUPT FLAGS.
+ */
+__weak__ __sram__ HAL_StatusTypedef HAL_GPIO_UserIRQ(MODULE_PORT_Typedef *Port)
+{
+  return HAL_OK;
+}
+
+/**
+ * @brief  Handles VTS interrupt request.
+ * @retval Return value of HAL_VTS_UserIRQ
+ * @note   Invoked from the global interrupt handler. DeInitializes the VTS,
+ *         then calls HAL_VTS_UserIRQ.
+ */
+__sram__ HAL_StatusTypedef HAL_GPIO_IRQHandler(MODULE_PORT_Typedef *Port)
+{
+    if ((Port == NULL) || (Port != PORT_A && Port != PORT_B))
+        return HAL_ERROR;
+        
+  return HAL_GPIO_UserIRQ(Port);
 }

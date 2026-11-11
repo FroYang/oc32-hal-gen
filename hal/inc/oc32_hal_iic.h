@@ -7,8 +7,8 @@
  *          The chip provides a single IIC peripheral (base 0x3FF08300). As a
  *          single-instance peripheral (like CRC), it is accessed directly via
  *          the device-header register macros — the control register
- *          (IICCON_TypeDef / IICCON) and the standalone data registers
- *          (IICTBUF/IICRBUF/IICADR/IICDA/IICBC). No MODULE_IIC_TypeDef block
+ *          (IICCON_Typedef / IICCON) and the standalone data registers
+ *          (IICTBUF/IICRBUF/IICADR/IICDA/IICBC). No MODULE_IIC_Typedef block
  *          struct is introduced; that pattern is reserved for peripherals that
  *          have multiple on-chip instances (SPI/UART/WDT/CCP/TIMER).
  *
@@ -32,6 +32,10 @@ extern "C"
 /* Includes ------------------------------------------------------------*/
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
+
+  /* extern ------------------------------------------------------------*/
+  extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
 
   /** @addtogroup OC32_HAL_Driver
    * @{
@@ -135,10 +139,10 @@ extern "C"
   {
     HAL_IIC_AddrModeTypedef AddrMode; /*!< Specifies address bit width */
     uint32_t ClkDiv;                  /*!< Specifies the IIC master clock divider */
-    HAL_EnableTypeDef Stretch;        /*!< Specifies Clock-Stretching enable (slave) */
+    HAL_EnableTypedef Stretch;        /*!< Specifies Clock-Stretching enable (slave) */
     HAL_IIC_PinsTypedef Pins;         /*!< Specifies the pins */
     HAL_DMA_ChTypedef DmaCh;          /*!< Specifies the DMA channel for transfers */
-  } HAL_IIC_InitTypeDef;
+  } HAL_IIC_InitTypedef;
 
   /**
    * @brief  IIC data packet structure for DMA / interrupt transfers
@@ -149,7 +153,7 @@ extern "C"
     HAL_IIC_RWTypedef RW;   /*!< Specifies the data direction */
     uint32_t *Data;         /*!< DMA data buffer (SRAM). */
     uint32_t Length;        /*!< Number of bytes. Non-DMA max 4, DMA max 1023. */
-    HAL_EnableTypeDef IntE; /*!< Specifies the interrupt */
+    HAL_EnableTypedef IntE; /*!< Specifies the interrupt */
   } HAL_IIC_PacketTypedef;
 
   /**
@@ -160,10 +164,13 @@ extern "C"
    * @{
    */
 #ifdef HAL_IIC_ENABLE
+  HAL_StatusTypedef HAL_IIC_Init(HAL_IIC_InitTypedef *Init);
+  HAL_StatusTypedef HAL_IIC_DeInit(void);
+  __sram__ HAL_StatusTypedef HAL_IIC_Transfer(HAL_IIC_PacketTypedef *Packet);
 
   /* ---- interrupt handling -------------------------------------------- */
-  __sram__ HAL_StatusTypeDef HAL_IIC_IRQHandler(void);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_IIC_UserIRQ(void);
+  __sram__ HAL_StatusTypedef HAL_IIC_IRQHandler(void);
+  __weak__ __sram__ HAL_StatusTypedef HAL_IIC_UserIRQ(void);
 #endif /* HAL_IIC_ENABLE */
   /**
    * @}

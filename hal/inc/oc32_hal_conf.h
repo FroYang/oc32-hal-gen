@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file    oc32_hal_conf.h
  * @author
- * @brief   Configuration header file of CV32S6015U HAL module.
+ * @brief   Configuration header file of CV32S6015 HAL module.
  ******************************************************************************
  */
 
@@ -23,7 +23,7 @@ extern "C"
     uint32_t ChEnable;       /* specify interrupt enable for each channel */
     uint32_t ChPriorityBit0; /* specify interrupt priority for each channel */
     uint32_t ChPriorityBit1; /* specify interrupt priority for each channel */
-  } HAL_HICInitTypeDef;
+  } HAL_HICInitTypedef;
 
 
 
@@ -37,8 +37,7 @@ extern "C"
 #define OC32_CLK_ILOSC_FAKE
 #define OC32_CLK_PLL_ENABLE
 #define OC32_CLK_PLL_OM_ENABLE
-#define HAL_RCM_CDR_ENABLE
-#define OC32_CDR_FREQ ((uint32_t)12000000U)     /* USB CDR output frequency in Hz */
+
 #define OC32_XHOSC_FREQ ((uint32_t)4000000) /* External oscillator frequency in Hz */
 #define OC32_XLOSC_FREQ ((uint32_t)32768) /* External low-speed oscillator frequency in Hz */
 #define OC32_IHOSC_FREQ ((uint32_t)24000000) /* Internal oscillator frequency in Hz */
@@ -203,7 +202,7 @@ OC32_HIC_PRI3       = 3U
     HAL_TICK_FREQ_100Hz = 10U,
     HAL_TICK_FREQ_1KHz = 1U,
     HAL_TICK_FREQ_DEFAULT = HAL_TICK_FREQ_1KHz
-  } HAL_TICK_FreqTypeDef;
+  } HAL_TICK_FreqTypedef;
 
   extern volatile uint32_t uwTick;
 
@@ -223,7 +222,8 @@ OC32_HIC_PRI3       = 3U
    */
 
   /* use defined enable modules */
-  #define HAL_PORTB_ENABLE
+  #define HAL_QUAD_READ_ENABLE
+#define HAL_WDT_ENABLE
 #define HAL_CRC_ENABLE
 #define HAL_FLASH_ENABLE
 #define HAL_FLASH_VERIFY_ENABLE
@@ -232,15 +232,14 @@ OC32_HIC_PRI3       = 3U
 #define HAL_CCP_ENABLE
 #define HAL_SPI_ENABLE
 #define HAL_IIC_ENABLE
-#define HAL_MPWM_ENABLE
-#define HAL_USB_ENABLE
 #define HAL_LVD_ENABLE
 #define HAL_ADC_ENABLE
-#define HAL_DAC_ENABLE
 #define HAL_CMP_ENABLE
 #define HAL_AMP_ENABLE
 #define HAL_VTS_ENABLE
 #define HAL_DEBUG_ENABLE
+   /* #define HAL_MPWM_ENABLE */
+   /* #define HAL_DAC_ENABLE */
 
   /**
    * @}

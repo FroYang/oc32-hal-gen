@@ -18,6 +18,11 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
+    /* extern ------------------------------------------------------------*/
+    extern uint32_t SystemClock;
+    extern uint32_t SysReqBuf[4];
+    
+
     /** @addtogroup OC32_HAL_Driver
      * @{
      */
@@ -27,8 +32,6 @@ extern "C"
      */
 
     /* Exported types ------------------------------------------------------*/
-
-
 
 /**
  * @}
@@ -64,7 +67,6 @@ extern "C"
 /**
  * @}
  */
-
 
 /**
  * @}
@@ -125,14 +127,17 @@ extern "C"
      */
 
     /* Initialization and de-initialization functions */
-    HAL_StatusTypeDef HAL_RCM_DeInit(void);
-    HAL_StatusTypeDef HAL_RCM_Init(void);
-    HAL_StatusTypeDef HAL_PLL_IRQHandler(void);
-    __weak__ HAL_StatusTypeDef HAL_PLL_UserIRQ(void);
+    HAL_StatusTypedef HAL_RCM_DeInit(void);
+    HAL_StatusTypedef HAL_RCM_Init(void);
+
+#ifdef OC32_CLK_PLL_ENABLE
+    HAL_StatusTypedef HAL_PLL_IRQHandler(void);
+    __weak__ HAL_StatusTypedef HAL_PLL_UserIRQ(void);
+#endif /* OC32_CLK_PLL_ENABLE */
 
 #ifdef HAL_USB_ENABLE
-    HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_EnableTypeDef Trim);
-    HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_EnableTypeDef Lock);
+    HAL_StatusTypedef HAL_RCM_UsbTrim(HAL_EnableTypedef Trim);
+    HAL_StatusTypedef HAL_RCM_UsbTrimLock(HAL_EnableTypedef Lock);
 #endif
 
     /* Frequency query functions */

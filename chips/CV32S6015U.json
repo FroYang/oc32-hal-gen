@@ -25,9 +25,19 @@
     "vdd_value": 5000,
     "features": [
         {
+            "key": "QUAD_READ",
+            "description": "CPU Quad-Read Instructions From Flash",
+            "always": false
+        },
+        {
             "key": "PORTB",
             "description": "GPIO Port B",
             "always": true
+        },
+        {
+            "key": "WDT",
+            "description": "Watchdog Timer",
+            "always": false
         },
         {
             "key": "CRC",
@@ -107,7 +117,10 @@
         {
             "key": "CMP",
             "description": "Analog Comparator",
-            "always": false
+            "always": false,
+            "dependencies": [
+                "TIMER"
+            ]
         },
         {
             "key": "AMP",
@@ -117,7 +130,10 @@
         {
             "key": "VTS",
             "description": "Voltage Internal Temperature Sensor",
-            "always": false
+            "always": false,
+            "dependencies": [
+                "ADC"
+            ]
         },
         {
             "key": "DEBUG",

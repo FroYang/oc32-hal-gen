@@ -7,9 +7,11 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_rcm.h"
+#include "oc32_hal_flash.h"
+#include "oc32_hal_static.h"
 
-/* Private typedef -----------------------------------------------------------*/
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
 /* Private macro -------------------------------------------------------------*/
@@ -32,7 +34,7 @@ uint32_t SystemClock = OC32_IHOSC_FREQ;
  * The loop reads the volatile CSF each iteration, so the constant is a
  * conservative upper bound on loop count, not an exact cycle count.
  */
-static HAL_StatusTypeDef RCM_ClockSwitchWait(void)
+static HAL_StatusTypedef RCM_ClockSwitchWait(void)
 {
     uint32_t loops = 0U;
     while (CLKCON->CSF == HAL_FLAG_INVALID)
@@ -45,6 +47,28 @@ static HAL_StatusTypeDef RCM_ClockSwitchWait(void)
     return HAL_OK;
 }
 
+/* always need this function for rcm clock config */
+__sram__ HAL_StatusTypedef FlashClkUpdate(void)
+{
+    /* clock divide: flash clock < 25MHz */
+    if (SystemClock > FLASH_SCLK_HIGH)
+    {
+        /* sclk/4 */
+        FLCCON->FLCC = FLASH_CLK_DIV4;
+        FLUCON->FLUC = FLASH_CLK_DIV4;
+        FLCCON->FLTSHSL = FLASH_CORE_TSHSL_HIGH;
+    }
+    else
+    {
+        /* sclk/2 */
+        FLCCON->FLCC = FLASH_CLK_DIV2;
+        FLUCON->FLUC = FLASH_CLK_DIV2;
+        FLCCON->FLTSHSL = FLASH_CORE_TSHSL_LOW;
+    }
+
+    return HAL_OK;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -54,20 +78,25 @@ static HAL_StatusTypeDef RCM_ClockSwitchWait(void)
  *         and LVDCON, resets SystemClock to IHOSC, and updates the flash
  *         clock divider.
  */
-HAL_StatusTypeDef HAL_RCM_DeInit(void)
+HAL_StatusTypedef HAL_RCM_DeInit(void)
 {
     /* default value */
     WRITE_SR(CLKCON, CLKCON_DEFAULT);
+
+#ifdef OC32_PLL_ENABLE
     WRITE_SR(PLLCON, PLLCON_DEFAULT);
-    WRITE_SR(BPCON, HAL_GetRegTrim0w0());
-    WRITE_SR(IOSCCON, HAL_GetRegTrim0w1());
-    WRITE_SR(VTSCON, HAL_GetRegTrim0w2());
-    WRITE_SR(LVDCON, HAL_GetRegTrim0w3());
+#endif /* OC32_PLL_ENABLE */
+
+    HAL_SYS_GetTrim0();
+    WRITE_SR(BPCON, SysReqBuf[0]);
+    WRITE_SR(IOSCCON, SysReqBuf[1]);
+    WRITE_SR(VTSCON, SysReqBuf[2]);
+    WRITE_SR(LVDCON, SysReqBuf[3]);
 
     SystemClock = OC32_IHOSC_FREQ;
 
     /* update flash clock setting base on new system clock */
-    HAL_FLASH_ClkUpdate();
+    FlashClkUpdate();
 
     return HAL_OK;
 }
@@ -80,7 +109,7 @@ HAL_StatusTypeDef HAL_RCM_DeInit(void)
  *         configures the PLL if enabled, and updates the flash clock divider.
  *         On error, calls HAL_RCM_DeInit to restore the default clock state.
  */
-HAL_StatusTypeDef HAL_RCM_Init(void)
+HAL_StatusTypedef HAL_RCM_Init(void)
 {
     /* flash clock config: slow down the clock for safe */
     FLCCON->FLCC = FLASH_CLK_DIV5;
@@ -138,7 +167,9 @@ HAL_StatusTypeDef HAL_RCM_Init(void)
    (which skips those blocks because CDR must run on IHOSC). SystemClock is
    updated here from whichever reference the earlier blocks selected. */
 /* system may use pll clock */
+#ifdef HAL_RCM_CDR_ENABLE
 pll_cfg:
+#endif
     SystemClock = reffreq;
 
 #ifdef OC32_CLK_PLL_ENABLE
@@ -198,7 +229,7 @@ pll_cfg:
 
     /* check pll freq over or not */
 #ifdef OC32_CLK_PLL_OM_ENABLE
-    if (PLLCON->PFO)
+    if (PLLCON->PFO == HAL_FLAG_ERROR)
         goto rcm_cfg_err;
 #endif // OC32_CLK_PLL_OM_ENABLE
 
@@ -207,7 +238,7 @@ pll_cfg:
 #endif // OC32_CLK_PLL_ENABLE
 
     /* update flash clock setting base on new system clock */
-    HAL_FLASH_ClkUpdate();
+    FlashClkUpdate();
     return HAL_OK;
 
 rcm_cfg_err:
@@ -221,7 +252,7 @@ rcm_cfg_err:
  * @param  Trim: the trim enable value (HAL_ENABLE / HAL_DISABLE)
  * @retval HAL_OK: always
  */
-HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_EnableTypeDef Trim)
+HAL_StatusTypedef HAL_RCM_UsbTrim(HAL_EnableTypedef Trim)
 {
     CLKCON->IOSCUTE = Trim;
     return HAL_OK;
@@ -232,7 +263,7 @@ HAL_StatusTypeDef HAL_RCM_UsbTrim(HAL_EnableTypeDef Trim)
  * @param  Lock: the lock enable value (HAL_ENABLE / HAL_DISABLE)
  * @retval HAL_OK: always
  */
-HAL_StatusTypeDef HAL_RCM_UsbTrimLock(HAL_EnableTypeDef Lock)
+HAL_StatusTypedef HAL_RCM_UsbTrimLock(HAL_EnableTypedef Lock)
 {
 
     CLKCON->IOSCUTL = Lock;
@@ -249,12 +280,14 @@ uint32_t HAL_RCM_GetSysClockFreq(void)
     return SystemClock;
 }
 
+
+#ifdef OC32_CLK_PLL_ENABLE
 /**
  * @brief  Handles PLL frequency-over interrupt request at user side.
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
+HAL_StatusTypedef HAL_PLL_UserIRQ(void)
 {
     return HAL_OK;
 }
@@ -266,7 +299,7 @@ HAL_StatusTypeDef HAL_PLL_UserIRQ(void)
  *         clock (HAL_RCM_DeInit), clears the PFO flag, then calls
  *         HAL_PLL_UserIRQ.
  */
-HAL_StatusTypeDef HAL_PLL_IRQHandler(void)
+HAL_StatusTypedef HAL_PLL_IRQHandler(void)
 {
     /* switchback to default clock */
     HAL_RCM_DeInit();
@@ -275,3 +308,4 @@ HAL_StatusTypeDef HAL_PLL_IRQHandler(void)
     PLLCON->PFOCLR = HAL_ENABLE;
     return HAL_PLL_UserIRQ();
 }
+#endif /* OC32_CLK_PLL_ENABLE */

@@ -6,11 +6,14 @@
  ******************************************************************************
  */
 
+
+
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_crc.h"
 
 #ifdef HAL_CRC_ENABLE
-/* Private typedef -----------------------------------------------------------*/
+
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -21,11 +24,11 @@ static HAL_DMA_ChTypedef CrcDmaCh;
 
 /**
  * @brief  Initializes the CRC peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_CRC_InitTypeDef structure.
+ * @param  Init: pointer to a HAL_CRC_Inittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL
  */
-__sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
+__sram__ HAL_StatusTypedef HAL_CRC_Init(HAL_CRC_InitTypedef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -47,7 +50,7 @@ __sram__ HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init)
  * @note   Resets CRCPOLY, CRCREG, and CRCCON to 0, and records the DMA channel
  *         state as idle.
  */
-HAL_StatusTypeDef HAL_CRC_DeInit(void)
+HAL_StatusTypedef HAL_CRC_DeInit(void)
 {
   WRITE_SR(CRCPOLY, 0);
   WRITE_SR(CRCREG, 0);
@@ -110,7 +113,7 @@ __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data)
 
 /**
  * @brief  Calculates CRC of a data packet (LSB first default)
- * @param  Packet: pointer to a HAL_CRC_PacketTypedef structure.
+ * @param  Packet: pointer to a HAL_CRC_Packettypedef structure.
  * @retval HAL_ResultTypedef:
  *         .Data  = CRC result (in polling mode)
  *         .Error = HAL_OK on success, HAL_ERROR on failure
@@ -153,7 +156,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
   WRITE_SR(CRCBC, Packet->Length);
 
   /* kickstart */
-  CRCCON->CRCKS = 1U;
+  CRCCON->CRCKS = HAL_ENABLE;
 
   /* if interrupt mode, return value is not the correct result, user should get it in IRQ
    * if normal mode, return value is the crc result */
@@ -177,7 +180,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
+__weak__ __sram__ HAL_StatusTypedef HAL_CRC_UserIRQ(void)
 {
   return HAL_OK;
 }
@@ -188,9 +191,9 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void)
  * @note   Invoked from the global interrupt handler. Clears the CRC done flag,
  *         disables the CRC interrupt, and updates the DMA channel state to IDLE.
  */
-__sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void)
+__sram__ HAL_StatusTypedef HAL_CRC_IRQHandler(void)
 {
-  HAL_StatusTypeDef status = HAL_CRC_UserIRQ();
+  HAL_StatusTypedef status = HAL_CRC_UserIRQ();
   CRCCON->CRCCCLR = HAL_ENABLE;
   CRCCON->CRCIE = HAL_DISABLE;
   HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);

@@ -29,50 +29,38 @@ extern "C"
 #define va_arg(v, l) __builtin_va_arg(v, l)
 #define va_copy(d, s) __builtin_va_copy(d, s)
 
+
   /* Exported macros -----------------------------------------------------*/
   /* Exported functions ----------------------------------------------------*/
   void *memcpy(void *dest, const void *src, uint32_t n);
   void *memset(void *dest, int c, uint32_t n);
 
+  __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
 
 
-  HAL_StatusTypeDef HAL_TICK_Init(void);
-  HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init);
+  HAL_StatusTypedef HAL_TICK_Init(void);
+  HAL_StatusTypedef HAL_HIC_Init(HAL_HICInitTypedef *Init);
   void HAL_HIC_DeInit(void);
 
-#define HAL_TICK_Inc() do { uwTick++; } while (0)
+#define HAL_TICK_Inc() \
+  do                   \
+  {                    \
+    uwTick++;          \
+  } while (0)
 #define HAL_TICK_GetVal() (uwTick)
 #define HAL_GetHalVer() (__OC32_HAL_VERSION)
 
   void HAL_Delay(uint32_t Delay);
-  __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
-  int __syscall_handler(uint32_t Num);
-  int __systrap_handler(void);
-  uint32_t HAL_GetRevID(void);
-  uint32_t HAL_GetDevID(void);
-  uint32_t HAL_GetUIDw0(void);
-  uint32_t HAL_GetUIDw1(void);
-  uint32_t HAL_GetUIDw2(void);
-  uint32_t HAL_GetUIDw3(void);
-  uint32_t HAL_GetRegTrim0w0(void);
-  uint32_t HAL_GetRegTrim0w1(void);
-  uint32_t HAL_GetRegTrim0w2(void);
-  uint32_t HAL_GetRegTrim0w3(void);
-  __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void);
-  __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void);
-  HAL_StatusTypeDef HAL_HRF_IRQHandler(void);
 
-/* Syscall numbers for fused data access via SYSC instruction */
-#define SYSC_PID 0u      /* fused Product ID (DEVID/REVID) */
-#define SYSC_LID 1u      /* fused Lot ID */
-#define SYSC_TSN 2u      /* fused Test Serial Number (96-bit UID) */
-#define SYSC_REGTRIM0 3u /* fused reg: BPCON/IOSCCON/LVDCON/VTSCON */
-#define SYSC_REGTRIM1 4u /* fused reg:  */
-#define SYSC_REGTRIM2 5u /* fused reg:  */
+  __weak__ HAL_StatusTypedef HAL_POR_UserIRQ(void);
+  __weak__ HAL_StatusTypedef HAL_DBGR_UserIRQ(void);
+  HAL_StatusTypedef HAL_HRF_IRQHandler(void);
 
   /* extern var */
   extern uint32_t SystemClock;
   extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+  extern uint32_t SysReqBuf[4];
+  extern uint32_t VtIndex;
 
 #include "oc32_hal_rcm.h"
 #include "oc32_hal_gpio.h"
@@ -80,6 +68,9 @@ extern "C"
 #include "oc32_hal_flash.h"
 #include "oc32_hal_crc.h"
 #include "oc32_hal_lvd.h"
+#include "oc32_hal_vts.h"
+#include "oc32_hal_amp.h"
+#include "oc32_hal_cmp.h"
 #include "oc32_hal_uart.h"
 #include "oc32_hal_timer.h"
 #include "oc32_hal_ccp.h"
@@ -89,10 +80,10 @@ extern "C"
 #ifdef HAL_UART_DEBUG_ENABLE
   __weak__ int puts(const char *s);
   __weak__ int printf(const char *format, ...);
-  HAL_StatusTypeDef HAL_DEBUG_Init(void);
+  HAL_StatusTypedef HAL_DEBUG_Init(void);
 #endif
 
-__weak__ HAL_StatusTypeDef HAL_SYS_Init(void);
+  __weak__ HAL_StatusTypedef HAL_SYS_Init(void);
 
 #ifdef __cplusplus
 }

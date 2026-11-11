@@ -65,10 +65,20 @@
     "vdd_value": 5000,
     "features": [
         {
+            "key": "QUAD_READ",
+            "description": "CPU Quad-Read Instructions From Flash",
+            "always": false
+        },  
+        {
+            "key": "WDT",
+            "description": "Watchdog Timer",
+            "always": false
+        },
+        {
             "key": "CRC",
             "description": "CRC Calculator",
             "always": false
-        },
+        },      
         {
             "key": "FLASH",
             "description": "Read/Write Flash",
@@ -138,7 +148,10 @@
         {
             "key": "CMP",
             "description": "Analog Comparator",
-            "always": false
+            "always": false,
+            "dependencies": [
+                "TIMER"
+            ]
         },
         {
             "key": "AMP",
@@ -148,7 +161,10 @@
         {
             "key": "VTS",
             "description": "Voltage Internal Temperature Sensor",
-            "always": false
+            "always": false,
+            "dependencies": [
+                "ADC"
+            ]
         },
         {
             "key": "DEBUG",

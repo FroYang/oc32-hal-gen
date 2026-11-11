@@ -26,17 +26,17 @@ extern "C"
   {
     HAL_DISABLE = 0x00U,
     HAL_ENABLE = 0x01U
-  } HAL_EnableTypeDef;
+  } HAL_EnableTypedef;
 
   /**
    * @brief  Flag error/valid type definitions.
    *
    * Two separate 2-value enums are used deliberately to keep register
    * semantics readable at the call site:
-   *  - HAL_FlagErrorTypeDef   (GOOD=0 / ERROR=1) is for error-type
+   *  - HAL_FlagErrorTypedef   (GOOD=0 / ERROR=1) is for error-type
    *    status flags (e.g. IICHNACK, IICCLTO, HRF->PORF):
    *    `X == HAL_FLAG_ERROR` reads as "error condition present".
-   *  - HAL_FlagValidTypeDef   (INVALID=0 / VALID=1) is for operation
+   *  - HAL_FlagValidTypedef   (INVALID=0 / VALID=1) is for operation
    *    done/busy flags (e.g. IICTBV, IICRBV, CRCCF, FLUOPF):
    *    `X == HAL_FLAG_INVALID` reads as "not done yet".
    *
@@ -47,7 +47,7 @@ extern "C"
   {
     HAL_FLAG_GOOD = 0x00U,
     HAL_FLAG_ERROR = 0x01U
-  } HAL_FlagErrorTypeDef;
+  } HAL_FlagErrorTypedef;
 
   /**
    * @brief  Flag valid/invalid type definition (operation done/busy flags).
@@ -56,7 +56,7 @@ extern "C"
   {
     HAL_FLAG_INVALID = 0x00U,
     HAL_FLAG_VALID = 0x01U
-  } HAL_FlagValidTypeDef;
+  } HAL_FlagValidTypedef;
 
   /**
    * @brief HAL Status structure definition
@@ -67,12 +67,12 @@ extern "C"
     HAL_ERROR = 0x01U,
     HAL_BUSY = 0x02U,
     HAL_TIMEOUT = 0x03U
-  } HAL_StatusTypeDef;
+  } HAL_StatusTypedef;
 
   typedef struct
   {
     uint32_t Data;           /*!< Specifies Data buffer */
-    HAL_StatusTypeDef Error; /*!< Specifies the status */
+    HAL_StatusTypedef Error; /*!< Specifies the status */
   } HAL_ResultTypedef;
 
 /* Exported macros -----------------------------------------------------*/

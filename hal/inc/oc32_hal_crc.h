@@ -18,6 +18,10 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
+  /* extern ------------------------------------------------------------*/
+  extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+
   /** @addtogroup OC32_HAL_Driver
    * @{
    */
@@ -57,26 +61,24 @@ extern "C"
   {
     uint32_t Poly;            /*!< Specifies the crc poly */
     uint32_t InitVal;         /*!< Specifies the initial value */
-    HAL_CRC_BitsTypedef Bits;  /*!< Specifies the bit length */
+    HAL_CRC_BitsTypedef Bits; /*!< Specifies the bit length */
     uint32_t RefIn;           /*!< Specifies the input reverse bits in a byte */
     uint32_t RefOut;          /*!< Specifies the output reverse bits in whole word */
     uint32_t CplOut;          /*!< Specifies the output complement */
     uint32_t Rvb;             /*!< Specifies the output byte ordering reverse */
-    HAL_DMA_ChTypedef DmaCh;     /*!< Specifies DMA channel for transfer */
-  } HAL_CRC_InitTypeDef;
+    HAL_DMA_ChTypedef DmaCh;  /*!< Specifies DMA channel for transfer */
+  } HAL_CRC_InitTypedef;
 
   /**
    * @brief  CRC packet structure definition
    */
   typedef struct
   {
-    uint32_t *Data;          /*!< Specifies Data buffer */
-    uint32_t Length;         /*!< Specifies Data Length in bytes */
-    HAL_EnableTypeDef IntE; /*!< Specifies the int mode */
-    HAL_CRC_IDMTypedef IDM;   /*!< Specifies the input data mode */
+    uint32_t *Data;         /*!< Specifies Data buffer */
+    uint32_t Length;        /*!< Specifies Data Length in bytes */
+    HAL_EnableTypedef IntE; /*!< Specifies the int mode */
+    HAL_CRC_IDMTypedef IDM; /*!< Specifies the input data mode */
   } HAL_CRC_PacketTypedef;
-
-
 
   /* Exported constants --------------------------------------------------*/
 
@@ -84,18 +86,18 @@ extern "C"
 #define CRC_GOOD_DEFAULT 0x2144DF1CU
 
   /* Exported macros -------------------------------------------------------*/
-#define HAL_CRC_GetResult()  (READ_SR(CRCOUT))
+#define HAL_CRC_GetResult() (READ_SR(CRCOUT))
 
   /* Exported functions ----------------------------------------------------*/
 
 #ifdef HAL_CRC_ENABLE
-  HAL_StatusTypeDef HAL_CRC_Init(HAL_CRC_InitTypeDef *Init);
-  HAL_StatusTypeDef HAL_CRC_DeInit(void);
+  HAL_StatusTypedef HAL_CRC_Init(HAL_CRC_InitTypedef *Init);
+  HAL_StatusTypedef HAL_CRC_DeInit(void);
   __sram__ uint32_t HAL_CRC_OneByte(uint32_t Data);
   __sram__ uint32_t HAL_CRC_OneWord(uint32_t Data);
   __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_CRC_UserIRQ(void);
-  __sram__ HAL_StatusTypeDef HAL_CRC_IRQHandler(void);
+  __weak__ __sram__ HAL_StatusTypedef HAL_CRC_UserIRQ(void);
+  __sram__ HAL_StatusTypedef HAL_CRC_IRQHandler(void);
 #endif /* HAL_CRC_ENABLE */
 
   /**

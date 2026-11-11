@@ -14,6 +14,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "oc32_hal.h"
+#include "oc32_hal_static.h"
 
 /**
  * @brief OC32 HAL Driver version number
@@ -31,16 +32,21 @@
 /** @defgroup HAL_Private_Variables HAL Private Variables
  * @{
  */
+
+/* the tick counter */
 volatile uint32_t uwTick;
 
 /* Syscall request buffer: filled by __syscall_handler via SYSC instruction */
-static uint32_t requestbuf[4];
+uint32_t SysReqBuf[4];
+
+/** VTS table index */
+uint32_t VtIndex;
 
 /* DMA Channel State
  *
  * Per-channel busy/idle bookkeeping for the shared DMA hardware. Each
  * peripheral declares the DMA channel it wants via its Init struct's DmaCh
- * field (set by the user at init time). The HAL layer does NOT arbitrate
+ * field (set by the user). The HAL layer does NOT arbitrate
  * channel ownership between modules: the user is responsible for assigning
  * non-conflicting channels and for serializing access to any channel that
  * two modules both claim. DMAChState[] only tracks whether the channel is
@@ -56,6 +62,9 @@ extern const uint32_t __FUSE_TSN[4];
 extern const uint32_t __FUSE_REGTRIM0[4];
 extern const uint32_t __FUSE_REGTRIM1[4];
 extern const uint32_t __FUSE_REGTRIM2[4];
+extern const uint32_t __FUSE_REGTRIM3[4];
+extern const uint32_t __FUSE_VTTABLE[32];
+
 
 /**
  * @}
@@ -122,7 +131,7 @@ __weak__ void *memset(void *dest, int c, uint32_t n)
  *         so user-configured modules that also use CH0 must not run them
  *         concurrently (see HAL_FLASH_VerifyCode's exclusivity note).
  */
-__sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
+__sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
 {
     /* indicates that the DMA is busy now, should not update the state */
     if (DMAE == HAL_ENABLE)
@@ -158,7 +167,7 @@ __sram__ HAL_StatusTypeDef HAL_DMA_Update(HAL_EnableTypeDef DMAE, HAL_DMA_ChType
 /**
  * @brief  System trap handler invoked by crti-hw.S when the SYSC trap vector
  *         is taken. This is a temporary placeholder: it performs no action and
- *         just returns 0. (The fused-data read into requestbuf[4] is actually
+ *         just returns 0. (The fused-data read into SysReqBuf[4] is actually
  *         handled by __syscall_handler, not here.)
  * @retval 0 on success
  */
@@ -170,7 +179,7 @@ int __systrap_handler(void)
 
 /**
  * @brief  System call handler invoked by crtihw.S when SYSC instruction is executed.
- *         Reads fused data from the appropriate source into requestbuf[4].
+ *         Reads fused data from the appropriate source into SysReqBuf[4].
  * @param  Num: syscall number (0=PID, 1=LID, 2=TSN, 3=REGTRIM0, 4=REGTRIM1, 5=REGTRIM2)
  * @retval 0 on success, -1 on invalid number
  */
@@ -204,53 +213,22 @@ int __syscall_handler(uint32_t Num)
         fuseptr = __FUSE_REGTRIM2;
         break;
 
+    case SYSC_REGTRIM3:
+        fuseptr = __FUSE_REGTRIM3;
+        break;
+
+    case SYSC_VTTABLE:
+        fuseptr = __FUSE_VTTABLE + (VtIndex & 0x00FCU);
+        break;
+
     default:
         return -1;
     }
 
-    memcpy(requestbuf, fuseptr, sizeof(requestbuf));
+    memcpy(SysReqBuf, fuseptr, sizeof(SysReqBuf));
     return 0;
 }
 
-/**
- * @brief  Trigger SYSC instruction to read fused Product ID into requestbuf.
- */
-static void request_PID(void)
-{
-    __asm__ __volatile__("SYSC  %0" : : "i"(SYSC_PID) : "memory");
-}
-
-/**
- * @brief  Trigger SYSC instruction to read fused Test Serial Number into requestbuf.
- */
-static void request_TSN(void)
-{
-    __asm__ __volatile__("SYSC  %0" : : "i"(SYSC_TSN) : "memory");
-}
-
-/**
- * @brief  Trigger SYSC instruction to read fused Register Trim Value into requestbuf.
- */
-static void request_REGTRIM0(void)
-{
-    __asm__ __volatile__("SYSC  %0" : : "i"(SYSC_REGTRIM0) : "memory");
-}
-
-/**
- * @brief  Trigger SYSC instruction to read fused Register Trim Value into requestbuf.
- */
-static void request_REGTRIM1(void)
-{
-    __asm__ __volatile__("SYSC  %0" : : "i"(SYSC_REGTRIM1) : "memory");
-}
-
-/**
- * @brief  Trigger SYSC instruction to read fused Register Trim Value into requestbuf.
- */
-static void request_REGTRIM2(void)
-{
-    __asm__ __volatile__("SYSC  %0" : : "i"(SYSC_REGTRIM2) : "memory");
-}
 
 /**
  * @brief This function configures the source of the time base.
@@ -263,9 +241,9 @@ static void request_REGTRIM2(void)
  *       than the peripheral interrupt. Otherwise the caller ISR process will be blocked.
  * @retval HAL_OK: on success
  */
-HAL_StatusTypeDef HAL_TICK_Init(void)
+HAL_StatusTypedef HAL_TICK_Init(void)
 {
-    HAL_WDT_InitTypeDef Init = {
+    HAL_WDT_InitTypedef Init = {
         .Wdt = WDT_1,
         .Mode = WDT_MODE_INT,
         .Period = HAL_TICK_FREQ_DEFAULT * 1000U};
@@ -277,13 +255,13 @@ HAL_StatusTypeDef HAL_TICK_Init(void)
 
 /**
  * @brief  This function is called to setup global HIC(hardware interrupt controller)
- * @param  Init: pointer to a HAL_HICInitTypeDef structure.
+ * @param  Init: pointer to a HAL_HICInittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL
  * @note   Always enables the WDT channel (vector 17) in HIE so that the
  *         system tick timer is active, regardless of Init->ChEnable.
  */
-HAL_StatusTypeDef HAL_HIC_Init(HAL_HICInitTypeDef *Init)
+HAL_StatusTypedef HAL_HIC_Init(HAL_HICInitTypedef *Init)
 {
     if (Init == NULL)
         return HAL_ERROR;
@@ -329,120 +307,10 @@ void HAL_Delay(uint32_t Delay)
 }
 
 /**
- * @brief  Returns the device revision identifier.
- * @retval Revision ID (from fused __FUSE_PID[1])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetRevID(void)
-{
-    request_PID();
-    return requestbuf[1];
-}
-
-/**
- * @brief  Returns the device identifier.
- * @retval Device ID (from fused __FUSE_PID[0])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetDevID(void)
-{
-    request_PID();
-    return requestbuf[0];
-}
-
-/**
- * @brief  Returns the first word of the 128-bit unique device ID.
- * @retval Unique Device ID word 0 (from fused __FUSE_TSN[0])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetUIDw0(void)
-{
-    request_TSN();
-    return requestbuf[0];
-}
-
-/**
- * @brief  Returns the second word of the 128-bit unique device ID.
- * @retval Unique Device ID word 1 (from fused __FUSE_TSN[1])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetUIDw1(void)
-{
-    request_TSN();
-    return requestbuf[1];
-}
-
-/**
- * @brief  Returns the third word of the 128-bit unique device ID.
- * @retval Unique Device ID word 2 (from fused __FUSE_TSN[2])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetUIDw2(void)
-{
-    request_TSN();
-    return requestbuf[2];
-}
-
-/**
- * @brief  Returns the fourth word of the 128-bit unique device ID.
- * @retval Unique Device ID word 3 (from fused __FUSE_TSN[3])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetUIDw3(void)
-{
-    request_TSN();
-    return requestbuf[3];
-}
-
-/**
- * @brief  Returns the first word of reg trim value 0
- * @retval Register Trim Value word 0 (from fused __FUSE_REGTRIM0[0])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetRegTrim0w0(void)
-{
-    request_REGTRIM0();
-    return requestbuf[0];
-}
-
-/**
- * @brief  Returns the second word of reg trim value 0
- * @retval Register Trim Value word 1 (from fused __FUSE_REGTRIM0[1])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetRegTrim0w1(void)
-{
-    request_REGTRIM0();
-    return requestbuf[1];
-}
-
-/**
- * @brief  Returns the third word of reg trim value 0
- * @retval Register Trim Value word 2 (from fused __FUSE_REGTRIM0[2])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetRegTrim0w2(void)
-{
-    request_REGTRIM0();
-    return requestbuf[2];
-}
-
-/**
- * @brief  Returns the fourth word of reg trim value 0
- * @retval Register Trim Value word 3 (from fused __FUSE_REGTRIM0[3])
- * @note   This function should not be used in an interrupt service routine.
- */
-uint32_t HAL_GetRegTrim0w3(void)
-{
-    request_REGTRIM0();
-    return requestbuf[3];
-}
-
-/**
  * @brief  Handles POR interrupt request.
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
+__weak__ HAL_StatusTypedef HAL_POR_UserIRQ(void)
 {
     return HAL_OK;
 }
@@ -452,7 +320,7 @@ __weak__ HAL_StatusTypeDef HAL_POR_UserIRQ(void)
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
+__weak__ HAL_StatusTypedef HAL_DBGR_UserIRQ(void)
 {
     return HAL_OK;
 }
@@ -464,7 +332,7 @@ __weak__ HAL_StatusTypeDef HAL_DBGR_UserIRQ(void)
  * @note   Clears POR/DBGR flags and dispatches to HAL_POR_UserIRQ /
  *         HAL_DBGR_UserIRQ. Also handles LVD and WDT reset flags.
  */
-HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
+HAL_StatusTypedef HAL_HRF_IRQHandler(void)
 {
     /* clear flag */
     if (HRF->PORF == HAL_FLAG_VALID)
@@ -505,9 +373,11 @@ HAL_StatusTypeDef HAL_HRF_IRQHandler(void)
  */
 void uart_tx_char(char c)
 {
+
+    uint32_t txdata = (uint32_t)c;
     HAL_UART_PacketTypedef Packet;
     Packet.Length = 1U;
-    Packet.Data = &c;
+    Packet.Data = &txdata;
     Packet.IntE = HAL_DISABLE;
 #ifdef HAL_UART0_DEBUG
     HAL_UART_TX(UART_0, &Packet);
@@ -720,9 +590,9 @@ __weak__ int printf(const char *format, ...)
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if UART init fails
  */
-HAL_StatusTypeDef HAL_DEBUG_Init(void)
+HAL_StatusTypedef HAL_DEBUG_Init(void)
 {
-    HAL_UART_InitTypeDef Init;
+    HAL_UART_InitTypedef Init;
 #ifdef HAL_UART0_DEBUG
     Init.Uart = UART_0;
 #endif
@@ -746,17 +616,21 @@ HAL_StatusTypeDef HAL_DEBUG_Init(void)
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if RCM init, flash verify, debug uart, or tick init fails
  */
-__weak__ HAL_StatusTypeDef HAL_SYS_Init(void)
+__weak__ HAL_StatusTypedef HAL_SYS_Init(void)
 {
     /* setup system clock */
     if (HAL_RCM_Init() != HAL_OK)
         return HAL_ERROR;
 
-#ifdef HAL_FLASH_ENABLE
-    /* setup flash */
-    if (HAL_FLASH_Init() != HAL_OK)
-        return HAL_ERROR;
-#endif /* HAL_FLASH_ENABLE */
+#ifndef HAL_LVD_ENABLE
+/* turn off lvd if not enabled */
+    HAL_LVD_DeInit();
+#endif /* HAL_LVD_ENABLE */
+
+#ifdef HAL_QUAD_READ_ENABLE
+    /* setup flash quad read mode for cpu instruction fetch */
+    HAL_FLASH_CPUQuadRead();
+#endif /* HAL_QUAD_READ_ENABLE */
 
 #ifdef HAL_FLASH_VERIFY_ENABLE
     /* verify flash code integrity */

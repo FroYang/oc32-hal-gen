@@ -6,34 +6,15 @@
  ******************************************************************************
  */
 
+
+
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_flash.h"
 
-/* always need this function for rcm clock config */
-__sram__ HAL_StatusTypeDef HAL_FLASH_ClkUpdate(void)
-{
-    /* clock divide: flash clock < 25MHz */
-    if (SystemClock > FLASH_SCLK_HIGH)
-    {
-        /* sclk/4 */
-        FLCCON->FLCC = FLASH_CLK_DIV4;
-        FLUCON->FLUC = FLASH_CLK_DIV4;
-        FLCCON->FLTSHSL = FLASH_CORE_TSHSL_HIGH;
-    }
-    else
-    {
-        /* sclk/2 */
-        FLCCON->FLCC = FLASH_CLK_DIV2;
-        FLUCON->FLUC = FLASH_CLK_DIV2;
-        FLCCON->FLTSHSL = FLASH_CORE_TSHSL_LOW;
-    }
 
-    return HAL_OK;
-}
 
-#ifdef HAL_FLASH_ENABLE
 
-/* Private typedef -----------------------------------------------------------*/
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -46,7 +27,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_ClkUpdate(void)
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: on timeout
  */
-__sram__ HAL_StatusTypeDef FlashKick(void)
+__sram__ HAL_StatusTypedef FlashKick(void)
 {
     uint32_t timeout;
 
@@ -60,21 +41,67 @@ __sram__ HAL_StatusTypeDef FlashKick(void)
     return HAL_OK;
 }
 
+#ifdef HAL_QUAD_READ_ENABLE
+/**
+ * @brief  Sets up SPI flash Quad-Read mode for CPU instruction fetch
+ * @retval HAL_OK: on success
+ * @retval HAL_ERROR: on timeout
+ * @note   Writes the QE bit in Status Register 2, then configures the
+ *         core-accessing flash controller for 4-line (Quad) reads.
+ */
+__sram__ HAL_StatusTypedef HAL_FLASH_CPUQuadRead(void)
+{
+    /* Write Enable for Non-volatile bit(QE in SR2) */
+    FLUCON->FLUI = FLASH_NV_WRITE_ENABLE;
+    if (FlashKick() != HAL_OK)
+        return HAL_ERROR;
+
+    /* Write Status Register2: QE=1*/
+    WRITE_SR(FLUDATA0, FLASH_SET_STATUS2_QE);
+
+    /* write status command */
+    FLUCON->FLUI = FLASH_WRITE_STATUS;
+    /* write 2 bytes: status 1 & status 2*/
+    FLUCON->FLUDC = FLASH_USER_LENGTH_2B;
+    /* operation type: inst+wr_data */
+    FLUCON->FLUT = FLASH_USER_OP_INST_WDATA;
+
+    if (FlashKick() != HAL_OK)
+        return HAL_ERROR;
+
+    /* setup Quad Read command for core read */
+    FLCCON->FLCI = FLASH_QUAD_READ;
+    /* setup data line for Quad Read */
+    FLCCON->FLCDL = FLASH_CORE_4_LINE;
+    /* setup read latency for Quad Read */
+    FLCCON->FLCLC = FLASH_CORE_CLC_4_LINE;
+    /* setup address+mode cycles */
+    FLCCON->FLCAC = FLASH_CORE_CAC_4_LINE;
+
+    return HAL_OK;
+}
+#endif
+
+#ifdef HAL_FLASH_ENABLE
+
+#include "oc32_hal_crc.h"
+
 /**
  * @brief  Sets SPI flash Write Enable
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: on timeout
  */
-__sram__ HAL_StatusTypeDef FlashWREN(void)
+__sram__ HAL_StatusTypedef FlashWREN(void)
 {
     /* write enable command */
     FLUCON->FLUI = FLASH_WRITE_ENABLE;
     return FlashKick();
 }
 
+
 /**
  * @brief  Reads lines of data (4 words per line) from the specified address using DMA.
- * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ * @param  Packet: pointer to a HAL_Flash_Packettypedef structure that contains
  *         the configuration information for the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if flashloader operation times out
@@ -82,7 +109,7 @@ __sram__ HAL_StatusTypeDef FlashWREN(void)
  *         Packet->Length must be a multiple of 16 words and Packet->Data
  *         must be 32-bit aligned.
  */
-__sram__ HAL_StatusTypeDef FlashReadLines(HAL_Flash_PacketTypeDef *Packet)
+__sram__ HAL_StatusTypedef FlashReadLines(HAL_Flash_PacketTypedef *Packet)
 {
     /* translate length to the configure value (power of 2) */
     uint32_t n = 0;
@@ -120,83 +147,8 @@ error:
 }
 
 /**
- * @brief  Sets up SPI flash Quad-Read mode for CPU instruction fetch
- * @retval HAL_OK: on success
- * @retval HAL_ERROR: on timeout
- * @note   Writes the QE bit in Status Register 2, then configures the
- *         core-accessing flash controller for 4-line (Quad) reads.
- */
-__sram__ HAL_StatusTypeDef HAL_FLASH_CPUQuadRead(void)
-{
-    /* Write Enable for Non-volatile bit(QE in SR2) */
-    FLUCON->FLUI = FLASH_NV_WRITE_ENABLE;
-    if (FlashKick() != HAL_OK)
-        return HAL_ERROR;
-
-    /* Write Status Register2: QE=1*/
-    WRITE_SR(FLUDATA0, FLASH_SET_STATUS2_QE);
-
-    /* write status command */
-    FLUCON->FLUI = FLASH_WRITE_STATUS;
-    /* write 2 bytes: status 1 & status 2*/
-    FLUCON->FLUDC = FLASH_USER_LENGTH_2B;
-    /* operation type: inst+wr_data */
-    FLUCON->FLUT = FLASH_USER_OP_INST_WDATA;
-
-    if (FlashKick() != HAL_OK)
-        return HAL_ERROR;
-
-    /* setup Quad Read command for core read */
-    FLCCON->FLCI = FLASH_QUAD_READ;
-    /* setup data line for Quad Read */
-    FLCCON->FLCDL = FLASH_CORE_4_LINE;
-    /* setup read latency for Quad Read */
-    FLCCON->FLCLC = FLASH_CORE_CLC_4_LINE;
-    /* setup address+mode cycles */
-    FLCCON->FLCAC = FLASH_CORE_CAC_4_LINE;
-
-    return HAL_OK;
-}
-
-/**
- * @brief  Initializes the FLASH peripheral.
- * @retval HAL_OK: on success
- * @note   Disables all interrupts (HAL_HIC_DeInit), configures the flashloader
- *         for standard read mode, updates the flash clock divider based on
- *         SystemClock, and sets default read latency / data length / operation type.
- */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Init(void)
-{
-    /* disable interrupt at first */
-    HAL_HIC_DeInit();
-
-    /* standard read command */
-    FLCCON->FLCI = FLASH_READ;
-    FLUCON->FLUI = FLASH_READ;
-
-    HAL_FLASH_ClkUpdate();
-
-    /* (core accessing) read latency */
-    FLCCON->FLCLC = FLASH_CORE_CLC_1_LINE;
-
-    /* (core accessing) address+mode cycles */
-    FLCCON->FLCAC = FLASH_CORE_CAC_1_LINE;
-
-    /* (user accessing) default 32-bit data length */
-    FLUCON->FLUDC = FLASH_USER_LENGTH_4B;
-
-    /* (user accessing) default read operation */
-    FLUCON->FLUT = FLASH_USER_OP_INST_ADR_RDATA;
-
-    /* (user accessing) default config */
-    WRITE_SR(FLUCON, READ_SR(FLUCON) & 0x0000FFFFU);
-
-    return HAL_OK;
-}
-
-/**
  * @brief  Reads data from the specified flash address.
- * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ * @param  Packet: pointer to a HAL_Flash_Packettypedef structure that contains
  *         the configuration information for the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet/Data/Length is invalid, address out of range,
@@ -204,7 +156,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void)
  * @note   Uses DMA for aligned multi-line reads; falls back to byte-by-byte
  *         user-accessing reads for small or unaligned transfers.
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_Flash_PacketTypeDef *Packet)
+__sram__ HAL_StatusTypedef HAL_FLASH_Read(HAL_Flash_PacketTypedef *Packet)
 {
     if (Packet == NULL || Packet->Data == NULL)
         return HAL_ERROR;
@@ -268,14 +220,14 @@ error:
 
 /**
  * @brief  Programs a word at the specified flash address.
- * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ * @param  Packet: pointer to a HAL_Flash_Packettypedef structure that contains
  *         the configuration information for the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet/Data is NULL, data spans multiple pages,
  *         or flashloader operation times out
  * @note   All data in Packet->Data must reside within a single 256-byte page.
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_Flash_PacketTypeDef *Packet)
+__sram__ HAL_StatusTypedef HAL_FLASH_Program(HAL_Flash_PacketTypedef *Packet)
 {
     if (Packet == NULL || Packet->Data == NULL)
         return HAL_ERROR;
@@ -354,7 +306,7 @@ error:
 
 /**
  * @brief  Erases the specified flash address range.
- * @param  Packet: pointer to a HAL_Flash_PacketTypeDef structure that contains
+ * @param  Packet: pointer to a HAL_Flash_Packettypedef structure that contains
  *         the configuration information for the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet is NULL, address/length is not page-aligned,
@@ -362,7 +314,7 @@ error:
  * @note   Uses sector erase (4 KB) wherever possible, falling back to
  *         page erase (256 B) for partial sectors.
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet)
+__sram__ HAL_StatusTypedef HAL_FLASH_Erase(HAL_Flash_PacketTypedef *Packet)
 {
     if (Packet == NULL)
         return HAL_ERROR;
@@ -416,7 +368,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet)
  */
 __sram__ void FlashCrcInit(void)
 {
-    HAL_CRC_InitTypeDef crc_init = {
+    HAL_CRC_InitTypedef crc_init = {
         .Poly = CRC_POLY_DEFAULT,
         .InitVal = 0xFFFFFFFFU,
         .Bits = CRC_32_BIT,
@@ -431,17 +383,18 @@ __sram__ void FlashCrcInit(void)
 
 /**
  * @brief  Reads a flash zone and updates the CRC32 stored at the zone boundary.
- * @param  Zone: pointer to a HAL_Flash_ZoneTypeDef structure that contains
+ * @param  Zone: pointer to a HAL_Flash_Zonetypedef structure that contains
  *         the bank/zone configuration.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Zone is NULL, a read/CRC error occurs, or the
  *         CRC program write fails
+ * @note   The crc field should be erased before calling this function.
  * @note   Reads the zone in 1 KB blocks via DMA, computes the running CRC,
  *         then programs the final CRC value into the last 4 bytes of the zone
  *         (offset 1020). Uses a 1 KB static DMA buffer; caller must ensure
  *         sufficient memory before calling.
  */
-HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
+HAL_StatusTypedef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypedef *Zone)
 {
     if (Zone == NULL)
         return HAL_ERROR;
@@ -485,7 +438,7 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
         }
 
         /* 1k per kick, overwrite the buffer every kick */
-        HAL_Flash_PacketTypeDef pkt = {
+        HAL_Flash_PacketTypedef pkt = {
             .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 1024U,
@@ -502,7 +455,7 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
 
     HAL_CRC_DeInit();
     /* program crc */
-    HAL_Flash_PacketTypeDef crc_pkt = {
+    HAL_Flash_PacketTypedef crc_pkt = {
         .Data = &crc32,
         .Address = Address + 1020U,
         .Length = 4U,
@@ -524,7 +477,7 @@ HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone)
  * @note   Internal helper; uses a 1 KB static DMA buffer. The final CRC result
  *         is discarded (caller inspects CRCOUT directly after each block).
  */
-__sram__ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
+__sram__ HAL_StatusTypedef FlashReadZone(uint32_t Address, uint32_t Size)
 {
     uint32_t i;
 
@@ -544,7 +497,7 @@ __sram__ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
             return HAL_ERROR;
 
         /* 1k per kick, overwrite the data every kick */
-        HAL_Flash_PacketTypeDef pkt = {
+        HAL_Flash_PacketTypedef pkt = {
             .Data = flashbuf,
             .Address = Address + i * 1024U,
             .Length = 1024U,
@@ -570,7 +523,7 @@ __sram__ HAL_StatusTypeDef FlashReadZone(uint32_t Address, uint32_t Size)
  * @note   Erases the destination zone, then copies the source zone page-by-page
  *         (256 B per page) into the destination. Uses a static DMA buffer.
  */
-__sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, uint32_t Size)
+__sram__ HAL_StatusTypedef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, uint32_t Size)
 {
     /* DMA buffer for flash reads */
     static uint32_t flashbuf[64] __attribute__((aligned(4)));
@@ -599,7 +552,7 @@ __sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, u
     }
 
     /* erase error zone */
-    HAL_Flash_PacketTypeDef erase_pkt = {
+    HAL_Flash_PacketTypedef erase_pkt = {
         .Data = NULL,
         .Address = daddr,
         .Length = Size,
@@ -611,7 +564,7 @@ __sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, u
     for (uint32_t page = 0; page < (Size / FLASH_PAGE_SIZE); page++)
     {
         /* read a page, then program a page */
-        HAL_Flash_PacketTypeDef read_pkt = {
+        HAL_Flash_PacketTypedef read_pkt = {
             .Data = flashbuf,
             .Address = saddr,
             .Length = FLASH_PAGE_SIZE,
@@ -620,7 +573,7 @@ __sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, u
         if (HAL_FLASH_Read(&read_pkt) != HAL_OK)
             return HAL_ERROR;
 
-        HAL_Flash_PacketTypeDef prog_pkt = {
+        HAL_Flash_PacketTypedef prog_pkt = {
             .Data = flashbuf,
             .Address = daddr,
             .Length = FLASH_PAGE_SIZE,
@@ -648,7 +601,7 @@ __sram__ HAL_StatusTypeDef FlashCopyZone(uint32_t Bank0Err, uint32_t Bank1Err, u
  * IT WILL REQUEST 1K DATA BUFFER FOR FLASH OPERATION; PLEASE MAKE SURE
  * ENOUGH MEMORY IS AVAILABLE BEFORE CALLING IT.
  */
-__sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void)
+__sram__ HAL_StatusTypedef HAL_FLASH_VerifyCode(void)
 {
 
     FlashCrcInit();
@@ -677,7 +630,7 @@ __sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void)
         uint32_t b1z1err = (READ_SR(CRCOUT) == CRC_GOOD_DEFAULT) ? HAL_FLAG_GOOD : HAL_FLAG_ERROR;
 
         /* return ok if no error */
-        if (!b0z0err && !b1z0err && !b0z1err && !b1z1err)
+        if ((b0z0err == HAL_FLAG_GOOD) && (b1z0err == HAL_FLAG_GOOD) && (b0z1err == HAL_FLAG_GOOD) && (b1z1err == HAL_FLAG_GOOD))
         {
             return HAL_OK;
         }

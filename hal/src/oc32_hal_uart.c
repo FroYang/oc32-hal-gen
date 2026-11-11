@@ -6,11 +6,14 @@
  ******************************************************************************
  */
 
+
+
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_uart.h"
 
 #ifdef HAL_UART_ENABLE
-/* Private typedef -----------------------------------------------------------*/
+
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -21,14 +24,14 @@ static HAL_DMA_ChTypedef Ut1DmaCh = 0U;
 
 /**
  * @brief  UART TX Setup
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
  * @param  Length: length of data in bytes
  * @param  Data: pointer to the tx data buffer
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Uart is not UART_0/UART_1
  * @note   Blocks until any pending UART interrupt (UTIE) has completed.
  */
-__sram__ HAL_StatusTypeDef UartTxSetup(MODULE_UART_TypeDef *Uart, uint32_t Length, uint32_t *Data)
+__sram__ HAL_StatusTypedef UartTxSetup(MODULE_UART_Typedef *Uart, uint32_t Length, uint32_t *Data)
 {
 
   if (Uart != UART_0 && Uart != UART_1)
@@ -45,7 +48,7 @@ __sram__ HAL_StatusTypeDef UartTxSetup(MODULE_UART_TypeDef *Uart, uint32_t Lengt
 
 /**
  * @brief  UART RX Setup
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
  * @param  Length: length of data in bytes
  * @param  Data: pointer to the rx data buffer (may be NULL; in that case
  *               UTRDA is set to 0, which is harmless when DMA is not enabled,
@@ -55,7 +58,7 @@ __sram__ HAL_StatusTypeDef UartTxSetup(MODULE_UART_TypeDef *Uart, uint32_t Lengt
  * @retval HAL_ERROR: if Uart is not UART_0/UART_1
  * @note   Blocks until any pending UART interrupt (UTIE) has completed.
  */
-__sram__ HAL_StatusTypeDef UartRxSetup(MODULE_UART_TypeDef *Uart, uint32_t Length, uint32_t *Data)
+__sram__ HAL_StatusTypedef UartRxSetup(MODULE_UART_Typedef *Uart, uint32_t Length, uint32_t *Data)
 {
   if (Uart != UART_0 && Uart != UART_1)
     return HAL_ERROR;
@@ -72,11 +75,11 @@ __sram__ HAL_StatusTypeDef UartRxSetup(MODULE_UART_TypeDef *Uart, uint32_t Lengt
 
 /**
  * @brief  Initializes the UART peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_UART_InitTypeDef structure.
+ * @param  Init: pointer to a HAL_UART_Inittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL or Init->Uart is not UART_0/UART_1
  */
-HAL_StatusTypeDef HAL_UART_Init(HAL_UART_InitTypeDef *Init)
+HAL_StatusTypedef HAL_UART_Init(HAL_UART_InitTypedef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -131,17 +134,17 @@ HAL_StatusTypeDef HAL_UART_Init(HAL_UART_InitTypeDef *Init)
 
 /**
  * @brief  DeInitializes the UART peripheral.
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Uart is not UART_0/UART_1
  * @note   Resets UTCON to 0 then clears TX and RX done flags.
  */
-HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart)
+HAL_StatusTypedef HAL_UART_DeInit(MODULE_UART_Typedef *Uart)
 {
   if (Uart != UART_0 && Uart != UART_1)
     return HAL_ERROR;
 
-  *(volatile uint32_t *)&Uart->UTCON = 0U;
+  WRITE_SR(&Uart->UTCON, 0U);
   Uart->UTCON.UTTCLR = HAL_ENABLE;
   Uart->UTCON.UTRCLR = HAL_ENABLE;
   HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
@@ -152,8 +155,8 @@ HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart)
 
 /**
  * @brief  Tx packet
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
- * @param  Packet: pointer to a HAL_UART_PacketTypedef structure, specifies the tx data packet.
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
+ * @param  Packet: pointer to a HAL_UART_Packettypedef structure, specifies the tx data packet.
  *                 Packet->Data must not be NULL.
  * @retval HAL_OK: on success (in both polling and interrupt mode)
  * @retval HAL_ERROR: on failure
@@ -163,7 +166,7 @@ HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart)
  *         Caller must not mask the UART interrupt during the call, or the busy-wait
  *         on UTTDMAE / UTTBV will not terminate.
  */
-__sram__ HAL_StatusTypeDef HAL_UART_TX(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef HAL_UART_TX(MODULE_UART_Typedef *Uart, HAL_UART_PacketTypedef *Packet)
 {
   if (Packet == NULL || Packet->Data == NULL || (Uart != UART_0 && Uart != UART_1))
     return HAL_ERROR;
@@ -179,11 +182,11 @@ __sram__ HAL_StatusTypeDef HAL_UART_TX(MODULE_UART_TypeDef *Uart, HAL_UART_Packe
   while (Uart->UTCON.UTTDMAE == HAL_ENABLE)
     ;
 
+  HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
   /* setup dma if length is greater than 4 bytes */
   if ((Packet->Length > 4U) || (Packet->IntE == HAL_ENABLE))
   {
-    HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
-    HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
     if (HAL_DMA_Update(Uart->UTCON.UTRDMAE, DmaCh, DmaModule, OC32_DMA_BUSY) != HAL_OK)
       return HAL_ERROR;
 
@@ -217,8 +220,8 @@ __sram__ HAL_StatusTypeDef HAL_UART_TX(MODULE_UART_TypeDef *Uart, HAL_UART_Packe
 
 /**
  * @brief  Rx packet
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
- * @param  Packet: pointer to a HAL_UART_PacketTypedef structure, specifies the rx data packet.
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
+ * @param  Packet: pointer to a HAL_UART_Packettypedef structure, specifies the rx data packet.
  *                 Packet->Data must not be NULL.
  * @retval HAL_OK: on success (in both polling and interrupt mode)
  * @retval HAL_ERROR: on failure
@@ -228,7 +231,7 @@ __sram__ HAL_StatusTypeDef HAL_UART_TX(MODULE_UART_TypeDef *Uart, HAL_UART_Packe
  *         Caller must not mask the UART interrupt during the call, or the busy-wait
  *         on UTRDMAE / UTRBV will not terminate.
  */
-__sram__ HAL_StatusTypeDef HAL_UART_RX(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef HAL_UART_RX(MODULE_UART_Typedef *Uart, HAL_UART_PacketTypedef *Packet)
 {
   if (Packet == NULL || Packet->Data == NULL || (Uart != UART_0 && Uart != UART_1))
     return HAL_ERROR;
@@ -277,7 +280,7 @@ __sram__ HAL_StatusTypeDef HAL_UART_RX(MODULE_UART_TypeDef *Uart, HAL_UART_Packe
   if (Uart->UTCON.UTRDMAE == HAL_DISABLE)
     Packet->Data[0] = Uart->UTRBUF;
 
-  HAL_StatusTypeDef status = HAL_OK;
+  HAL_StatusTypedef status = HAL_OK;
   if (Uart->UTCON.UTRERR == HAL_FLAG_ERROR)
     status = HAL_ERROR;
 
@@ -290,18 +293,18 @@ __sram__ HAL_StatusTypeDef HAL_UART_RX(MODULE_UART_TypeDef *Uart, HAL_UART_Packe
 
 /**
  * @brief  Handles UART interrupt request at user side.
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(MODULE_UART_TypeDef *Uart)
+__sram__ __weak__ HAL_StatusTypedef HAL_UART_UserIRQ(MODULE_UART_Typedef *Uart)
 {
   return HAL_OK;
 }
 
 /**
  * @brief  Handles UART interrupt request.
- * @param  Uart: pointer to a MODULE_UART_TypeDef structure, specifies which UART
+ * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Uart is not UART_0/UART_1
  * @note   Invoked from the global interrupt handler. On TX completion (UTTBV set) or
@@ -309,14 +312,14 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(MODULE_UART_TypeDef *Uart)
  *         associated DMA, and updates the DMA channel state to IDLE.
  *         Disables UTIE when the DMA channel is idle, allowing the next transfer to proceed.
  */
-__sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(MODULE_UART_TypeDef *Uart)
+__sram__ HAL_StatusTypedef HAL_UART_IRQHandler(MODULE_UART_Typedef *Uart)
 {
   if (Uart != UART_0 && Uart != UART_1)
     return HAL_ERROR;
 
   HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
   HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
-  HAL_StatusTypeDef status = HAL_OK;
+  HAL_StatusTypedef status = HAL_OK;
 
   if (Uart->UTCON.UTTBV == HAL_FLAG_VALID)
   {

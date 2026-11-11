@@ -17,16 +17,18 @@
  ******************************************************************************
  */
 
+
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_iic.h"
 
 #ifdef HAL_IIC_ENABLE
-/* Private typedef -----------------------------------------------------------*/
+
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static HAL_DMA_ChTypedef IicDmaCh = OC32_DMA_CH0;
-static HAL_IIC_TransferStateTypedef IicTransState = HAL_IIC_TRANSFER_STATE_IDLE;
+static HAL_IIC_TransferStateTypedef IicTransState = IIC_TRANS_IDLE;
 /* current in-flight packet, set by HAL_IIC_Transfer before a transfer and read
  * back by HAL_IIC_IRQHandler so the state machine can keep stepping with the
  * SAME packet/queue established by the main loop. Note: the caller's Packet
@@ -38,7 +40,7 @@ static HAL_IIC_PacketTypedef *IicCurPacket = NULL;
 
 /**
  * @brief  Writes the target device address into IICADR.
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet.
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet.
  * @note   10-bit mode (IICHE enabled) packs the 10-bit header + R/W + address
  *         into the 16-bit IICADR field; 7-bit mode shifts the address left one
  *         bit and ORs in the R/W flag at bit 0.
@@ -63,17 +65,17 @@ __sram__ void IicSetAddress(HAL_IIC_PacketTypedef *Packet)
  * @note   Clears the done/ack/clock-timeout flags and sets the kick-start bit
  *         atomically in one write to minimize clock-stretching delay.
  */
-__sram__ HAL_StatusTypeDef IicKickStart(void)
+__sram__ HAL_StatusTypedef IicKickStart(void)
 {
   /* we have to clear flags and kick start at the same time,
      in order to remove clock stretching effect as near as possible. */
-  uint32_t iicconval = READ_SR(IICCON) | IICKS_POS | IICTCLR_POS | IICRCLR_POS;
+  uint32_t iicconval = READ_SR(IICCON) | IICKS_BIT | IICTCLR_BIT | IICRCLR_BIT;
   WRITE_SR(IICCON, iicconval);
 
   /* check if slave mode is enabled and start late error occurred */
   if ((IICCON->IICS == IIC_SLAVE) && (IICCON->IICSLE == HAL_FLAG_ERROR))
   {
-    IICCON->IICCLR = HAL_ENABLE;
+    IICCON->IICCCLR = HAL_ENABLE;
     return HAL_ERROR;
   }
 
@@ -85,7 +87,7 @@ __sram__ HAL_StatusTypeDef IicKickStart(void)
  * @retval HAL_OK: no error
  * @retval HAL_ERROR: handshake NACK detected (flag is cleared on detection)
  */
-__sram__ HAL_StatusTypeDef IicHandshakeCheck(void)
+__sram__ HAL_StatusTypedef IicHandshakeCheck(void)
 {
   /* check if handshake error occurred */
   if (IICCON->IICHNACK == HAL_FLAG_ERROR)
@@ -101,7 +103,7 @@ __sram__ HAL_StatusTypeDef IicHandshakeCheck(void)
  * @retval HAL_OK: no error
  * @retval HAL_ERROR: clock low-timeout detected (flag is cleared on detection)
  */
-__sram__ HAL_StatusTypeDef IicClockTimeOutCheck(void)
+__sram__ HAL_StatusTypedef IicClockTimeOutCheck(void)
 {
   /* check clock low time out (indicates clock stretching time too long) or not */
   if (IICCON->IICCLTO == HAL_FLAG_ERROR)
@@ -121,7 +123,7 @@ __sram__ HAL_StatusTypeDef IicClockTimeOutCheck(void)
  *         for NACK / clock-timeout. The done flag is not cleared when clock
  *         stretching is active.
  */
-__sram__ HAL_StatusTypeDef IicTxOnce(void)
+__sram__ HAL_StatusTypedef IicTxOnce(void)
 {
   IICCON->IICTX = IIC_TX;
 
@@ -158,7 +160,7 @@ __sram__ HAL_StatusTypeDef IicTxOnce(void)
  *         immediately; in polling mode busy-waits for IICRBV. The done flag
  *         is not cleared when clock stretching is active.
  */
-__sram__ HAL_StatusTypeDef IicRxOnce(void)
+__sram__ HAL_StatusTypedef IicRxOnce(void)
 {
   IICCON->IICTX = IIC_RX;
 
@@ -186,14 +188,14 @@ __sram__ HAL_StatusTypeDef IicRxOnce(void)
 
 /**
  * @brief  Configures the data buffer / byte count for the next transfer.
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet.
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet or Packet->Data is NULL
  * @note   Waits for any previous DMA transfer to finish, then loads the first
  *         byte into IICTBUF, the byte count into IICBC, and the buffer base
  *         address into IICDA.
  */
-__sram__ HAL_StatusTypeDef IicBufConfig(HAL_IIC_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef IicBufConfig(HAL_IIC_PacketTypedef *Packet)
 {
   if (Packet == NULL || Packet->Data == NULL)
     return HAL_ERROR;
@@ -214,7 +216,7 @@ __sram__ HAL_StatusTypeDef IicBufConfig(HAL_IIC_PacketTypedef *Packet)
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if the bus is not idle or a transfer step fails
  */
-__sram__ HAL_StatusTypeDef IicMasterStart(void)
+__sram__ HAL_StatusTypedef IicMasterStart(void)
 {
   /* check bus state */
   if (IICCON->IICBSTA != IIC_BUS_IDLE)
@@ -228,14 +230,14 @@ __sram__ HAL_StatusTypeDef IicMasterStart(void)
 
 /**
  * @brief  Slave mode start condition and address-match check.
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet.
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet.
  * @retval HAL_OK: on success (address matched, or pending in interrupt mode)
  * @retval HAL_ERROR: if Packet is NULL or clock-stretch timeout occurs
  * @note   In interrupt mode, returns immediately after enabling IICIE; the IRQ
  *         handler polls IICSAM. In polling mode, blocks until IICSAM is set,
  *         bounded only by clock-stretching timeouts (no dedicated counter).
  */
-__sram__ HAL_StatusTypeDef IicSlaveStart(HAL_IIC_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef IicSlaveStart(HAL_IIC_PacketTypedef *Packet)
 {
   if (Packet == NULL)
     return HAL_ERROR;
@@ -275,7 +277,7 @@ __sram__ HAL_StatusTypeDef IicSlaveStart(HAL_IIC_PacketTypedef *Packet)
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if the bus is not active or a transfer step fails
  */
-__sram__ HAL_StatusTypeDef IicMasterStop(void)
+__sram__ HAL_StatusTypedef IicMasterStop(void)
 {
   /* check bus state */
   if (IICCON->IICBSTA != IIC_BUS_ACTIVE)
@@ -289,11 +291,11 @@ __sram__ HAL_StatusTypeDef IicMasterStop(void)
 
 /**
  * @brief  Master mode sends the device address.
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet.
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet is NULL, the bus is not active, or a transfer step fails
  */
-__sram__ HAL_StatusTypeDef IicMasterAddress(HAL_IIC_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef IicMasterAddress(HAL_IIC_PacketTypedef *Packet)
 {
   /* check bus state */
   if (Packet == NULL || IICCON->IICBSTA != IIC_BUS_ACTIVE)
@@ -308,13 +310,13 @@ __sram__ HAL_StatusTypeDef IicMasterAddress(HAL_IIC_PacketTypedef *Packet)
 
 /**
  * @brief  Transfers data (read or write) in the current bus transaction.
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet.
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet is NULL, the bus is not active, or a transfer step fails
  * @note   Enables DMA automatically when Packet->Length > 4 bytes. Direction is
  *         chosen from the read/write flag (IIC_READ/IIC_WRITE vs. IIC_MASTER/IIC_SLAVE).
  */
-__sram__ HAL_StatusTypeDef IicData(HAL_IIC_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef IicData(HAL_IIC_PacketTypedef *Packet)
 {
   /* check bus state */
   if (Packet == NULL || IICCON->IICBSTA != IIC_BUS_ACTIVE)
@@ -350,7 +352,7 @@ __sram__ HAL_StatusTypeDef IicData(HAL_IIC_PacketTypedef *Packet)
  *         in-flight packet pointer (IicCurPacket) so no dangling pointer is left
  *         after a completed transfer.
  */
-__sram__ HAL_StatusTypeDef IicDeInit(void)
+__sram__ HAL_StatusTypedef IicDeInit(void)
 {
   IICCON->IICS = IIC_MASTER;
   IICCON->IICIE = HAL_DISABLE;
@@ -368,7 +370,7 @@ __sram__ HAL_StatusTypeDef IicDeInit(void)
 
 /**
  * @brief  Advances the IIC transfer state machine by one step.
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet.
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if a step fails or the state is unrecognized
  * @note   Each call executes exactly one state (IDLE -> START -> ADDR -> DATA ->
@@ -376,9 +378,9 @@ __sram__ HAL_StatusTypeDef IicDeInit(void)
  *         (via HAL_IIC_IRQHandler); in polling mode HAL_IIC_Transfer loops it
  *         until IicTransState returns to IDLE.
  */
-__sram__ HAL_StatusTypeDef IicTransStm(HAL_IIC_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef IicTransStm(HAL_IIC_PacketTypedef *Packet)
 {
-  HAL_StatusTypeDef status = HAL_OK;
+  HAL_StatusTypedef status = HAL_OK;
 
   switch (IicTransState)
   {
@@ -414,7 +416,7 @@ __sram__ HAL_StatusTypeDef IicTransStm(HAL_IIC_PacketTypedef *Packet)
       - if dma is disabled(Length <= 4 bytes), then we load IICRBUF to Packet->Data
       - if dma is enabled, rx data is already in Packet->Data */
     if ((IICCON->IICDMAE == HAL_DISABLE) && (IICCON->IICTX == IIC_RX))
-      Packet->Data[0] = IICCON->IICRBUF;
+      Packet->Data[0] = READ_SR(IICRBUF);
 
     IicDeInit();
     break;
@@ -431,11 +433,11 @@ __sram__ HAL_StatusTypeDef IicTransStm(HAL_IIC_PacketTypedef *Packet)
 
 /**
  * @brief  Initializes the IIC peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_IIC_InitTypeDef structure.
+ * @param  Init: pointer to a HAL_IIC_Inittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL
  */
-HAL_StatusTypeDef HAL_IIC_Init(HAL_IIC_InitTypeDef *Init)
+HAL_StatusTypedef HAL_IIC_Init(HAL_IIC_InitTypedef *Init)
 {
   if (Init == NULL)
     return HAL_ERROR;
@@ -461,7 +463,7 @@ HAL_StatusTypeDef HAL_IIC_Init(HAL_IIC_InitTypeDef *Init)
 
   /* enable module */
   IICCON->IICE = HAL_ENABLE;
-  IicTransState = HAL_IIC_TRANSFER_STATE_IDLE;
+  IicTransState = IIC_TRANS_IDLE;
 
   return HAL_OK;
 }
@@ -471,7 +473,7 @@ HAL_StatusTypeDef HAL_IIC_Init(HAL_IIC_InitTypeDef *Init)
  * @note   Writes 0 to IICCON to disable the module, then calls the private
  *         IicDeInit() to reset state fields and release the DMA channel.
  */
-HAL_StatusTypeDef HAL_IIC_DeInit(void)
+HAL_StatusTypedef HAL_IIC_DeInit(void)
 {
   WRITE_SR(IICCON, 0U);
   return IicDeInit();
@@ -479,7 +481,7 @@ HAL_StatusTypeDef HAL_IIC_DeInit(void)
 
 /**
  * @brief  Transfer Tx/Rx packet
- * @param  Packet: pointer to a HAL_IIC_PacketTypedef structure, specifies the data packet
+ * @param  Packet: pointer to a HAL_IIC_Packettypedef structure, specifies the data packet
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Packet is NULL, bus is not idle, or a transfer step fails
  * @note   Master-oriented transfer. In interrupt mode (Packet->IntE != 0), starts
@@ -489,7 +491,7 @@ HAL_StatusTypeDef HAL_IIC_DeInit(void)
  *         (module scope / static buffer, not a stack local that dies on return)
  *         until the transfer completes.
  */
-__sram__ HAL_StatusTypeDef HAL_IIC_Transfer(HAL_IIC_PacketTypedef *Packet)
+__sram__ HAL_StatusTypedef HAL_IIC_Transfer(HAL_IIC_PacketTypedef *Packet)
 {
   if (Packet == NULL)
     return HAL_ERROR;
@@ -528,7 +530,7 @@ __sram__ HAL_StatusTypeDef HAL_IIC_Transfer(HAL_IIC_PacketTypedef *Packet)
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__sram__ __weak__ HAL_StatusTypeDef HAL_IIC_UserIRQ(void)
+__weak__ __sram__ HAL_StatusTypedef HAL_IIC_UserIRQ(void)
 {
   return HAL_OK;
 }
@@ -538,7 +540,7 @@ __sram__ __weak__ HAL_StatusTypeDef HAL_IIC_UserIRQ(void)
  * @retval HAL_OK: on success
  * @note   Invoked from the global interrupt handler
  */
-__sram__ HAL_StatusTypeDef HAL_IIC_IRQHandler(void)
+__sram__ HAL_StatusTypedef HAL_IIC_IRQHandler(void)
 {
   /* check error flags */
   if (IicHandshakeCheck() != HAL_OK)

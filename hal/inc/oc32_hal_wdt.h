@@ -18,6 +18,8 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
+  /* extern ------------------------------------------------------------*/
+
   /** @addtogroup OC32_HAL_Driver
    * @{
    */
@@ -28,10 +30,9 @@ extern "C"
 
   /* Exported types ------------------------------------------------------*/
 
-  /** @defgroup WDT_Mode
-   * @{
+  /**
+   * @brief  WDT Mode definition
    */
-
   typedef enum
   {
     WDT_MODE_NONE = 0x0U,
@@ -46,10 +47,10 @@ extern "C"
    */
   typedef struct
   {
-    MODULE_WDT_TypeDef *Wdt;  /*!< Specifies the watchdogtimer */
+    MODULE_WDT_Typedef *Wdt;  /*!< Specifies the watchdogtimer */
     HAL_WDT_ModeTypedef Mode; /*!< Specifies the Mode: INT or None */
     uint32_t Period;          /*!< Specifies the overflow period (us) */
-  } HAL_WDT_InitTypeDef;
+  } HAL_WDT_InitTypedef;
 
 /**
  * @}
@@ -76,11 +77,11 @@ extern "C"
 
   /* Exported functions ----------------------------------------------------*/
 
-  HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init);
-  HAL_StatusTypeDef HAL_WDT_DeInit(MODULE_WDT_TypeDef *Wdt);
-  __sram__ HAL_StatusTypeDef HAL_WDT_Clear(MODULE_WDT_TypeDef *Wdt);
-  HAL_StatusTypeDef HAL_WDT_IRQHandler(MODULE_WDT_TypeDef *Wdt);
-  __weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(MODULE_WDT_TypeDef *Wdt);
+  HAL_StatusTypedef HAL_WDT_Init(HAL_WDT_InitTypedef *Init);
+  HAL_StatusTypedef HAL_WDT_DeInit(MODULE_WDT_Typedef *Wdt);
+  __sram__ HAL_StatusTypedef HAL_WDT_Clear(MODULE_WDT_Typedef *Wdt);
+  HAL_StatusTypedef HAL_WDT_IRQHandler(void);
+  __weak__ HAL_StatusTypedef HAL_WDT_UserIRQ(void);
 
   /**
    * @}

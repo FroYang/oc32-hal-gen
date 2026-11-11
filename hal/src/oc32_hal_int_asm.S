@@ -41,8 +41,8 @@
 
 
 
-/* implement functions by assembly code, just return if it is empty
-   ASM int will be executed before C int, so we can do something with lower latency 
+/* implement functions by assembly code, just return if it is empty.
+   ASM int will be executed before C int, so we can do something with lower latency.
    for the models without full-registers-stack, only R6 is avaliable at first,
    please push the other GPRs(R9~31) into stack before use them */
 

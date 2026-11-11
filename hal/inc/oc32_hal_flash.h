@@ -18,6 +18,12 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
+    /* extern ------------------------------------------------------------*/
+    extern uint32_t SystemClock;
+    extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+    extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+    extern void HAL_HIC_DeInit(void);
+
     /** @addtogroup OC32_HAL_Driver
      * @{
      */
@@ -35,7 +41,7 @@ extern "C"
     {
         FLASH_CS_ENABLE = 0x00U,
         FLASH_CS_DISABLE = 0x01U
-    } FLASH_CSTypeDef;
+    } FLASH_CSTypedef;
 
     /**
      * @brief flash command structure definition
@@ -51,7 +57,7 @@ extern "C"
         FLASH_NV_WRITE_ENABLE = 0x50U,
         FLASH_PAGE_ERASE = 0x81U,
         FLASH_QUAD_READ = 0xEBU
-    } FLASH_CommandTypeDef;
+    } FLASH_CommandTypedef;
 
     /**
      * @brief flash clock divider structure definition
@@ -62,7 +68,7 @@ extern "C"
         FLASH_CLK_DIV3 = 1U,
         FLASH_CLK_DIV4 = 2U,
         FLASH_CLK_DIV5 = 3U
-    } FLASH_ClkDivTypeDef;
+    } FLASH_ClkDivTypedef;
 
     /* flash timing: clock cycles latency between address -> data out
        user need to confirm the timing parameters base on flash spec
@@ -77,7 +83,7 @@ extern "C"
         FLASH_CORE_CLC_1_LINE = 0U,
         FLASH_CORE_CLC_2_LINE = 0U,
         FLASH_CORE_CLC_4_LINE = 4U
-    } FLASH_CoreClcTypeDef;
+    } FLASH_CoreClcTypedef;
 
     /* flash timing: clock cycles of command + address + mode
        - 1-line mode: 23 + 1 clock cycles
@@ -91,7 +97,7 @@ extern "C"
         FLASH_CORE_CAC_1_LINE = 23U,
         FLASH_CORE_CAC_2_LINE = 15U,
         FLASH_CORE_CAC_4_LINE = 7U
-    } FLASH_CoreCacTypeDef;
+    } FLASH_CoreCacTypedef;
 
     /* flash timing: CS deselect minimum time */
     /**
@@ -102,7 +108,7 @@ extern "C"
         FLASH_CORE_TSHSL_LOW = 0U,
         FLASH_CORE_TSHSL_HIGH = 1U,
         FLASH_CORE_TSHSL_MAX = 15U
-    } FLASH_CoreTshslTypeDef;
+    } FLASH_CoreTshslTypedef;
 
     /**
      * @brief flash core line mode structure definition
@@ -112,7 +118,7 @@ extern "C"
         FLASH_CORE_1_LINE = 0U,
         FLASH_CORE_2_LINE = 1U,
         FLASH_CORE_4_LINE = 2U
-    } FLASH_CoreLineTypeDef;
+    } FLASH_CoreLineTypedef;
 
     /* user accessing data length */
     /**
@@ -124,7 +130,7 @@ extern "C"
         FLASH_USER_LENGTH_2B = 1U,
         FLASH_USER_LENGTH_4B = 2U,
         FLASH_USER_LENGTH_16B = 3U
-    } FLASH_UserLengthTypeDef;
+    } FLASH_UserLengthTypedef;
 
     /* user accessing operation */
     /**
@@ -140,7 +146,7 @@ extern "C"
         FLASH_USER_OP_INST_ADR_WDATA = 5U,
         FLASH_USER_OP_RDATA = 6U,
         FLASH_USER_OP_WDATA = 7U
-    } FLASH_UserOpTypeDef;
+    } FLASH_UserOpTypedef;
 
     /**
      * @brief  Flash Data structure definition
@@ -151,7 +157,7 @@ extern "C"
         uint32_t Address;        /*!< Specifies Data Address */
         uint32_t Length;         /*!< Specifies Data Length */
         HAL_DMA_ChTypedef DmaCh; /*!< Specifies DMA channel for transfer */
-    } HAL_Flash_PacketTypeDef;
+    } HAL_Flash_PacketTypedef;
 
     /**
      * @brief  Flash Zone structure definition
@@ -160,7 +166,7 @@ extern "C"
     {
         uint32_t BankNum; /*!< Specifies Flash bank number */
         uint32_t ZoneNum; /*!< Specifies Zone number in a bank */
-    } HAL_Flash_ZoneTypeDef;
+    } HAL_Flash_ZoneTypedef;
 
 /* Exported constants --------------------------------------------------*/
 
@@ -214,34 +220,28 @@ extern "C"
      * @{
      */
 
-    /* Flash clock update functions *************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_ClkUpdate(void);
-
 #ifdef HAL_FLASH_ENABLE
     /* Flash quad read for core functions *************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_CPUQuadRead(void);
-
-    /* Initialization and de-initialization functions *************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Init(void);
+    __sram__ HAL_StatusTypedef HAL_FLASH_CPUQuadRead(void);
 
     /* Read operation functions ********************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Read(HAL_Flash_PacketTypeDef *Packet);
+    __sram__ HAL_StatusTypedef HAL_FLASH_Read(HAL_Flash_PacketTypedef *Packet);
 
     /* Program operation functions ********************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Program(HAL_Flash_PacketTypeDef *Packet);
+    __sram__ HAL_StatusTypedef HAL_FLASH_Program(HAL_Flash_PacketTypedef *Packet);
 
     /* Erase operation ***************************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_Erase(HAL_Flash_PacketTypeDef *Packet);
+    __sram__ HAL_StatusTypedef HAL_FLASH_Erase(HAL_Flash_PacketTypedef *Packet);
 
     /* Update CRC of a zone **************************************************/
-    HAL_StatusTypeDef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypeDef *Zone);
-
-#endif /* HAL_FLASH_ENABLE */
+    HAL_StatusTypedef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypedef *Zone);
 
 #ifdef HAL_FLASH_VERIFY_ENABLE
     /* CRC verify and recovery **************************************************/
-    __sram__ HAL_StatusTypeDef HAL_FLASH_VerifyCode(void);
+    __sram__ HAL_StatusTypedef HAL_FLASH_VerifyCode(void);
 #endif /* HAL_FLASH_VERIFY_ENABLE */
+
+#endif /* HAL_FLASH_ENABLE */
 
     /**
      * @}

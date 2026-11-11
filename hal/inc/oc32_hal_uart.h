@@ -18,6 +18,11 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
+  /* extern ------------------------------------------------------------*/
+  extern uint32_t SystemClock;
+  extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
+  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+
   /** @addtogroup OC32_HAL_Driver
    * @{
    */
@@ -93,23 +98,23 @@ extern "C"
    */
   typedef struct
   {
-    MODULE_UART_TypeDef *Uart;     /*!< Specifies the Uart */
+    MODULE_UART_Typedef *Uart;     /*!< Specifies the Uart */
     HAL_UART_ParityTypedef Parity; /*!< Specifies the Parity mode */
     HAL_UART_BitsTypedef Bits;     /*!< Specifies the Data bits */
     HAL_UART_BaudTypedef Baud;     /*!< Specifies the Baudrate */
     HAL_UART_DuplexTypedef Duplex; /*!< Specifies the Half-duplex */
     HAL_UART_PinsTypedef Pins;     /*!< Specifies the pins */
     HAL_DMA_ChTypedef DmaCh;       /*!< Specifies DMA channel for transfer, requisite if Interrupt is enabled */
-  } HAL_UART_InitTypeDef;
+  } HAL_UART_InitTypedef;
 
   /**
    * @brief  UART packet structure definition
    */
   typedef struct
   {
-    uint32_t *Data;            /*!< Specifies Data buffer */
-    uint32_t Length;           /*!< Specifies Data Length in bytes */
-    HAL_EnableTypeDef IntE; /*!< Specifies the interrupt */
+    uint32_t *Data;         /*!< Specifies Data buffer */
+    uint32_t Length;        /*!< Specifies Data Length in bytes */
+    HAL_EnableTypedef IntE; /*!< Specifies the interrupt */
   } HAL_UART_PacketTypedef;
 
   /**
@@ -120,12 +125,12 @@ extern "C"
    * @{
    */
 #ifdef HAL_UART_ENABLE
-  HAL_StatusTypeDef HAL_UART_Init(HAL_UART_InitTypeDef *Init);
-  HAL_StatusTypeDef HAL_UART_DeInit(MODULE_UART_TypeDef *Uart);
-  __sram__ HAL_StatusTypeDef HAL_UART_TX(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet);
-  __sram__ HAL_StatusTypeDef HAL_UART_RX(MODULE_UART_TypeDef *Uart, HAL_UART_PacketTypedef *Packet);
-  __sram__ HAL_StatusTypeDef HAL_UART_IRQHandler(MODULE_UART_TypeDef *Uart);
-  __sram__ __weak__ HAL_StatusTypeDef HAL_UART_UserIRQ(MODULE_UART_TypeDef *Uart);
+  HAL_StatusTypedef HAL_UART_Init(HAL_UART_InitTypedef *Init);
+  HAL_StatusTypedef HAL_UART_DeInit(MODULE_UART_Typedef *Uart);
+  __sram__ HAL_StatusTypedef HAL_UART_TX(MODULE_UART_Typedef *Uart, HAL_UART_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypedef HAL_UART_RX(MODULE_UART_Typedef *Uart, HAL_UART_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypedef HAL_UART_IRQHandler(MODULE_UART_Typedef *Uart);
+  __sram__ __weak__ HAL_StatusTypedef HAL_UART_UserIRQ(MODULE_UART_Typedef *Uart);
 #endif /* HAL_UART_ENABLE */
   /**
    * @}

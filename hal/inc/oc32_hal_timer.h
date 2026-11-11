@@ -127,15 +127,6 @@ extern "C"
   } HAL_TIMER_EncPolarityTypedef;
 
   /**
-   * @brief  TIMER reset gen event enum definition
-   */
-  typedef enum
-  {
-    TIMER_RESET_GEN_NONE = 0x0U,
-    TIMER_RESET_GEN_EVENT = 0x1U
-  } HAL_TIMER_ResetGenTypedef;
-
-  /**
    * @brief  TIMER ex-reset enum definition
    */
   typedef enum
@@ -169,14 +160,6 @@ extern "C"
     TIMER_EXRESET_LOW = 3U
   } HAL_TIMER_ExResetConTypedef;
 
-  /**
-   * @brief  TIMER pause gen event enum definition
-   */
-  typedef enum
-  {
-    TIMER_PAUSE_GEN_NONE = 0x0U,
-    TIMER_PAUSE_GEN_EVENT = 0x1U
-  } HAL_TIMER_PauseGenTypedef;
 
   /**
    * @brief  TIMER ex-pause enum definition
@@ -259,11 +242,11 @@ extern "C"
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer;              /*!< Specifies the timer */
+    MODULE_TIMER_Typedef *Timer;              /*!< Specifies the timer */
     uint32_t ReloadVal;                       /*!< Specifies the reload value */
     uint32_t PreScaler;                       /*!< Specifies the prescaler */
     uint32_t CountVal;                        /*!< Specifies the counter value */
-    HAL_EnableTypeDef IntE;               /*!< Specifies the interrupt mode */
+    HAL_EnableTypedef IntE;               /*!< Specifies the interrupt mode */
     HAL_TIMER_CountModeTypedef CountMode;     /*!< Specifies the count mode */
     HAL_TIMER_StopConTypedef StopCon;         /*!< Specifies the stop condition */
     HAL_TIMER_OvflagModeTypedef OvfMode;      /*!< Specifies the overflow flag mode */
@@ -272,64 +255,64 @@ extern "C"
     HAL_TIMER_UpdateModeTypedef UpdateMode;   /*!< Specifies the update mode */
     HAL_TIMER_ReadRegTypedef ReadReg;         /*!< Specifies the read way */
     HAL_TIMER_AdcTrigConTypedef AdcTrig;      /*!< Specifies the adc trig way */
-  } HAL_TIMER_BaseInitTypeDef;
+  } HAL_TIMER_BaseInitTypedef;
 
   /**
    * @brief  TIMER encode config Init structure definition
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer;           /*!< Specifies the timer */
+    MODULE_TIMER_Typedef *Timer;           /*!< Specifies the timer */
     HAL_TIMER_EncPinTypedef Enc0Pin;       /*!< Specifies the pin */
     HAL_TIMER_EncPinTypedef Enc1Pin;       /*!< Specifies the pin */
     HAL_TIMER_EncModeTypedef Mode;         /*!< Specifies the count mode */
     HAL_TIMER_EncPolarityTypedef Polarity; /*!< Specifies the count polarity */
-  } HAL_TIMER_EncodeInitTypeDef;
+  } HAL_TIMER_EncodeInitTypedef;
 
   /**
    * @brief  TIMER reset config Init structure definition
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer;        /*!< Specifies the timer */
-    HAL_TIMER_ResetGenTypedef GenEvent; /*!< Specifies the reset event generation */
+    MODULE_TIMER_Typedef *Timer;        /*!< Specifies the timer */
+    HAL_EnableTypedef GenEventE; /*!< Specifies the reset event generation enable */
     HAL_TIMER_ExResetTypedef ExSource;  /*!< Specifies the reset ex-source */
     HAL_TIMER_ExResetConTypedef ExCon;  /*!< Specifies the reset ex-source condition */
-  } HAL_TIMER_ResetInitTypeDef;
+  } HAL_TIMER_ResetInitTypedef;
 
   /**
    * @brief  TIMER pause config Init structure definition
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer;        /*!< Specifies the timer */
-    HAL_TIMER_PauseGenTypedef GenEvent; /*!< Specifies the pause event generation */
+    MODULE_TIMER_Typedef *Timer;        /*!< Specifies the timer */
+    HAL_EnableTypedef GenEventE; /*!< Specifies the pause event generation enable */
     HAL_TIMER_ExPauseTypedef ExSource;  /*!< Specifies the reset ex-source */
     HAL_TIMER_ExPauseConTypedef ExCon;  /*!< Specifies the reset ex-source condition */
-  } HAL_TIMER_PauseInitTypeDef;
+  } HAL_TIMER_PauseInitTypedef;
 
   /**
    * @brief  TIMER event config Init structure definition
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer;         /*!< Specifies the timer */
+    MODULE_TIMER_Typedef *Timer;         /*!< Specifies the timer */
     uint32_t OvfPost;                    /*!< Specifies the overflag event post counter */
-    HAL_EnableTypeDef IntE;          /*!< Specifies the event interrupt mode */
+    HAL_EnableTypedef IntE;          /*!< Specifies the event interrupt mode */
     HAL_TIMER_EventSourceTypedef Source; /*!< Specifies the event source */
     HAL_TIMER_ExEventConTypedef ExCon;   /*!< Specifies the event ex-source condition */
-  } HAL_TIMER_EventInitTypeDef;
+  } HAL_TIMER_EventInitTypedef;
 
   /**
    * @brief  TIMER update structure definition
    */
   typedef struct
   {
-    MODULE_TIMER_TypeDef *Timer; /*!< Specifies the timer */
+    MODULE_TIMER_Typedef *Timer; /*!< Specifies the timer */
     uint32_t ReloadVal;          /*!< Specifies the reload value */
     uint32_t PreScaler;          /*!< Specifies the prescaler */
     uint32_t CountVal;           /*!< Specifies the counter value */
-  } HAL_TIMER_UpdateTypeDef;
+  } HAL_TIMER_UpdateTypedef;
 
   /* Exported constants --------------------------------------------------*/
 
@@ -338,18 +321,31 @@ extern "C"
   /* Exported functions ----------------------------------------------------*/
 
 #ifdef HAL_TIMER_ENABLE
-  static inline void HAL_TIMER_Update(HAL_TIMER_UpdateTypeDef *Update);
-  HAL_StatusTypeDef HAL_TIMER_Init(HAL_TIMER_BaseInitTypeDef *Init);
-  HAL_StatusTypeDef HAL_TIMER_DeInit(MODULE_TIMER_TypeDef *Timer);
-  HAL_StatusTypeDef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypeDef *Init);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_ResetNow(MODULE_TIMER_TypeDef *Timer);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypeDef *Update);
-  HAL_StatusTypeDef HAL_TIMER_PauseInit(HAL_TIMER_PauseInitTypeDef *Init);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_EventInit(HAL_TIMER_EventInitTypeDef *Init);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitOv(MODULE_TIMER_TypeDef *Timer);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_WaitEv(MODULE_TIMER_TypeDef *Timer);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_UserIRQ(MODULE_TIMER_TypeDef *Timer);
-  __weak__ __sram__ HAL_StatusTypeDef HAL_TIMER_IRQHandler(MODULE_TIMER_TypeDef *Timer);
+  HAL_StatusTypedef HAL_TIMER_Init(HAL_TIMER_BaseInitTypedef *Init);
+  HAL_StatusTypedef HAL_TIMER_DeInit(MODULE_TIMER_Typedef *Timer);
+  HAL_StatusTypedef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypedef *Init);
+  __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_ResetNow(MODULE_TIMER_Typedef *Timer);
+  __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypedef *Update);
+  HAL_StatusTypedef HAL_TIMER_PauseInit(HAL_TIMER_PauseInitTypedef *Init);
+  __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_EventInit(HAL_TIMER_EventInitTypedef *Init);
+  __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_WaitOv(MODULE_TIMER_Typedef *Timer);
+  __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_WaitEv(MODULE_TIMER_Typedef *Timer);
+  __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_UserIRQ(MODULE_TIMER_Typedef *Timer);
+  __sram__ HAL_StatusTypedef HAL_TIMER_IRQHandler(MODULE_TIMER_Typedef *Timer);
+
+/**
+ * @brief  Updates the TIMER reload value and counter for a given timer.
+ * @param  Update: pointer to a HAL_TIMER_Updatetypedef structure.
+ * @note   Internal helper; writes TARL (reload & prescaler) and TCNT.
+ */
+static inline void HAL_TIMER_Update(HAL_TIMER_UpdateTypedef *Update)
+{
+  /* setup reload value */
+  Update->Timer->TARL = (Update->ReloadVal & 0xFFFFU) | ((Update->PreScaler & 0xFFFFU) << 16U);
+  Update->Timer->TCNT = Update->CountVal;
+  return;
+}
+
 #endif /* HAL_TIMER_ENABLE */
 
   /**

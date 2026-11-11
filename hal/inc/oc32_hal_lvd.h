@@ -18,94 +18,91 @@ extern "C"
 #include "oc32_hal_def.h"
 #include "oc32_hal_conf.h"
 
-#ifdef HAL_LVD_ENABLE
+  /** @addtogroup OC32_HAL_Driver
+   * @{
+   */
 
-/** @addtogroup OC32_HAL_Driver
- * @{
- */
+  /* Exported types ------------------------------------------------------*/
 
-/* Exported types ------------------------------------------------------*/
+  /** @defgroup LVD_Trigger_Voltage
+   * @{
+   */
+  typedef enum
+  {
+    LVD_TRIG_V2400 = 0U,
+    LVD_TRIG_V2500 = 1U,
+    LVD_TRIG_V2600 = 2U,
+    LVD_TRIG_V2700 = 3U,
+    LVD_TRIG_V2800 = 4U,
+    LVD_TRIG_V2900 = 5U,
+    LVD_TRIG_V3000 = 6U,
+    LVD_TRIG_V3100 = 7U,
+    LVD_TRIG_V3300 = 8U,
+    LVD_TRIG_V3500 = 9U,
+    LVD_TRIG_V3700 = 10U,
+    LVD_TRIG_V3900 = 11U,
+    LVD_TRIG_V4100 = 12U,
+    LVD_TRIG_V4300 = 13U,
+    LVD_TRIG_V4500 = 14U,
+    LVD_TRIG_V4700 = 15U
+  } HAL_LVD_TrigVTypedef;
 
-/** @defgroup LVD_Trigger_Voltage
- * @{
- */
-typedef enum
-{
-  LVD_TRIG_V2400 = 0U,
-  LVD_TRIG_V2500 = 1U,
-  LVD_TRIG_V2600 = 2U,
-  LVD_TRIG_V2700 = 3U,
-  LVD_TRIG_V2800 = 4U,
-  LVD_TRIG_V2900 = 5U,
-  LVD_TRIG_V3000 = 6U,
-  LVD_TRIG_V3100 = 7U,
-  LVD_TRIG_V3300 = 8U,
-  LVD_TRIG_V3500 = 9U,
-  LVD_TRIG_V3700 = 10U,
-  LVD_TRIG_V3900 = 11U,
-  LVD_TRIG_V4100 = 12U,
-  LVD_TRIG_V4300 = 13U,
-  LVD_TRIG_V4500 = 14U,
-  LVD_TRIG_V4700 = 15U
-} HAL_LVD_TrigVTypedef;
+  /**
+   * @}
+   */
 
-/**
- * @}
- */
+  /** @defgroup LVD_Mode
+   * @{
+   */
+  typedef enum
+  {
+    LVD_MODE_NONE = 0x0U,
+    LVD_MODE_RST = 0x1U,
+    LVD_MODE_WAKE = 0x2U,
+    LVD_MODE_INT = 0x3U,
+    LVD_MODE_INT_AND_WAKE = 0x4U
+  } HAL_LVD_ModeTypedef;
 
-/** @defgroup LVD_Mode
- * @{
- */
-typedef enum
-{
-  LVD_MODE_NONE = 0x0U,
-  LVD_MODE_RST = 0x1U,
-  LVD_MODE_WAKE = 0x2U,
-  LVD_MODE_INT = 0x3U,
-  LVD_MODE_INT_AND_WAKE = 0x4U
-} HAL_LVD_ModeTypedef;
+  /**
+   * @}
+   */
 
-/**
- * @}
- */
-
-/**
- * @brief  LVD Init structure definition
- */
-typedef struct {
-    HAL_LVD_ModeTypedef Mode;  /*!< Specifies the Mode */
+  /**
+   * @brief  LVD Init structure definition
+   */
+  typedef struct
+  {
+    HAL_LVD_ModeTypedef Mode;   /*!< Specifies the Mode */
     HAL_LVD_TrigVTypedef TrigV; /*!< Specifies the Trigger voltage */
-} HAL_LVD_InitTypeDef;
+  } HAL_LVD_InitTypedef;
 
 /**
  * @}
  */
-
 
 /** @addtogroup LVD
  * @{
  */
+HAL_StatusTypedef HAL_LVD_DeInit(void);
 
-HAL_StatusTypeDef HAL_LVD_Init(HAL_LVD_InitTypeDef *Init);
-HAL_StatusTypeDef HAL_LVD_DeInit(void);
-__weak__ HAL_StatusTypeDef HAL_LVD_UserIRQ(void);
-HAL_StatusTypeDef HAL_LVD_IRQHandler(void);
-
-/**
- * @}
- */
-
-/* Exported constants --------------------------------------------------*/
-
-/** @defgroup LVD_Exported_Constants LVD Exported Constants
- * @{
- */
-
-/**
- * @}
- */
-
+#ifdef HAL_LVD_ENABLE
+  HAL_StatusTypedef HAL_LVD_Init(HAL_LVD_InitTypedef *Init);  
+  __weak__ HAL_StatusTypedef HAL_LVD_UserIRQ(void);
+  HAL_StatusTypedef HAL_LVD_IRQHandler(void);
 #endif /* HAL_LVD_ENABLE */
+  /**
+   * @}
+   */
+
+  /* Exported constants --------------------------------------------------*/
+
+  /** @defgroup LVD_Exported_Constants LVD Exported Constants
+   * @{
+   */
+
+  /**
+   * @}
+   */
 
 #ifdef __cplusplus
 }

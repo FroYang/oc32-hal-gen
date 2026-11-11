@@ -131,8 +131,8 @@ extern "C"
      */
     typedef struct
     {
-        MODULE_PORT_TypeDef *Port; /*!< Specifies the GPIO port to be configured */
-        HAL_GPIO_PinTypedef Pin;   /*!< Specifies the GPIO pins to be configured */
+        MODULE_PORT_Typedef *Port;           /*!< Specifies the GPIO port to be configured */
+        HAL_GPIO_PinTypedef Pin;             /*!< Specifies the GPIO pins to be configured */
         HAL_GPIO_DirectionTypedef Direction; /*!< Specifies the operating mode for the selected pins */
 
         /* output config */
@@ -143,7 +143,7 @@ extern "C"
         HAL_GPIO_PullTypedef Pull;     /*!< Specifies the Pull-up activation */
         HAL_GPIO_ExIntTypedef ExInt;   /*!< Specifies the External Interrupt control */
         HAL_GPIO_FilterTypedef Filter; /*!< Specifies the Filter control */
-    } HAL_GPIO_InitTypeDef;
+    } HAL_GPIO_InitTypedef;
 
     /**
      * @}
@@ -162,9 +162,11 @@ extern "C"
      */
 
     /* Initialization and de-initialization functions *************************/
-    HAL_StatusTypeDef HAL_GPIO_Init(HAL_GPIO_InitTypeDef *Init);
-    HAL_StatusTypeDef HAL_GPIO_DeInit(HAL_GPIO_InitTypeDef *Init);
-
+    HAL_StatusTypedef HAL_GPIO_Init(HAL_GPIO_InitTypedef *Init);
+    HAL_StatusTypedef HAL_GPIO_DeInit(HAL_GPIO_InitTypedef *Init);
+    /* ---- interrupt handling -------------------------------------------- */
+    HAL_StatusTypedef HAL_GPIO_IRQHandler(MODULE_PORT_Typedef *Port);
+    __weak__ HAL_StatusTypedef HAL_GPIO_UserIRQ(MODULE_PORT_Typedef *Port);
     /**
      * @}
      */

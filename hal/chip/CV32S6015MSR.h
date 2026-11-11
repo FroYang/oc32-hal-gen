@@ -22,8 +22,8 @@ typedef volatile struct
     uint32_t SFBR : 1;
     uint32_t HIAS : 4;
     uint32_t : 24;
-} CMODE_TypeDef; // 0x0004
-#define CMODE ((CMODE_TypeDef *)0x3FF00004)
+} CMODE_Typedef; // 0x0004
+#define CMODE ((CMODE_Typedef *)0x3FF00004)
 
 // ---- Hardware Interrupt (0x3FF00040) ----
 typedef volatile struct
@@ -60,11 +60,11 @@ typedef volatile struct
     uint32_t V29 : 1;
     uint32_t V30 : 1;
     uint32_t V31 : 1;
-} HIC_TypeDef; // 0x3FF00040; 
-#define HIE ((HIC_TypeDef *)0x3FF00040)
-#define HIPRM ((HIC_TypeDef *)0x3FF00044)
-#define HIPL0 ((HIC_TypeDef *)0x3FF00048)
-#define HIPL1 ((HIC_TypeDef *)0x3FF0004C)
+} HIC_Typedef; // 0x3FF00040; 
+#define HIE ((HIC_Typedef *)0x3FF00040)
+#define HIPRM ((HIC_Typedef *)0x3FF00044)
+#define HIPL0 ((HIC_Typedef *)0x3FF00048)
+#define HIPL1 ((HIC_Typedef *)0x3FF0004C)
 
 
 // ---- Peripheral Part (starts from 0x3FF08000) ----
@@ -89,8 +89,8 @@ typedef volatile struct
     uint32_t   : 2;
     uint32_t PORFCLR : 1;
     uint32_t PORF : 1;
-} HRF_TypeDef; // 0x8000
-#define HRF ((HRF_TypeDef *)0x3FF08000)
+} HRF_Typedef; // 0x8000
+#define HRF ((HRF_Typedef *)0x3FF08000)
 
 
 // ---- Alarm (0x3FF08004) ----
@@ -100,8 +100,8 @@ typedef volatile struct
     uint32_t UXARE : 1;
     uint32_t VTSARE : 1;
     uint32_t   : 18;
-} ALMCON_TypeDef; // 0x8004
-#define ALMCON ((ALMCON_TypeDef *)0x3FF08004)
+} ALMCON_Typedef; // 0x8004
+#define ALMCON ((ALMCON_Typedef *)0x3FF08004)
 
 
 // ---- Bandgap & Power (0x3FF08008) ----
@@ -117,8 +117,8 @@ typedef volatile struct
     uint32_t  : 1;
     uint32_t HOLD : 1;
     uint32_t SLEEP : 1;
-} BPCON_TypeDef; // 0x8008
-#define BPCON ((BPCON_TypeDef *)0x3FF08008)
+} BPCON_Typedef; // 0x8008
+#define BPCON ((BPCON_Typedef *)0x3FF08008)
 
 
 // ---- DMA (0x3FF0800C) ----
@@ -129,8 +129,8 @@ typedef volatile struct
     uint32_t DMACH2 : 4;
     uint32_t DMACH3 : 4;
     uint32_t  : 16;
-} DMACON_TypeDef; // 0x800C
-#define DMACON ((DMACON_TypeDef *)0x3FF0800C)
+} DMACON_Typedef; // 0x800C
+#define DMACON ((DMACON_Typedef *)0x3FF0800C)
 
 
 // ---- LVD (0x3FF08010) ----
@@ -140,8 +140,8 @@ typedef volatile struct
     uint32_t  : 3;
     uint32_t VTST : 5;
     uint32_t  : 23;
-} VTSCON_TypeDef; // 0x8010
-#define VTSCON ((VTSCON_TypeDef *)0x3FF08010)
+} VTSCON_Typedef; // 0x8010
+#define VTSCON ((VTSCON_Typedef *)0x3FF08010)
 
 typedef volatile struct
 {
@@ -153,8 +153,8 @@ typedef volatile struct
     uint32_t  : 22;
     uint32_t LVDECLR : 1;
     uint32_t LVDEF : 1;
-} LVDCON_TypeDef; // 0x8014
-#define LVDCON ((LVDCON_TypeDef *)0x3FF08014)
+} LVDCON_Typedef; // 0x8014
+#define LVDCON ((LVDCON_Typedef *)0x3FF08014)
 
 
 // ---- RCM (0x3FF08018) ----
@@ -176,8 +176,8 @@ typedef volatile struct
     uint32_t  : 1;
     uint32_t DACMCG : 1;
     uint32_t  : 11;
-} CLKCON_TypeDef; // 0x8018
-#define CLKCON ((CLKCON_TypeDef *)0x3FF08018)
+} CLKCON_Typedef; // 0x8018
+#define CLKCON ((CLKCON_Typedef *)0x3FF08018)
 #define CLKCON_DEFAULT (0x00001F01U)
 #define CSWT_MAX (0x7FU)
 
@@ -191,8 +191,8 @@ typedef volatile struct
     uint32_t  : 2;
     uint32_t IOSCLRT : 2;
     uint32_t  : 2;
-} IOSCCON_TypeDef; // 0x801C
-#define IOSCCON ((IOSCCON_TypeDef *)0x3FF0801C)
+} IOSCCON_Typedef; // 0x801C
+#define IOSCCON ((IOSCCON_Typedef *)0x3FF0801C)
 
 typedef volatile struct
 {
@@ -204,8 +204,8 @@ typedef volatile struct
     uint32_t PFOM : 1;
     uint32_t PFOCLR : 1;
     uint32_t PFO : 1;
-} PLLCON_TypeDef; // 0x82FC
-#define PLLCON ((PLLCON_TypeDef *)0x3FF082FC)
+} PLLCON_Typedef; // 0x82FC
+#define PLLCON ((PLLCON_Typedef *)0x3FF082FC)
 #define PLLCON_DEFAULT (0x00000028U)
 #define PFCNT_MAX (0x3FFU)
 
@@ -224,8 +224,8 @@ typedef volatile struct
     uint32_t FLBANK1V : 1;
     uint32_t FLBANK2V : 1;
     uint32_t FLBANK3V : 1;
-} FLCCON_TypeDef; // 0x8020
-#define FLCCON ((FLCCON_TypeDef *)0x3FF08020)
+} FLCCON_Typedef; // 0x8020
+#define FLCCON ((FLCCON_Typedef *)0x3FF08020)
 
 typedef volatile struct
 {
@@ -245,8 +245,8 @@ typedef volatile struct
     uint32_t FLUIE : 1;
     uint32_t FLUOCLR : 1;
     uint32_t FLUOPF : 1;
-} FLUCON_TypeDef; // 0x8024
-#define FLUCON ((FLUCON_TypeDef *)0x3FF08024)
+} FLUCON_Typedef; // 0x8024
+#define FLUCON ((FLUCON_Typedef *)0x3FF08024)
 
 #define FLUADR (*(volatile uint32_t *)0x3FF08028)
 #define FLUDATA0 (*(volatile uint32_t *)0x3FF0802C)
@@ -291,19 +291,19 @@ typedef volatile struct
     uint32_t P29 : 1;
     uint32_t P30 : 1;
     uint32_t P31 : 1;
-} PORT_TypeDef; // 0x8040; Port Data
-#define PA ((PORT_TypeDef *)0x3FF08040)
-#define PAOE ((PORT_TypeDef *)0x3FF08044)
-#define PAIE ((PORT_TypeDef *)0x3FF08048)
-#define PAPU ((PORT_TypeDef *)0x3FF0804C)
-#define PARIE ((PORT_TypeDef *)0x3FF08050)
-#define PAFIE ((PORT_TypeDef *)0x3FF08054)
-#define PAIF ((PORT_TypeDef *)0x3FF08058)
-#define PAIFC ((PORT_TypeDef *)0x3FF0805C)
-#define PAFS0 ((PORT_TypeDef *)0x3FF08060)
-#define PAFS1 ((PORT_TypeDef *)0x3FF08064)
-#define PALS ((PORT_TypeDef *)0x3FF08068)
-#define PAPE ((PORT_TypeDef *)0x3FF0806C)
+} PORT_Typedef; // 0x8040; Port Data
+#define PA ((PORT_Typedef *)0x3FF08040)
+#define PAOE ((PORT_Typedef *)0x3FF08044)
+#define PAIE ((PORT_Typedef *)0x3FF08048)
+#define PAPU ((PORT_Typedef *)0x3FF0804C)
+#define PARIE ((PORT_Typedef *)0x3FF08050)
+#define PAFIE ((PORT_Typedef *)0x3FF08054)
+#define PAIF ((PORT_Typedef *)0x3FF08058)
+#define PAIFC ((PORT_Typedef *)0x3FF0805C)
+#define PAFS0 ((PORT_Typedef *)0x3FF08060)
+#define PAFS1 ((PORT_Typedef *)0x3FF08064)
+#define PALS ((PORT_Typedef *)0x3FF08068)
+#define PAPE ((PORT_Typedef *)0x3FF0806C)
 #define PA0  (PA->P0)
 #define PA1  (PA->P1)
 #define PA2  (PA->P2)
@@ -338,18 +338,18 @@ typedef volatile struct
 #define PA31 (PA->P31)
 
 
-#define PB ((PORT_TypeDef *)0x3FF08080)
-#define PBOE ((PORT_TypeDef *)0x3FF08084)
-#define PBIE ((PORT_TypeDef *)0x3FF08088)
-#define PBPU ((PORT_TypeDef *)0x3FF0808C)
-#define PBRIE ((PORT_TypeDef *)0x3FF08090)
-#define PBFIE ((PORT_TypeDef *)0x3FF08094)
-#define PBIF ((PORT_TypeDef *)0x3FF08098)
-#define PBIFC ((PORT_TypeDef *)0x3FF0809C)
-#define PBFS0 ((PORT_TypeDef *)0x3FF080A0)
-#define PBFS1 ((PORT_TypeDef *)0x3FF080A4)
-#define PBLS ((PORT_TypeDef *)0x3FF080A8)
-#define PBPE ((PORT_TypeDef *)0x3FF080AC)
+#define PB ((PORT_Typedef *)0x3FF08080)
+#define PBOE ((PORT_Typedef *)0x3FF08084)
+#define PBIE ((PORT_Typedef *)0x3FF08088)
+#define PBPU ((PORT_Typedef *)0x3FF0808C)
+#define PBRIE ((PORT_Typedef *)0x3FF08090)
+#define PBFIE ((PORT_Typedef *)0x3FF08094)
+#define PBIF ((PORT_Typedef *)0x3FF08098)
+#define PBIFC ((PORT_Typedef *)0x3FF0809C)
+#define PBFS0 ((PORT_Typedef *)0x3FF080A0)
+#define PBFS1 ((PORT_Typedef *)0x3FF080A4)
+#define PBLS ((PORT_Typedef *)0x3FF080A8)
+#define PBPE ((PORT_Typedef *)0x3FF080AC)
 #define PB0  (PB->P0)
 #define PB1  (PB->P1)
 #define PB2  (PB->P2)
@@ -398,10 +398,10 @@ typedef volatile struct
     uint32_t FS1;
     uint32_t LS;
     uint32_t PE;
-} MODULE_PORT_TypeDef;
+} MODULE_PORT_Typedef;
 
-#define PORT_A ((MODULE_PORT_TypeDef *)0x3FF08040)
-#define PORT_B ((MODULE_PORT_TypeDef *)0x3FF08080)
+#define PORT_A ((MODULE_PORT_Typedef *)0x3FF08040)
+#define PORT_B ((MODULE_PORT_Typedef *)0x3FF08080)
 
 
 // ---- ADC (0x3FF08140) ----
@@ -422,9 +422,9 @@ typedef volatile struct
     uint32_t  : 1;
     uint32_t ADCESDLYP : 1;
     uint32_t ADCESDLYU : 4;
-} ADCCON_TypeDef; // 0x8140
-#define ADC0CON ((ADCCON_TypeDef *)0x3FF08140)
-#define ADC1CON ((ADCCON_TypeDef *)0x3FF08180)
+} ADCCON_Typedef; // 0x8140
+#define ADC0CON ((ADCCON_Typedef *)0x3FF08140)
+#define ADC1CON ((ADCCON_Typedef *)0x3FF08180)
 
 typedef volatile struct
 {
@@ -436,9 +436,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE0CC_TypeDef; // 0x8144
-#define ADC0E0CC ((ADCE0CC_TypeDef *)0x3FF088144)
-#define ADC1E0CC ((ADCE0CC_TypeDef *)0x3FF088184)
+} ADCE0CC_Typedef; // 0x8144
+#define ADC0E0CC ((ADCE0CC_Typedef *)0x3FF088144)
+#define ADC1E0CC ((ADCE0CC_Typedef *)0x3FF088184)
 
 typedef volatile struct
 {
@@ -450,9 +450,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE1CC_TypeDef; // 0x8148
-#define ADC0E1CC ((ADCE1CC_TypeDef *)0x3FF08148)
-#define ADC1E1CC ((ADCE1CC_TypeDef *)0x3FF08188)
+} ADCE1CC_Typedef; // 0x8148
+#define ADC0E1CC ((ADCE1CC_Typedef *)0x3FF08148)
+#define ADC1E1CC ((ADCE1CC_Typedef *)0x3FF08188)
 
 typedef volatile struct
 {
@@ -464,9 +464,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE2CC_TypeDef; // 0x814C
-#define ADC0E2CC ((ADCE2CC_TypeDef *)0x3FF0814C)
-#define ADC1E2CC ((ADCE2CC_TypeDef *)0x3FF0818C)
+} ADCE2CC_Typedef; // 0x814C
+#define ADC0E2CC ((ADCE2CC_Typedef *)0x3FF0814C)
+#define ADC1E2CC ((ADCE2CC_Typedef *)0x3FF0818C)
 
 typedef volatile struct
 {
@@ -478,9 +478,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE3CC_TypeDef; // 0x8150
-#define ADC0E3CC ((ADCE3CC_TypeDef *)0x3FF08150)
-#define ADC1E3CC ((ADCE3CC_TypeDef *)0x3FF08190)
+} ADCE3CC_Typedef; // 0x8150
+#define ADC0E3CC ((ADCE3CC_Typedef *)0x3FF08150)
+#define ADC1E3CC ((ADCE3CC_Typedef *)0x3FF08190)
 
 typedef volatile struct
 {
@@ -492,9 +492,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE4CC_TypeDef; // 0x8154
-#define ADC0E4CC ((ADCE4CC_TypeDef *)0x3FF08154)
-#define ADC1E4CC ((ADCE4CC_TypeDef *)0x3FF08194)
+} ADCE4CC_Typedef; // 0x8154
+#define ADC0E4CC ((ADCE4CC_Typedef *)0x3FF08154)
+#define ADC1E4CC ((ADCE4CC_Typedef *)0x3FF08194)
 
 typedef volatile struct
 {
@@ -506,9 +506,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE5CC_TypeDef; // 0x8158
-#define ADC0E5CC ((ADCE5CC_TypeDef *)0x3FF08158)
-#define ADC1E5CC ((ADCE5CC_TypeDef *)0x3FF08198)
+} ADCE5CC_Typedef; // 0x8158
+#define ADC0E5CC ((ADCE5CC_Typedef *)0x3FF08158)
+#define ADC1E5CC ((ADCE5CC_Typedef *)0x3FF08198)
 
 typedef volatile struct
 {
@@ -520,9 +520,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE6CC_TypeDef; // 0x815C
-#define ADC0E6CC ((ADCE6CC_TypeDef *)0x3FF0815C)
-#define ADC1E6CC ((ADCE6CC_TypeDef *)0x3FF0819C)
+} ADCE6CC_Typedef; // 0x815C
+#define ADC0E6CC ((ADCE6CC_Typedef *)0x3FF0815C)
+#define ADC1E6CC ((ADCE6CC_Typedef *)0x3FF0819C)
 
 typedef volatile struct
 {
@@ -534,9 +534,9 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE7CC_TypeDef; // 0x8160
-#define ADC0E7CC ((ADCE7CC_TypeDef *)0x3FF08160)
-#define ADC1E7CC ((ADCE7CC_TypeDef *)0x3FF081A0)
+} ADCE7CC_Typedef; // 0x8160
+#define ADC0E7CC ((ADCE7CC_Typedef *)0x3FF08160)
+#define ADC1E7CC ((ADCE7CC_Typedef *)0x3FF081A0)
 
 #define ADC0DA (*(volatile uint32_t *)0x3FF08164)
 #define ADC1DA (*(volatile uint32_t *)0x3FF081A4)
@@ -551,9 +551,9 @@ typedef volatile struct
     uint32_t ADCE2DMAE : 1;
     uint32_t ADCE3DC : 7;
     uint32_t ADCE3DMAE : 1;
-} ADCDC0_TypeDef; // 0x8168
-#define ADC0DC0 ((ADCDC0_TypeDef *)0x3FF08168)
-#define ADC1DC0 ((ADCDC0_TypeDef *)0x3FF081A8)
+} ADCDC0_Typedef; // 0x8168
+#define ADC0DC0 ((ADCDC0_Typedef *)0x3FF08168)
+#define ADC1DC0 ((ADCDC0_Typedef *)0x3FF081A8)
 
 typedef volatile struct
 {
@@ -565,9 +565,9 @@ typedef volatile struct
     uint32_t ADCE6DMAE : 1;
     uint32_t ADCE7DC : 7;
     uint32_t ADCE7DMAE : 1;
-} ADCDC1_TypeDef; // 0x816C
-#define ADC0DC1 ((ADCDC1_TypeDef *)0x3FF0816C)
-#define ADC1DC1 ((ADCDC1_TypeDef *)0x3FF081AC)
+} ADCDC1_Typedef; // 0x816C
+#define ADC0DC1 ((ADCDC1_Typedef *)0x3FF0816C)
+#define ADC1DC1 ((ADCDC1_Typedef *)0x3FF081AC)
 
 typedef volatile struct
 {
@@ -603,9 +603,9 @@ typedef volatile struct
     uint32_t ADCW0E6F : 1;
     uint32_t ADCW0E7CLR : 1;
     uint32_t ADCW0E7F : 1;
-} ADCWC0_TypeDef; // 0x8170
-#define ADC0WC0 ((ADCWC0_TypeDef *)0x3FF08170)
-#define ADC1WC0 ((ADCWC0_TypeDef *)0x3FF081B0)
+} ADCWC0_Typedef; // 0x8170
+#define ADC0WC0 ((ADCWC0_Typedef *)0x3FF08170)
+#define ADC1WC0 ((ADCWC0_Typedef *)0x3FF081B0)
 
 typedef volatile struct
 {
@@ -619,9 +619,9 @@ typedef volatile struct
     uint32_t ADCE5IB : 1;
     uint32_t ADCE6IB : 1;
     uint32_t ADCE7IB : 1;
-} ADCWW0_TypeDef; // 0x8174
-#define ADC0WW0 ((ADCWW0_TypeDef *)0x3FF08174)
-#define ADC1WW0 ((ADCWW0_TypeDef *)0x3FF081B4)
+} ADCWW0_Typedef; // 0x8174
+#define ADC0WW0 ((ADCWW0_Typedef *)0x3FF08174)
+#define ADC1WW0 ((ADCWW0_Typedef *)0x3FF081B4)
 
 typedef volatile struct
 {
@@ -657,9 +657,9 @@ typedef volatile struct
     uint32_t ADCW1E6F : 1;
     uint32_t ADCW1E7CLR : 1;
     uint32_t ADCW1E7F : 1;
-} ADCWC1_TypeDef; // 0x8178
-#define ADC0WC1 ((ADCWC1_TypeDef *)0x3FF08178)
-#define ADC1WC1 ((ADCWC1_TypeDef *)0x3FF081B8)
+} ADCWC1_Typedef; // 0x8178
+#define ADC0WC1 ((ADCWC1_Typedef *)0x3FF08178)
+#define ADC1WC1 ((ADCWC1_Typedef *)0x3FF081B8)
 
 typedef volatile struct
 {
@@ -668,9 +668,9 @@ typedef volatile struct
     uint32_t ADCWW1B : 12;
     uint32_t  : 2;
     uint32_t ADCRC : 2;
-} ADCWW1_TypeDef; // 0x817C
-#define ADC0WW1 ((ADCWW1_TypeDef *)0x3FF0817C)
-#define ADC1WW1 ((ADCWW1_TypeDef *)0x3FF081BC)
+} ADCWW1_Typedef; // 0x817C
+#define ADC0WW1 ((ADCWW1_Typedef *)0x3FF0817C)
+#define ADC1WW1 ((ADCWW1_Typedef *)0x3FF081BC)
 
 // ---- CCP (0x3FF081C0) ----
 typedef volatile struct
@@ -698,26 +698,26 @@ typedef volatile struct
     uint32_t CCPGF : 1;
     uint32_t CCPCCLR : 1;
     uint32_t CCPCF : 1;
-} CCPCON_TypeDef; // 0x81C0
-#define CCP0CON ((CCPCON_TypeDef *)0x3FF081C0)
-#define CCP1CON ((CCPCON_TypeDef *)0x3FF081D0)
-#define CCP2CON ((CCPCON_TypeDef *)0x3FF081E0)
-#define CCP3CON ((CCPCON_TypeDef *)0x3FF081F0)
-#define CCP4CON ((CCPCON_TypeDef *)0x3FF08200)
-#define CCP5CON ((CCPCON_TypeDef *)0x3FF08210)
+} CCPCON_Typedef; // 0x81C0
+#define CCP0CON ((CCPCON_Typedef *)0x3FF081C0)
+#define CCP1CON ((CCPCON_Typedef *)0x3FF081D0)
+#define CCP2CON ((CCPCON_Typedef *)0x3FF081E0)
+#define CCP3CON ((CCPCON_Typedef *)0x3FF081F0)
+#define CCP4CON ((CCPCON_Typedef *)0x3FF08200)
+#define CCP5CON ((CCPCON_Typedef *)0x3FF08210)
 
 typedef volatile struct
 {
     uint32_t CCPCV : 16;
     uint32_t CCPPSC : 8;
     uint32_t CCPDT : 8;
-} CCPVAL_TypeDef; // 0x81C4
-#define CCP0VAL ((CCPVAL_TypeDef *)0x3FF081C4)
-#define CCP1VAL ((CCPVAL_TypeDef *)0x3FF081D4)
-#define CCP2VAL ((CCPVAL_TypeDef *)0x3FF081E4)
-#define CCP3VAL ((CCPVAL_TypeDef *)0x3FF081F4)
-#define CCP4VAL ((CCPVAL_TypeDef *)0x3FF08204)
-#define CCP5VAL ((CCPVAL_TypeDef *)0x3FF08214)
+} CCPVAL_Typedef; // 0x81C4
+#define CCP0VAL ((CCPVAL_Typedef *)0x3FF081C4)
+#define CCP1VAL ((CCPVAL_Typedef *)0x3FF081D4)
+#define CCP2VAL ((CCPVAL_Typedef *)0x3FF081E4)
+#define CCP3VAL ((CCPVAL_Typedef *)0x3FF081F4)
+#define CCP4VAL ((CCPVAL_Typedef *)0x3FF08204)
+#define CCP5VAL ((CCPVAL_Typedef *)0x3FF08214)
 
 typedef volatile struct
 {
@@ -739,41 +739,41 @@ typedef volatile struct
     uint32_t CCPCOL : 2;
     uint32_t CCPGFM : 1;
     uint32_t  : 9;
-} CCPOUT_TypeDef; // 0x81C8
-#define CCP0OUT ((CCPOUT_TypeDef *)0x3FF081C8)
-#define CCP1OUT ((CCPOUT_TypeDef *)0x3FF081D8)
-#define CCP2OUT ((CCPOUT_TypeDef *)0x3FF081E8)
-#define CCP3OUT ((CCPOUT_TypeDef *)0x3FF081F8)
-#define CCP4OUT ((CCPOUT_TypeDef *)0x3FF08208)
-#define CCP5OUT ((CCPOUT_TypeDef *)0x3FF08218)
+} CCPOUT_Typedef; // 0x81C8
+#define CCP0OUT ((CCPOUT_Typedef *)0x3FF081C8)
+#define CCP1OUT ((CCPOUT_Typedef *)0x3FF081D8)
+#define CCP2OUT ((CCPOUT_Typedef *)0x3FF081E8)
+#define CCP3OUT ((CCPOUT_Typedef *)0x3FF081F8)
+#define CCP4OUT ((CCPOUT_Typedef *)0x3FF08208)
+#define CCP5OUT ((CCPOUT_Typedef *)0x3FF08218)
 
 typedef volatile struct
 {
     uint32_t CCPGSV : 16;
     uint32_t CCPGEV : 16;
-} CCPGAT_TypeDef; // 0x81CC
-#define CCP0GAT ((CCPGAT_TypeDef *)0x3FF081CC)
-#define CCP1GAT ((CCPGAT_TypeDef *)0x3FF081DC)
-#define CCP2GAT ((CCPGAT_TypeDef *)0x3FF081EC)
-#define CCP3GAT ((CCPGAT_TypeDef *)0x3FF081FC)
-#define CCP4GAT ((CCPGAT_TypeDef *)0x3FF0820C)
-#define CCP5GAT ((CCPGAT_TypeDef *)0x3FF0821C)
+} CCPGAT_Typedef; // 0x81CC
+#define CCP0GAT ((CCPGAT_Typedef *)0x3FF081CC)
+#define CCP1GAT ((CCPGAT_Typedef *)0x3FF081DC)
+#define CCP2GAT ((CCPGAT_Typedef *)0x3FF081EC)
+#define CCP3GAT ((CCPGAT_Typedef *)0x3FF081FC)
+#define CCP4GAT ((CCPGAT_Typedef *)0x3FF0820C)
+#define CCP5GAT ((CCPGAT_Typedef *)0x3FF0821C)
 
 
 typedef volatile struct
 {
-    CCPCON_TypeDef CCPCON;
-    CCPVAL_TypeDef CCPVAL;
-    CCPOUT_TypeDef CCPOUT;
-    CCPGAT_TypeDef CCPGAT;
-} MODULE_CCP_TypeDef;
+    CCPCON_Typedef CCPCON;
+    CCPVAL_Typedef CCPVAL;
+    CCPOUT_Typedef CCPOUT;
+    CCPGAT_Typedef CCPGAT;
+} MODULE_CCP_Typedef;
 
-#define CCP_0 ((MODULE_CCP_TypeDef *)0x3FF081C0)
-#define CCP_1 ((MODULE_CCP_TypeDef *)0x3FF081D0)
-#define CCP_2 ((MODULE_CCP_TypeDef *)0x3FF081E0)
-#define CCP_3 ((MODULE_CCP_TypeDef *)0x3FF081F0)
-#define CCP_4 ((MODULE_CCP_TypeDef *)0x3FF08200)
-#define CCP_5 ((MODULE_CCP_TypeDef *)0x3FF08210)
+#define CCP_0 ((MODULE_CCP_Typedef *)0x3FF081C0)
+#define CCP_1 ((MODULE_CCP_Typedef *)0x3FF081D0)
+#define CCP_2 ((MODULE_CCP_Typedef *)0x3FF081E0)
+#define CCP_3 ((MODULE_CCP_Typedef *)0x3FF081F0)
+#define CCP_4 ((MODULE_CCP_Typedef *)0x3FF08200)
+#define CCP_5 ((MODULE_CCP_Typedef *)0x3FF08210)
 
 
 // ---- MPWM (0x3FF08220) ----
@@ -809,46 +809,46 @@ typedef volatile struct
     uint32_t MPW6F : 1;
     uint32_t MPW7CLR : 1;
     uint32_t MPW7F : 1;
-} MPCON_TypeDef; // 0x8220
-#define MP0CON ((MPCON_TypeDef *)0x3FF08220)
-#define MP1CON ((MPCON_TypeDef *)0x3FF0823C)
-#define MP2CON ((MPCON_TypeDef *)0x3FF08258)
+} MPCON_Typedef; // 0x8220
+#define MP0CON ((MPCON_Typedef *)0x3FF08220)
+#define MP1CON ((MPCON_Typedef *)0x3FF0823C)
+#define MP2CON ((MPCON_Typedef *)0x3FF08258)
 
 typedef volatile struct
 {
     uint32_t MPW0DTY : 16;
     uint32_t MPW1DTY : 16;
-} MPDTY01_TypeDef; // 0x8224
-#define MP0DTY01 ((MPDTY01_TypeDef *)0x3FF08224)
-#define MP1DTY01 ((MPDTY01_TypeDef *)0x3FF08240)
-#define MP2DTY01 ((MPDTY01_TypeDef *)0x3FF0825C)
+} MPDTY01_Typedef; // 0x8224
+#define MP0DTY01 ((MPDTY01_Typedef *)0x3FF08224)
+#define MP1DTY01 ((MPDTY01_Typedef *)0x3FF08240)
+#define MP2DTY01 ((MPDTY01_Typedef *)0x3FF0825C)
 
 typedef volatile struct
 {
     uint32_t MPW2DTY : 16;
     uint32_t MPW3DTY : 16;
-} MPDTY23_TypeDef; // 0x8228
-#define MP0DTY23 ((MPDTY23_TypeDef *)0x3FF08228)
-#define MP1DTY23 ((MPDTY23_TypeDef *)0x3FF08244)
-#define MP2DTY23 ((MPDTY23_TypeDef *)0x3FF08260)
+} MPDTY23_Typedef; // 0x8228
+#define MP0DTY23 ((MPDTY23_Typedef *)0x3FF08228)
+#define MP1DTY23 ((MPDTY23_Typedef *)0x3FF08244)
+#define MP2DTY23 ((MPDTY23_Typedef *)0x3FF08260)
 
 typedef volatile struct
 {
     uint32_t MPW4DTY : 16;
     uint32_t MPW5DTY : 16;
-} MPDTY45_TypeDef; // 0x822C
-#define MP0DTY45 ((MPDTY45_TypeDef *)0x3FF0822C)
-#define MP1DTY45 ((MPDTY45_TypeDef *)0x3FF08248)
-#define MP2DTY45 ((MPDTY45_TypeDef *)0x3FF08264)
+} MPDTY45_Typedef; // 0x822C
+#define MP0DTY45 ((MPDTY45_Typedef *)0x3FF0822C)
+#define MP1DTY45 ((MPDTY45_Typedef *)0x3FF08248)
+#define MP2DTY45 ((MPDTY45_Typedef *)0x3FF08264)
 
 typedef volatile struct
 {
     uint32_t MPW6DTY : 16;
     uint32_t MPW7DTY : 16;
-} MPDTY67_TypeDef; // 0x8230
-#define MP0DTY67 ((MPDTY67_TypeDef *)0x3FF08230)
-#define MP1DTY67 ((MPDTY67_TypeDef *)0x3FF0824C)
-#define MP2DTY67 ((MPDTY67_TypeDef *)0x3FF08268)
+} MPDTY67_Typedef; // 0x8230
+#define MP0DTY67 ((MPDTY67_Typedef *)0x3FF08230)
+#define MP1DTY67 ((MPDTY67_Typedef *)0x3FF0824C)
+#define MP2DTY67 ((MPDTY67_Typedef *)0x3FF08268)
 
 #define MP0LDA (*(volatile uint32_t *)0x3FF08234)
 #define MP1LDA (*(volatile uint32_t *)0x3FF08250)
@@ -872,17 +872,17 @@ typedef volatile struct
     uint32_t WDTRLV : 8;
     uint32_t  : 7;
     uint32_t WDTTO : 1;
-} WDTCON_TypeDef; // 0x8278
-#define WDT0CON ((WDTCON_TypeDef *)0x3FF08278)
-#define WDT1CON ((WDTCON_TypeDef *)0x3FF0827C)
+} WDTCON_Typedef; // 0x8278
+#define WDT0CON ((WDTCON_Typedef *)0x3FF08278)
+#define WDT1CON ((WDTCON_Typedef *)0x3FF0827C)
 
 typedef volatile struct
 {
-    WDTCON_TypeDef WDTCON;
-} MODULE_WDT_TypeDef;
+    WDTCON_Typedef WDTCON;
+} MODULE_WDT_Typedef;
 
-#define WDT_0 ((MODULE_WDT_TypeDef *)0x3FF08278)
-#define WDT_1 ((MODULE_WDT_TypeDef *)0x3FF0827C)
+#define WDT_0 ((MODULE_WDT_Typedef *)0x3FF08278)
+#define WDT_1 ((MODULE_WDT_Typedef *)0x3FF0827C)
 
 
 // ---- SPI (0x3FF08280 / 0x3FF082A0) ----
@@ -905,9 +905,9 @@ typedef volatile struct
     uint32_t  : 13;
     uint32_t SPITCLR : 1;
     uint32_t SPITBV : 1;
-} SPICON_TypeDef; // 0x8280
-#define SPI0CON ((SPICON_TypeDef *)0x3FF08280)
-#define SPI1CON ((SPICON_TypeDef *)0x3FF082A0)
+} SPICON_Typedef; // 0x8280
+#define SPI0CON ((SPICON_Typedef *)0x3FF08280)
+#define SPI1CON ((SPICON_Typedef *)0x3FF082A0)
 
 #define SPI0TBUF (*(volatile uint32_t *)0x3FF08284)
 #define SPI0RBUF (*(volatile uint32_t *)0x3FF08288)
@@ -922,16 +922,16 @@ typedef volatile struct
 
 typedef volatile struct
 {
-    SPICON_TypeDef SPICON;
+    SPICON_Typedef SPICON;
     uint32_t SPITBUF;
     uint32_t SPIRBUF;
     uint32_t SPITDA;
     uint32_t SPIRDA;
     uint32_t SPITBC;
-} MODULE_SPI_TypeDef;
+} MODULE_SPI_Typedef;
 
-#define SPI_0 ((MODULE_SPI_TypeDef *)0x3FF08280)
-#define SPI_1 ((MODULE_SPI_TypeDef *)0x3FF082A0)
+#define SPI_0 ((MODULE_SPI_Typedef *)0x3FF08280)
+#define SPI_1 ((MODULE_SPI_Typedef *)0x3FF082A0)
 
 
 
@@ -955,9 +955,9 @@ typedef volatile struct
     uint32_t UTTBV : 1;
     uint32_t UTRCLR : 1;
     uint32_t UTRBV : 1;
-} UTCON_TypeDef; // 0x82C0
-#define UT0CON ((UTCON_TypeDef *)0x3FF082C0)
-#define UT1CON ((UTCON_TypeDef *)0x3FF082E0)
+} UTCON_Typedef; // 0x82C0
+#define UT0CON ((UTCON_Typedef *)0x3FF082C0)
+#define UT1CON ((UTCON_Typedef *)0x3FF082E0)
 
 #define UT0TBUF  (*(volatile uint32_t *)0x3FF082C4)
 #define UT0RBUF  (*(volatile uint32_t *)0x3FF082C8)
@@ -975,17 +975,17 @@ typedef volatile struct
 
 typedef volatile struct
 {
-    UTCON_TypeDef UTCON;
+    UTCON_Typedef UTCON;
     uint32_t UTTBUF;
     uint32_t UTRBUF;
     uint32_t UTTDA;
     uint32_t UTRDA;
     uint32_t UTTBC;
     uint32_t UTRBC;
-} MODULE_UART_TypeDef;
+} MODULE_UART_Typedef;
 
-#define UART_0 ((MODULE_UART_TypeDef *)0x3FF082C0)
-#define UART_1 ((MODULE_UART_TypeDef *)0x3FF082E0)
+#define UART_0 ((MODULE_UART_Typedef *)0x3FF082C0)
+#define UART_1 ((MODULE_UART_Typedef *)0x3FF082E0)
 
 
 // ---- Analog
@@ -998,17 +998,24 @@ typedef volatile struct
     uint32_t  : 4;
     uint32_t ADCTM : 8;
     uint32_t  : 8;
-} ABUFCON_TypeDef; // 0x8274
-#define ABUFCON ((ABUFCON_TypeDef *)0x3FF08274)
+} ABUFCON_Typedef; // 0x8274
+#define ABUFCON ((ABUFCON_Typedef *)0x3FF08274)
 
 typedef volatile struct
 {
     uint32_t CMPTWS : 16;
     uint32_t CMPTWE : 16;
-} CMPTW_TypeDef; // 0x82B8
-#define CMP0TW ((CMPTW_TypeDef *)0x3FF082B8)
-#define CMP1TW ((CMPTW_TypeDef *)0x3FF082BC)
-#define CMP2TW ((CMPTW_TypeDef *)0x3FF082DC)
+} CMPTW_Typedef; // 0x82B8
+#define CMP0TW ((CMPTW_Typedef *)0x3FF082B8)
+#define CMP1TW ((CMPTW_Typedef *)0x3FF082BC)
+#define CMP2TW ((CMPTW_Typedef *)0x3FF082DC)
+
+#define CMPTWS_POS (0U)
+#define CMPTWE_POS (16U)
+#define CMPTWS_BIT (0xFFFFU<<CMPTWS_POS)
+#define CMPTWE_BIT (0xFFFFU<<CMPTWE_POS)
+
+
 
 typedef volatile struct
 {
@@ -1027,10 +1034,41 @@ typedef volatile struct
     uint32_t  : 7;
     uint32_t CMPECLR : 1;
     uint32_t CMPEF : 1;
-} CMPCON_TypeDef; // 0x8318
-#define CMP0CON ((CMPCON_TypeDef *)0x3FF08318)
-#define CMP1CON ((CMPCON_TypeDef *)0x3FF0831C)
-#define CMP2CON ((CMPCON_TypeDef *)0x3FF083DC)
+} CMPCON_Typedef; // 0x8318
+#define CMP0CON ((CMPCON_Typedef *)0x3FF08318)
+#define CMP1CON ((CMPCON_Typedef *)0x3FF0831C)
+#define CMP2CON ((CMPCON_Typedef *)0x3FF083DC)
+
+#define CMPS_POS (0U)
+#define CMPE_POS (1U)
+#define CMPHS_POS (2U)
+#define CMPFS_POS (4U)
+#define CMPRFE_POS (6U)
+#define CMPFFE_POS (7U)
+#define CMPIS_POS (8U)
+#define CMPOE_POS (11U)
+#define CMPRS_POS (12U)
+#define CMPIE_POS (15U)
+#define CMPOT_POS (16U)
+#define CMPTM_POS (20U)
+#define CMPECLR_POS (30U)
+#define CMPEF_POS (31U)
+#define CMPS_BIT (0x1U<<CMPS_POS)
+#define CMPE_BIT (0x1U<<CMPE_POS)
+#define CMPHS_BIT (0x3U<<CMPHS_POS)
+#define CMPFS_BIT (0x3U<<CMPFS_POS)
+#define CMPRFE_BIT (0x1U<<CMPRFE_POS)
+#define CMPFFE_BIT (0x1U<<CMPFFE_POS)
+#define CMPIS_BIT (0x7U<<CMPIS_POS)
+#define CMPOE_BIT (0x1U<<CMPOE_POS)
+#define CMPRS_BIT (0x7U<<CMPRS_POS)
+#define CMPIE_BIT (0x1U<<CMPIE_POS)
+#define CMPOT_BIT (0xFU<<CMPOT_POS)
+#define CMPTM_BIT (0x7U<<CMPTM_POS)
+#define CMPECLR_BIT (0x1U<<CMPECLR_POS)
+#define CMPEF_BIT (0x1U<<CMPEF_POS)
+
+
 
 typedef volatile struct
 {
@@ -1046,8 +1084,18 @@ typedef volatile struct
     uint32_t AMP3GC : 3;
     uint32_t AMP3E : 1;
     uint32_t AMP3OT : 4;
-} AMPCON_TypeDef; // 0x833C
-#define AMPCON ((AMPCON_TypeDef *)0x3FF0833C)
+} AMPCON_Typedef; // 0x833C
+#define AMPCON ((AMPCON_Typedef *)0x3FF0833C)
+
+#define AMPGC_POS (0U)
+#define AMPE_POS (3U)
+#define AMPOT_POS (4U)
+#define AMPGC_BIT (0x3U<<AMPGC_POS)
+#define AMPE_BIT (0x1U<<AMPE_POS)
+#define AMPOT_BIT (0xFU<<AMPOT_POS)
+#define AMP_BIT_MASK (0xFFU)
+#define AMP_BIT_TOTAL (0x8U)
+
 
 
 // ---- IIC (0x3FF08300) ----
@@ -1077,8 +1125,8 @@ typedef volatile struct
     uint32_t IICTBV : 1;
     uint32_t IICRCLR : 1;
     uint32_t IICRBV : 1;
-} IICCON_TypeDef; // 0x8300
-#define IICCON ((IICCON_TypeDef *)0x3FF08300)
+} IICCON_Typedef; // 0x8300
+#define IICCON ((IICCON_Typedef *)0x3FF08300)
 
 #define IICTBUF  (*(volatile uint32_t *)0x3FF08304)
 #define IICRBUF  (*(volatile uint32_t *)0x3FF08308)
@@ -1086,9 +1134,12 @@ typedef volatile struct
 #define IICDA    (*(volatile uint32_t *)0x3FF08310)
 #define IICBC    (*(volatile uint32_t *)0x3FF08314)
 
-#define IICKS_POS (1U<<1U)
-#define IICTCLR_POS (1U<<28U)
-#define IICRCLR_POS (1U<<30U)
+#define IICKS_POS (1U)
+#define IICTCLR_POS (28U)
+#define IICRCLR_POS (30U)
+#define IICKS_BIT (0x1U<<IICKS_POS)
+#define IICTCLR_BIT (0x1U<<IICTCLR_POS)
+#define IICRCLR_BIT (0x1U<<IICRCLR_POS)
 
 
 
@@ -1107,8 +1158,8 @@ typedef volatile struct
     uint32_t  : 18;
     uint32_t CRCCCLR : 1;
     uint32_t CRCCF : 1;
-} CRCCON_TypeDef; // 0x8320
-#define CRCCON ((CRCCON_TypeDef *)0x3FF08320)
+} CRCCON_Typedef; // 0x8320
+#define CRCCON ((CRCCON_Typedef *)0x3FF08320)
 
 #define CRCPOLY  (*(volatile uint32_t *)0x3FF08324)
 #define CRCIN    (*(volatile uint32_t *)0x3FF08328)
@@ -1140,15 +1191,15 @@ typedef volatile struct
     uint32_t TCD : 1;
     uint32_t TOCLR : 1;
     uint32_t TOV : 1;
-} TCON_TypeDef; // 0x8340
-#define T0CON ((TCON_TypeDef *)0x3FF08340)
-#define T1CON ((TCON_TypeDef *)0x3FF08350)
-#define T2CON ((TCON_TypeDef *)0x3FF08360)
-#define T3CON ((TCON_TypeDef *)0x3FF08370)
-#define T4CON ((TCON_TypeDef *)0x3FF08380)
-#define T5CON ((TCON_TypeDef *)0x3FF08390)
-#define T6CON ((TCON_TypeDef *)0x3FF083A0)
-#define T7CON ((TCON_TypeDef *)0x3FF083B0)
+} TCON_Typedef; // 0x8340
+#define T0CON ((TCON_Typedef *)0x3FF08340)
+#define T1CON ((TCON_Typedef *)0x3FF08350)
+#define T2CON ((TCON_Typedef *)0x3FF08360)
+#define T3CON ((TCON_Typedef *)0x3FF08370)
+#define T4CON ((TCON_Typedef *)0x3FF08380)
+#define T5CON ((TCON_Typedef *)0x3FF08390)
+#define T6CON ((TCON_Typedef *)0x3FF083A0)
+#define T7CON ((TCON_Typedef *)0x3FF083B0)
 
 #define T0CNT    (*(volatile uint32_t *)0x3FF08344)
 #define T1CNT    (*(volatile uint32_t *)0x3FF08354)
@@ -1186,33 +1237,33 @@ typedef volatile struct
     uint32_t  : 4;
     uint32_t TECLR : 1;
     uint32_t TEF : 1;
-} TECON_TypeDef; // 0x834C
-#define T0ECON ((TECON_TypeDef *)0x3FF0834C)
-#define T1ECON ((TECON_TypeDef *)0x3FF0835C)
-#define T2ECON ((TECON_TypeDef *)0x3FF0836C)
-#define T3ECON ((TECON_TypeDef *)0x3FF0837C)
-#define T4ECON ((TECON_TypeDef *)0x3FF0838C)
-#define T5ECON ((TECON_TypeDef *)0x3FF0839C)
-#define T6ECON ((TECON_TypeDef *)0x3FF083AC)
-#define T7ECON ((TECON_TypeDef *)0x3FF083BC)
+} TECON_Typedef; // 0x834C
+#define T0ECON ((TECON_Typedef *)0x3FF0834C)
+#define T1ECON ((TECON_Typedef *)0x3FF0835C)
+#define T2ECON ((TECON_Typedef *)0x3FF0836C)
+#define T3ECON ((TECON_Typedef *)0x3FF0837C)
+#define T4ECON ((TECON_Typedef *)0x3FF0838C)
+#define T5ECON ((TECON_Typedef *)0x3FF0839C)
+#define T6ECON ((TECON_Typedef *)0x3FF083AC)
+#define T7ECON ((TECON_Typedef *)0x3FF083BC)
 
 
 typedef volatile struct
 {
-    TCON_TypeDef TCON;
+    TCON_Typedef TCON;
     uint32_t TCNT;
     uint32_t TARL;
-    TECON_TypeDef TECON;
-} MODULE_TIMER_TypeDef;
+    TECON_Typedef TECON;
+} MODULE_TIMER_Typedef;
 
-#define TIMER_0 ((MODULE_TIMER_TypeDef *)0x3FF08340)
-#define TIMER_1 ((MODULE_TIMER_TypeDef *)0x3FF08350)
-#define TIMER_2 ((MODULE_TIMER_TypeDef *)0x3FF08360)
-#define TIMER_3 ((MODULE_TIMER_TypeDef *)0x3FF08370)
-#define TIMER_4 ((MODULE_TIMER_TypeDef *)0x3FF08380)
-#define TIMER_5 ((MODULE_TIMER_TypeDef *)0x3FF08390)
-#define TIMER_6 ((MODULE_TIMER_TypeDef *)0x3FF083A0)
-#define TIMER_7 ((MODULE_TIMER_TypeDef *)0x3FF083B0)
+#define TIMER_0 ((MODULE_TIMER_Typedef *)0x3FF08340)
+#define TIMER_1 ((MODULE_TIMER_Typedef *)0x3FF08350)
+#define TIMER_2 ((MODULE_TIMER_Typedef *)0x3FF08360)
+#define TIMER_3 ((MODULE_TIMER_Typedef *)0x3FF08370)
+#define TIMER_4 ((MODULE_TIMER_Typedef *)0x3FF08380)
+#define TIMER_5 ((MODULE_TIMER_Typedef *)0x3FF08390)
+#define TIMER_6 ((MODULE_TIMER_Typedef *)0x3FF083A0)
+#define TIMER_7 ((MODULE_TIMER_Typedef *)0x3FF083B0)
 
 
 // ---- USB (0x3FF083C0) ----
@@ -1237,8 +1288,8 @@ typedef volatile struct
     uint32_t UBSPD : 1;
     uint32_t UBCLR : 1;
     uint32_t UBRST : 1;
-} UBCON_TypeDef; // 0x83C0
-#define UBCON ((UBCON_TypeDef *)0x3FF083C0)
+} UBCON_Typedef; // 0x83C0
+#define UBCON ((UBCON_Typedef *)0x3FF083C0)
 
 typedef volatile struct
 {
@@ -1249,8 +1300,8 @@ typedef volatile struct
     uint32_t UMISS : 1;
     uint32_t USCLR : 1;
     uint32_t USOF : 1;
-} UFCON_TypeDef; // 0x83C4
-#define UFCON ((UFCON_TypeDef *)0x3FF083C4)
+} UFCON_Typedef; // 0x83C4
+#define UFCON ((UFCON_Typedef *)0x3FF083C4)
 
 typedef volatile struct
 {
@@ -1272,8 +1323,8 @@ typedef volatile struct
     uint32_t UEOPF : 1;
     uint32_t UEICLR : 1;
     uint32_t UEIPF : 1;
-} UE0CON_TypeDef; // 0x83C8
-#define UE0CON ((UE0CON_TypeDef *)0x3FF083C8)
+} UE0CON_Typedef; // 0x83C8
+#define UE0CON ((UE0CON_Typedef *)0x3FF083C8)
 
 typedef volatile struct
 {
@@ -1295,11 +1346,11 @@ typedef volatile struct
     uint32_t UEOPF : 1;
     uint32_t UEICLR : 1;
     uint32_t UEIPF : 1;
-} UEXCON_TypeDef; // 0x83CC
-#define UE1CON ((UEXCON_TypeDef *)0x3FF083CC)
-#define UE2CON ((UEXCON_TypeDef *)0x3FF083D0)
-#define UE3CON ((UEXCON_TypeDef *)0x3FF083D4)
-#define UE4CON ((UEXCON_TypeDef *)0x3FF083D8)
+} UEXCON_Typedef; // 0x83CC
+#define UE1CON ((UEXCON_Typedef *)0x3FF083CC)
+#define UE2CON ((UEXCON_Typedef *)0x3FF083D0)
+#define UE3CON ((UEXCON_Typedef *)0x3FF083D4)
+#define UE4CON ((UEXCON_Typedef *)0x3FF083D8)
 
 // ---- DAC (0x3FF083E0 / 0x3FF083F0) ----
 typedef volatile struct
@@ -1315,9 +1366,9 @@ typedef volatile struct
     uint32_t  : 7;
     uint32_t DACCCLR : 1;
     uint32_t DACCF : 1;
-} DACCON_TypeDef; // 0x83E0
-#define DAC0CON ((DACCON_TypeDef *)0x3FF083E0)
-#define DAC1CON ((DACCON_TypeDef *)0x3FF083F0)
+} DACCON_Typedef; // 0x83E0
+#define DAC0CON ((DACCON_Typedef *)0x3FF083E0)
+#define DAC1CON ((DACCON_Typedef *)0x3FF083F0)
 
 #define DAC0BUF  (*(volatile uint32_t *)0x3FF083E4)
 #define DAC0DA   (*(volatile uint32_t *)0x3FF083E8)
@@ -1329,7 +1380,7 @@ typedef volatile struct
 /*
  * 统一寄存器读写宏 (GCC 内建)
  * 兼容两种寄存器定义风格:
- *   指针型:   #define HRF     ((HRF_TypeDef *)0x3FF08000)
+ *   指针型:   #define HRF     ((HRF_Typedef *)0x3FF08000)
  *   解引用型: #define DAC0BUF (*(volatile uint32_t *)0x3FF083E4)
  *
  * 用法:

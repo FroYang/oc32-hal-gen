@@ -7,9 +7,9 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "oc32_hal.h"
+#include "oc32_hal_wdt.h"
 
-/* Private typedef -----------------------------------------------------------*/
+/* Private Typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -18,7 +18,7 @@
 
 /**
  * @brief  Initializes the WDT peripheral according to the specified parameters.
- * @param  Init: pointer to a HAL_WDT_InitTypeDef structure.
+ * @param  Init: pointer to a HAL_WDT_Inittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Init is NULL, Wdt is not WDT_0/WDT_1,
  *                    Period is out of range, or no valid prescaler found
@@ -26,7 +26,7 @@
  *         that yields a valid 8-bit reload value, configures the action mode
  *         (reset / interrupt / wake), then enables the watchdog (WDTE=1).
  */
-HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init)
+HAL_StatusTypedef HAL_WDT_Init(HAL_WDT_InitTypedef *Init)
 {
   if (Init == NULL || (Init->Wdt != WDT_0 && Init->Wdt != WDT_1))
     return HAL_ERROR;
@@ -34,7 +34,7 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init)
   uint32_t wdtclkperiod;
 
 /* if ILOSC is real, use it as the clock always */
-#ifndef OC32_CLK_ILOSC_REAL
+#ifdef OC32_CLK_ILOSC_FAKE
   if (CLKCON->IOSCH)
   {
     /* 24M / 4 = 6MHz clock */
@@ -69,11 +69,8 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init)
     counter = wdtcycles / prescaler[i];
     if (counter <= 256)
     {
-
-      Init->Wdt->WDTCON.WDTE = 0;
       Init->Wdt->WDTCON.WDTCD = i;
       Init->Wdt->WDTCON.WDTRLV = counter - 1U;
-
       break;
     }
   }
@@ -107,13 +104,13 @@ HAL_StatusTypeDef HAL_WDT_Init(HAL_WDT_InitTypeDef *Init)
 
 /**
  * @brief  Refreshes the WDT.
- * @param  Wdt: pointer to a MODULE_WDT_TypeDef structure.
+ * @param  Wdt: pointer to a MODULE_WDT_typedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Wdt is not WDT_0/WDT_1
  * @note   Writes the WDT clear key (WDTCLR) and waits for the timeout flag (WDTTO)
  *         to clear before returning.
  */
-__sram__ HAL_StatusTypeDef HAL_WDT_Clear(MODULE_WDT_TypeDef *Wdt)
+__sram__ HAL_StatusTypedef HAL_WDT_Clear(MODULE_WDT_Typedef *Wdt)
 {
   if (Wdt != WDT_0 && Wdt != WDT_1)
     return HAL_ERROR;
@@ -124,15 +121,17 @@ __sram__ HAL_StatusTypeDef HAL_WDT_Clear(MODULE_WDT_TypeDef *Wdt)
   return HAL_OK;
 }
 
+#ifdef HAL_WDT_ENABLE
+
 /**
  * @brief  DeInitializes the WDT peripheral.
- * @param  Wdt: pointer to a MODULE_WDT_TypeDef structure.
+ * @param  Wdt: pointer to a MODULE_WDT_typedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Wdt is not WDT_0/WDT_1
  * @note   Disables reset/wake/interrupt actions, refreshes the watchdog,
  *         then disables it (WDTE=0).
  */
-HAL_StatusTypeDef HAL_WDT_DeInit(MODULE_WDT_TypeDef *Wdt)
+HAL_StatusTypedef HAL_WDT_DeInit(MODULE_WDT_Typedef *Wdt)
 {
   if (Wdt != WDT_0 && Wdt != WDT_1)
     return HAL_ERROR;
@@ -147,24 +146,25 @@ HAL_StatusTypeDef HAL_WDT_DeInit(MODULE_WDT_TypeDef *Wdt)
 
 /**
  * @brief  Handles WDT interrupt request at user side.
- * @param  Wdt: pointer to a MODULE_WDT_TypeDef structure.
+ * @param  Wdt: pointer to a MODULE_WDT_typedef structure.
  * @retval HAL_OK: on success
  * @note   This is a weak implementation that can be overridden by the user.
  */
-__weak__ HAL_StatusTypeDef HAL_WDT_UserIRQ(MODULE_WDT_TypeDef *Wdt)
+__weak__ HAL_StatusTypedef HAL_WDT_UserIRQ(void)
 {
   return HAL_OK;
 }
 
 /**
  * @brief  Handles WDT interrupt request.
- * @param  Wdt: pointer to a MODULE_WDT_TypeDef structure.
+ * @param  Wdt: pointer to a MODULE_WDT_typedef structure.
  * @retval Return value of HAL_WDT_UserIRQ
  * @note   Invoked from the global interrupt handler. Refreshes the watchdog,
  *         then calls HAL_WDT_UserIRQ.
  */
-HAL_StatusTypeDef HAL_WDT_IRQHandler(MODULE_WDT_TypeDef *Wdt)
+HAL_StatusTypedef HAL_WDT_IRQHandler(void)
 {
-  HAL_WDT_Clear(Wdt);
-  return HAL_WDT_UserIRQ(Wdt);
+  HAL_WDT_Clear(WDT_0);
+  return HAL_WDT_UserIRQ();
 }
+#endif /* HAL_WDT_ENABLE */

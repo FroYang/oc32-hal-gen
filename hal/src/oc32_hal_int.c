@@ -42,9 +42,11 @@ void __int0(void)
         HAL_LVD_IRQHandler();
 #endif /* HAL_LVD_ENABLE */
 
+#ifdef OC32_CLK_PLL_ENABLE
     /* pll frequency over */
     if ((PLLCON->PFO == HAL_FLAG_ERROR))
         HAL_PLL_IRQHandler();
+#endif /* OC32_CLK_PLL_ENABLE */
 
     return;
 }
@@ -57,6 +59,7 @@ __sram__ __weak__ void __int1(void)
     HIPRM->V1 = HAL_ENABLE;
 
     /* handler function */
+    HAL_CMP_IRQHandler(CMP_0);
 
     HIPRM->V1 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -73,6 +76,7 @@ __sram__ __weak__ void __int2(void)
     HIPRM->V2 = HAL_ENABLE;
 
     /* handler function */
+    HAL_CMP_IRQHandler(CMP_1);
 
     HIPRM->V2 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -333,7 +337,7 @@ __sram__ __weak__ void __int17(void)
 #ifdef HAL_WDT_ENABLE
     if (WDT0CON->WDTTO)
     {
-        HAL_WDT_IRQHandler(WDT_0);
+        HAL_WDT_IRQHandler();
     }
 #endif /* HAL_WDT_ENABLE */
 
@@ -557,6 +561,7 @@ __sram__ __weak__ void __int30(void)
     HIPRM->V30 = HAL_ENABLE;
 
     /* handler function */
+    HAL_GPIO_IRQHandler(PORT_A);
 
     HIPRM->V30 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -571,6 +576,7 @@ __sram__ __weak__ void __int31(void)
     HIPRM->V31 = HAL_ENABLE;
 
     /* handler function */
+    HAL_GPIO_IRQHandler(PORT_B);
 
     HIPRM->V31 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));

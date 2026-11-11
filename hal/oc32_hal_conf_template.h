@@ -23,7 +23,7 @@ extern "C"
     uint32_t ChEnable;       /* specify interrupt enable for each channel */
     uint32_t ChPriorityBit0; /* specify interrupt priority for each channel */
     uint32_t ChPriorityBit1; /* specify interrupt priority for each channel */
-  } HAL_HICInitTypeDef;
+  } HAL_HICInitTypedef;
 
 
 
@@ -119,7 +119,7 @@ __HAL_CONFIG_CDR_LINES__
     HAL_TICK_FREQ_100Hz = 10U,
     HAL_TICK_FREQ_1KHz = 1U,
     HAL_TICK_FREQ_DEFAULT = __HAL_CONFIG_TICK_FREQ__
-  } HAL_TICK_FreqTypeDef;
+  } HAL_TICK_FreqTypedef;
 
   extern volatile uint32_t uwTick;
 
