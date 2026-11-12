@@ -788,7 +788,7 @@ typedef volatile struct
     uint32_t MPW6E : 1;
     uint32_t MPW7E : 1;
     uint32_t MPT : 3;
-    uint32_t MPCO : 1;
+    uint32_t MPIO : 1;
     uint32_t MPLSM : 1;
     uint32_t MPLSKS : 1;
     uint32_t MPIE : 1;
@@ -857,6 +857,21 @@ typedef volatile struct
 #define MP0LDC (*(volatile uint32_t *)0x3FF08238)
 #define MP1LDC (*(volatile uint32_t *)0x3FF08254)
 #define MP2LDC (*(volatile uint32_t *)0x3FF08270)
+
+typedef volatile struct
+{
+    MPCON_Typedef MPCON;
+    MPDTY01_Typedef MPDTY01;
+    MPDTY23_Typedef MPDTY23;
+    MPDTY45_Typedef MPDTY45;
+    MPDTY67_Typedef MPDTY67;
+    uint32_t MPLDA;
+    uint32_t MPLDC;
+} MODULE_MPWM_Typedef;
+
+#define MPWM_0 ((MODULE_MPWM_Typedef *)0x3FF08220)
+#define MPWM_1 ((MODULE_MPWM_Typedef *)0x3FF0823C)
+#define MPWM_2 ((MODULE_MPWM_Typedef *)0x3FF08258)
 
 
 // ---- Watchdog (0x3FF08278) ----
@@ -1376,6 +1391,18 @@ typedef volatile struct
 #define DAC1BUF  (*(volatile uint32_t *)0x3FF083F4)
 #define DAC1DA   (*(volatile uint32_t *)0x3FF083F8)
 #define DAC1DC   (*(volatile uint32_t *)0x3FF083FC)
+
+typedef volatile struct
+{
+    DACCON_Typedef DACCON;
+    uint32_t DACBUF;
+    uint32_t DACDA;
+    uint32_t DACDC;
+} MODULE_DAC_Typedef;
+
+#define DAC_0 ((MODULE_DAC_Typedef *)0x3FF083E0)
+#define DAC_1 ((MODULE_DAC_Typedef *)0x3FF083F0)
+
 
 /*
  * 统一寄存器读写宏 (GCC 内建)

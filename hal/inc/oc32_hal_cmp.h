@@ -99,14 +99,14 @@ extern "C"
  */
   typedef enum
   {
-    CMP_INPUT_0 = 0U,
-    CMP_INPUT_1 = 1U,
-    CMP_INPUT_2 = 2U,
-    CMP_INPUT_3 = 3U,  
-    CMP_INPUT_4 = 4U,  
-    CMP_INPUT_5 = 5U,
-    CMP_INPUT_6 = 6U,
-    CMP_INPUT_7 = 7U
+    CMP_INPUT0 = 0U,
+    CMP_INPUT1 = 1U,
+    CMP_INPUT2 = 2U,
+    CMP_INPUT3 = 3U,  
+    CMP_INPUT4 = 4U,  
+    CMP_INPUT5 = 5U,
+    CMP_INPUT6 = 6U,
+    CMP_INPUT7 = 7U
   } HAL_CMP_InputTypedef;
 
 /**
@@ -114,14 +114,14 @@ extern "C"
  */
   typedef enum
   {
-    CMP_REF_0 = 0U,
-    CMP_REF_1 = 1U,
-    CMP_REF_2 = 2U,
-    CMP_REF_3 = 3U,  
-    CMP_REF_4 = 4U,  
-    CMP_REF_5 = 5U,
-    CMP_REF_6 = 6U,
-    CMP_REF_7 = 7U
+    CMP_REF0 = 0U,
+    CMP_REF1 = 1U,
+    CMP_REF2 = 2U,
+    CMP_REF3 = 3U,  
+    CMP_REF4 = 4U,  
+    CMP_REF5 = 5U,
+    CMP_REF6 = 6U,
+    CMP_REF7 = 7U
   } HAL_CMP_RefTypedef;
 
 /**

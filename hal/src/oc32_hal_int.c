@@ -478,6 +478,7 @@ __sram__ __weak__ void __int25(void)
     HIPRM->V25 = HAL_ENABLE;
 
     /* handler function */
+    HAL_MPWM_IRQHandler(MPWM_0);
 
     HIPRM->V25 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -494,6 +495,7 @@ __sram__ __weak__ void __int26(void)
     HIPRM->V26 = HAL_ENABLE;
 
     /* handler function */
+    HAL_MPWM_IRQHandler(MPWM_1);
 
     HIPRM->V26 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -510,6 +512,7 @@ __sram__ __weak__ void __int27(void)
     HIPRM->V27 = HAL_ENABLE;
 
     /* handler function */
+    HAL_MPWM_IRQHandler(MPWM_2);
 
     HIPRM->V27 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -526,6 +529,11 @@ __sram__ __weak__ void __int28(void)
     HIPRM->V28 = HAL_ENABLE;
 
     /* handler function */
+    if (DAC0CON->DACCF == HAL_FLAG_VALID)
+      HAL_DAC_IRQHandler(DAC_0);
+      
+    if (DAC1CON->DACCF == HAL_FLAG_VALID)
+      HAL_DAC_IRQHandler(DAC_1);
 
     HIPRM->V28 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));

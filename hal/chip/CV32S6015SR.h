@@ -1232,7 +1232,7 @@
 #define MPW6E_POS       6U
 #define MPW7E_POS       7U
 #define MPT_POS         8U
-#define MPCO_POS        11U
+#define MPIO_POS        11U
 #define MPLSM_POS       12U
 #define MPLSKS_POS      13U
 #define MPIE_POS        14U
@@ -1261,7 +1261,7 @@
 #define MPW6E           (0x01U << MPW6E_POS)
 #define MPW7E           (0x01U << MPW7E_POS)
 #define MPT             (0x07U << MPT_POS)
-#define MPCO            (0x01U << MPCO_POS)
+#define MPIO            (0x01U << MPIO_POS)
 #define MPLSM           (0x01U << MPLSM_POS)
 #define MPLSKS          (0x01U << MPLSKS_POS)
 #define MPIE            (0x01U << MPIE_POS)

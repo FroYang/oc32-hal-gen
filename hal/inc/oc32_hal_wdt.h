@@ -80,8 +80,11 @@ extern "C"
   HAL_StatusTypedef HAL_WDT_Init(HAL_WDT_InitTypedef *Init);
   HAL_StatusTypedef HAL_WDT_DeInit(MODULE_WDT_Typedef *Wdt);
   __sram__ HAL_StatusTypedef HAL_WDT_Clear(MODULE_WDT_Typedef *Wdt);
+
+  #ifdef HAL_WDT_ENABLE
   HAL_StatusTypedef HAL_WDT_IRQHandler(void);
   __weak__ HAL_StatusTypedef HAL_WDT_UserIRQ(void);
+  #endif
 
   /**
    * @}

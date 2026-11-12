@@ -21,7 +21,7 @@ extern "C"
   /* extern ------------------------------------------------------------*/
   extern uint32_t SystemClock;
   extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
-  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+  extern __sram__ HAL_StatusTypedef DmaUpdate(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
 
   /** @addtogroup OC32_HAL_Driver
    * @{
@@ -64,8 +64,8 @@ extern "C"
    */
   typedef enum
   {
-    UART_PINS_0 = 0x0U,
-    UART_PINS_1 = 0x1U
+    UART_PINS0 = 0x0U,
+    UART_PINS1 = 0x1U
   } HAL_UART_PinsTypedef;
 
   /**
@@ -112,9 +112,10 @@ extern "C"
    */
   typedef struct
   {
-    uint32_t *Data;         /*!< Specifies Data buffer */
-    uint32_t Length;        /*!< Specifies Data Length in bytes */
-    HAL_EnableTypedef IntE; /*!< Specifies the interrupt */
+    MODULE_UART_Typedef *Uart; /*!< Specifies the Uart */
+    uint32_t *Data;            /*!< Specifies Data buffer */
+    uint32_t Length;           /*!< Specifies Data Length in bytes */
+    HAL_EnableTypedef IntE;    /*!< Specifies the interrupt */
   } HAL_UART_PacketTypedef;
 
   /**
@@ -127,8 +128,8 @@ extern "C"
 #ifdef HAL_UART_ENABLE
   HAL_StatusTypedef HAL_UART_Init(HAL_UART_InitTypedef *Init);
   HAL_StatusTypedef HAL_UART_DeInit(MODULE_UART_Typedef *Uart);
-  __sram__ HAL_StatusTypedef HAL_UART_TX(MODULE_UART_Typedef *Uart, HAL_UART_PacketTypedef *Packet);
-  __sram__ HAL_StatusTypedef HAL_UART_RX(MODULE_UART_Typedef *Uart, HAL_UART_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypedef HAL_UART_TX(HAL_UART_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypedef HAL_UART_RX(HAL_UART_PacketTypedef *Packet);
   __sram__ HAL_StatusTypedef HAL_UART_IRQHandler(MODULE_UART_Typedef *Uart);
   __sram__ __weak__ HAL_StatusTypedef HAL_UART_UserIRQ(MODULE_UART_Typedef *Uart);
 #endif /* HAL_UART_ENABLE */

@@ -12,7 +12,7 @@
  *          (up to 1023 bytes), in either polling or interrupt mode.
  *
  *          This driver only touches IIC registers (and the DMA channel state
- *          via the shared HAL_DMA_Update helper). It does not modify any other
+ *          via the shared DmaUpdate helper). It does not modify any other
  *          module's code.
  ******************************************************************************
  */
@@ -328,7 +328,7 @@ __sram__ HAL_StatusTypedef IicData(HAL_IIC_PacketTypedef *Packet)
   /* setup dma if length is greater than 4 bytes */
   if (Packet->Length > 4U)
   {
-    if (HAL_DMA_Update(IICCON->IICDMAE, IicDmaCh, OC32_DMA_IIC, OC32_DMA_BUSY) != HAL_OK)
+    if (DmaUpdate(IICCON->IICDMAE, IicDmaCh, OC32_DMA_IIC, OC32_DMA_BUSY) != HAL_OK)
       return HAL_ERROR;
     /* setup dma */
     IICCON->IICDMAE = HAL_ENABLE;
@@ -365,7 +365,7 @@ __sram__ HAL_StatusTypedef IicDeInit(void)
   /* drop the completed transfer's packet pointer so a later stray interrupt
      sees NULL (guarded in HAL_IIC_IRQHandler) instead of a stale pointer */
   IicCurPacket = NULL;
-  return HAL_DMA_Update(IICCON->IICDMAE, IicDmaCh, OC32_DMA_IIC, OC32_DMA_IDLE);
+  return DmaUpdate(IICCON->IICDMAE, IicDmaCh, OC32_DMA_IIC, OC32_DMA_IDLE);
 }
 
 /**
@@ -443,7 +443,7 @@ HAL_StatusTypedef HAL_IIC_Init(HAL_IIC_InitTypedef *Init)
     return HAL_ERROR;
 
   /* record dma channel for iic (persists for the life of the peripheral;
-     IicData() / IicDeInit() use it to drive HAL_DMA_Update) */
+     IicData() / IicDeInit() use it to drive DmaUpdate) */
   IicDmaCh = Init->DmaCh;
 
   /* default is master mode */

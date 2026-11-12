@@ -35,7 +35,7 @@ extern "C"
 
   /* extern ------------------------------------------------------------*/
   extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
-  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+  extern __sram__ HAL_StatusTypedef DmaUpdate(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
 
   /** @addtogroup OC32_HAL_Driver
    * @{
@@ -98,8 +98,8 @@ extern "C"
    */
   typedef enum
   {
-    IIC_PINS_0 = 0x0U,
-    IIC_PINS_1 = 0x1U
+    IIC_PINS0 = 0x0U,
+    IIC_PINS1 = 0x1U
   } HAL_IIC_PinsTypedef;
 
   /**

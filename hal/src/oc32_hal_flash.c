@@ -122,7 +122,7 @@ __sram__ HAL_StatusTypedef FlashReadLines(HAL_Flash_PacketTypedef *Packet)
     /* using core-accessing config, no need to config at user side*/
     FLUCON->FLURUCS = HAL_ENABLE;
 
-    HAL_DMA_Update(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_BUSY);
+    DmaUpdate(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_BUSY);
 
     /* DMA mode */
     FLUCON->FLURRE = HAL_ENABLE;
@@ -136,13 +136,13 @@ __sram__ HAL_StatusTypedef FlashReadLines(HAL_Flash_PacketTypedef *Packet)
 
     FLUCON->FLURUCS = HAL_DISABLE;
     FLUCON->FLURRE = HAL_DISABLE;
-    HAL_DMA_Update(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
+    DmaUpdate(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
     return HAL_OK;
 
 error:
     FLUCON->FLURUCS = HAL_DISABLE;
     FLUCON->FLURRE = HAL_DISABLE;
-    HAL_DMA_Update(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
+    DmaUpdate(0U, Packet->DmaCh, OC32_DMA_FLASH, OC32_DMA_IDLE);
     return HAL_ERROR;
 }
 

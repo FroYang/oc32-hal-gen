@@ -50,7 +50,7 @@ uint32_t VtIndex;
  * channel ownership between modules: the user is responsible for assigning
  * non-conflicting channels and for serializing access to any channel that
  * two modules both claim. DMAChState[] only tracks whether the channel is
- * currently in use so that HAL_DMA_Update() can reject a second BUSY claim
+ * currently in use so that DmaUpdate() can reject a second BUSY claim
  * on the same channel. Flash operations are exclusive with respect to the
  * DMA/CRC configuration (see HAL_FLASH_VerifyCode). */
 uint32_t DMAChState[OC32_DMA_CH_TOTAL];
@@ -131,7 +131,7 @@ __weak__ void *memset(void *dest, int c, uint32_t n)
  *         so user-configured modules that also use CH0 must not run them
  *         concurrently (see HAL_FLASH_VerifyCode's exclusivity note).
  */
-__sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
+__sram__ HAL_StatusTypedef DmaUpdate(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State)
 {
     /* indicates that the DMA is busy now, should not update the state */
     if (DMAE == HAL_ENABLE)
@@ -163,6 +163,7 @@ __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChType
     DMAChState[DmaCh] = State;
     return HAL_OK;
 }
+
 
 /**
  * @brief  System trap handler invoked by crti-hw.S when the SYSC trap vector
@@ -380,11 +381,11 @@ void uart_tx_char(char c)
     Packet.Data = &txdata;
     Packet.IntE = HAL_DISABLE;
 #ifdef HAL_UART0_DEBUG
-    HAL_UART_TX(UART_0, &Packet);
+    HAL_UART_TX(&Packet);
 #endif
 
 #ifdef HAL_UART1_DEBUG
-    HAL_UART_TX(UART_1, &Packet);
+    HAL_UART_TX(&Packet);
 #endif
 }
 

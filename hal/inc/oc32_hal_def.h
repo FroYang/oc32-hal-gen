@@ -24,8 +24,8 @@ extern "C"
    */
   typedef enum
   {
-    HAL_DISABLE = 0x00U,
-    HAL_ENABLE = 0x01U
+    HAL_DISABLE = 0U,
+    HAL_ENABLE = 1U
   } HAL_EnableTypedef;
 
   /**
@@ -45,8 +45,8 @@ extern "C"
    */
   typedef enum
   {
-    HAL_FLAG_GOOD = 0x00U,
-    HAL_FLAG_ERROR = 0x01U
+    HAL_FLAG_GOOD = 0U,
+    HAL_FLAG_ERROR = 1U
   } HAL_FlagErrorTypedef;
 
   /**
@@ -54,8 +54,8 @@ extern "C"
    */
   typedef enum
   {
-    HAL_FLAG_INVALID = 0x00U,
-    HAL_FLAG_VALID = 0x01U
+    HAL_FLAG_INVALID = 0U,
+    HAL_FLAG_VALID = 1U
   } HAL_FlagValidTypedef;
 
   /**
@@ -63,10 +63,10 @@ extern "C"
    */
   typedef enum
   {
-    HAL_OK = 0x00U,
-    HAL_ERROR = 0x01U,
-    HAL_BUSY = 0x02U,
-    HAL_TIMEOUT = 0x03U
+    HAL_OK = 0U,
+    HAL_ERROR = 1U,
+    HAL_BUSY = 2U,
+    HAL_TIMEOUT = 3U
   } HAL_StatusTypedef;
 
   typedef struct

@@ -17,8 +17,9 @@ Layered design:
   `__sram__` placement attribute.
 
 Scope of this manual: GPIO, RCM, WDT, UART, SPI, IIC, TIMER, CCP, FLASH,
-CRC, LVD, and VTS drivers, the HIC interrupt service layer, and the generic
-HAL type system. Each peripheral chapter follows a fixed template:
+CRC, LVD, VTS, DAC, CMP, and AMP drivers, the HIC interrupt service layer,
+and the generic HAL type system. Each peripheral chapter follows a fixed
+template:
 features, configuration structure(s), and a per-function API description.
 No code blocks are used; API names are referenced inline in numbered steps.
 
@@ -32,6 +33,9 @@ No code blocks are used; API names are referenced inline in numbered steps.
 - **LVD**: Low-Voltage Detector.
 - **VTS**: Voltage (or thermal) Sensor block.
 - **CRC**: Cyclic Redundancy Check unit.
+- **DAC**: Digital-to-Analog Converter.
+- **CMP**: Voltage Comparator.
+- **AMP**: Amplifier (analog front-end).
 - **IIC**: Inter-Integrated Circuit (I2C) bus controller.
 - **IHOSC/ILOSC**: Internal High/Low-speed Oscillator.
 - **XHOSC/XLOSC**: External High/Low-speed Oscillator.
@@ -136,11 +140,11 @@ struct's `DmaCh` field. The HAL layer does **not** arbitrate channel
 ownership between modules: the user is responsible for assigning
 non-conflicting channels and for serializing access to any channel claimed
 by two modules. `DMAChState[OC32_DMA_CH_TOTAL]` only records whether a
-channel is currently busy so that `HAL_DMA_Update` can reject a second BUSY
+channel is currently busy so that `DmaUpdate` can reject a second BUSY
 claim on the same channel. Flash/CRC internal operations default to CH0, so
 user modules that also use CH0 must not run them concurrently.
 
-`HAL_DMA_Update` (SRAM-resident) is the single helper used by every module
+`DmaUpdate` (SRAM-resident) is the single helper used by every module
 to record a channel as busy or idle and to map the channel to a module.
 
 ### 5.5 Interrupt service architecture
@@ -230,6 +234,11 @@ position.
 Initializes the system tick timer on WDT1 in interrupt mode.
 Parameters: none. Returns `HAL_OK`.
 
+Note: `HAL_TICK_Init` only configures the WDT tick parameters; it does
+NOT enable the WDT interrupt in HIE. The system tick only actually runs
+after the user calls `HAL_HIC_Init` (which sets the WDT HIE bit). Until
+then, `uwTick` stays 0 and `HAL_Delay` will not advance.
+
 ### 7.2 HAL_HIC_Init
 
 Initializes the HIC with the user-supplied `HAL_HICInitTypedef`.
@@ -239,6 +248,11 @@ or `HAL_ERROR` if `Init` is NULL.
 ### 7.3 HAL_HIC_DeInit
 
 Resets HIE, HIPRM, HIPL0, and HIPL1 to 0. No return value.
+
+Note: clearing HIE also disables the WDT tick channel, so `HAL_Delay`
+will stop advancing. Call `HAL_HIC_Init` again if the tick is needed
+after a DeInit. `HAL_FLASH_Init` invokes `HAL_HIC_DeInit` internally;
+re-run `HAL_HIC_Init` afterwards if the tick is required.
 
 ### 7.4 HAL_Delay
 
@@ -272,7 +286,7 @@ Dispatches hardware reset flag interrupts: clears POR, DBGR, LVD, WDT0,
 and VTS flags and routes to the corresponding handler. Returns `HAL_OK`
 or `HAL_ERROR`.
 
-### 7.11 HAL_DMA_Update
+### 7.11 DmaUpdate
 
 Records a DMA channel's busy/idle state and maps it to a module.
 Parameters: `DMAE` (current DMA enable from the module), `DmaCh`,
@@ -398,6 +412,9 @@ Enable/disable the USB IOSC trim value and its lock. Guarded by
 - Period range is validated against `WDT_H_PERIOD_MIN`/`MAX` (high
   clock) or `WDT_L_PERIOD_MIN`/`MAX` (low clock) at init time.
 - The clear/refresh key is `WDT_CLR_KEY` (0xA5).
+- The min/max period limits carry a 1 µs safety margin
+  (`WDT_PERIOD_LIMIT_MARGIN`) to avoid the 8-bit reload value rounding
+  to 0.
 
 ### 10.2 Configuration structure
 
@@ -455,7 +472,7 @@ logic.
 - `Bits`: `HAL_UART_BitsTypedef`.
 - `Baud`: `HAL_UART_BaudTypedef` (9600 .. 1000000).
 - `Duplex`: `UART_FULL_DUPLEX` / `UART_HALF_DUPLEX`.
-- `Pins`: `UART_PINS_0` / `UART_PINS_1`.
+- `Pins`: `UART_PINS0` / `UART_PINS1`.
 - `DmaCh`: the shared DMA channel for transfers.
 
 `HAL_UART_PacketTypedef` fields:
@@ -527,7 +544,7 @@ the UART interrupt when the channel is idle. Calls the weak
 - `Duplex`: `SPI_FULL_DUPLEX` / `SPI_HALF_DUPLEX`.
 - `HalfPin`: `SPI_HALF_PIN_SEPARATE` / `SPI_HALF_PIN_SHARE`.
 - `FirstBit`: `SPI_MSB_FIRST` / `SPI_LSB_FIRST`.
-- `Pins`: `SPI_PINS_0` / `SPI_PINS_1`.
+- `Pins`: `SPI_PINS0` / `SPI_PINS1`.
 - `DmaCh`: the shared DMA channel.
 
 `HAL_SPI_PacketTypedef` fields:
@@ -585,7 +602,7 @@ channel is idle. Calls the weak `HAL_SPI_UserIRQ`. Returns `HAL_OK` or
 - `AddrMode`: `IIC_ADDR_7BIT` / `IIC_ADDR_10BIT`.
 - `ClkDiv`: master clock divider.
 - `Stretch`: clock-stretching enable (slave only).
-- `Pins`: `IIC_PINS_0` / `IIC_PINS_1`.
+- `Pins`: `IIC_PINS0` / `IIC_PINS1`.
 - `DmaCh`: the shared DMA channel.
 
 `HAL_IIC_PacketTypedef` fields:
@@ -605,7 +622,7 @@ Enables the module. Returns `HAL_OK` or `HAL_ERROR`.
 ### 13.4 HAL_IIC_DeInit
 
 Writes 0 to the IIC control register, resets the internal transfer-state
-machine and packet pointer, and releases the DMA channel.
+machine and in-flight packet pointer, and releases the DMA channel.
 
 ### 13.5 HAL_IIC_Transfer
 
@@ -893,11 +910,14 @@ previous operation completes, then waits for the new result. SRAM-resident.
 
 ### 17.6 HAL_CRC_Packet
 
-Computes the CRC of a data packet. In `READ_DMA` mode the CRC initiates
-the DMA transfer; in `CAPTURE_*` modes it passively monitors a DMA channel.
-In polling mode, blocks and returns the CRC in `Result.Data`; in interrupt
-mode, `Result.Data` is not valid and the result must be read in the IRQ.
-Returns `HAL_ResultTypedef`.
+Computes the CRC of a data packet. In `READ_DMA` mode the CRC peripheral
+acts as the initiating DMA source — the channel is bound in the DMA
+controller and the source address in `CRCDA`; `CRCPDC` is NOT used.
+In `CAPTURE_*` modes the CRC passively monitors a DMA channel, with
+`CRCPDC` selecting which channel's data it listens to.
+In polling mode, blocks and returns the CRC in `Result.Data`; in
+interrupt mode, `Result.Data` is not valid and the result must be read
+in the IRQ. Returns `HAL_ResultTypedef`.
 
 ### 17.7 HAL_CRC_IRQHandler / HAL_CRC_UserIRQ
 
@@ -953,7 +973,174 @@ Disables the VTS alarm reset and the VTS module. Returns `HAL_OK`.
 `HAL_VTS_IRQHandler` de-initializes the VTS and calls the weak
 `HAL_VTS_UserIRQ`.
 
-## 20. How to use the HAL drivers
+## 20. DAC driver
+
+### 20.1 Features
+
+- Two digital-to-analog converter instances (`DAC_0`, `DAC_1`).
+- Configurable clock divider and input mode (latch or immediate).
+- Single or repeated conversion: `Count` conversions in one call; non-DMA
+  max 2, DMA max 1023. `Data` is a `uint16_t` buffer (32-bit aligned).
+- DMA is engaged automatically when `Count > 2` or `IntE` is enabled;
+  DMA modes are `DAC_DMA_ONCE` and `DAC_DMA_LOOP`.
+- Interrupt on conversion completion (`__int28` serves both instances,
+  dispatching on the `DACCF` flag).
+
+### 20.2 Configuration structures
+
+`HAL_DAC_InitTypedef` fields: `Dac` (pointer to a `MODULE_DAC_Typedef`),
+`ClkDiv`, and `Mode` (`HAL_DAC_InputTypedef`).
+
+`HAL_DAC_PacketTypedef` fields: `Dac`, `Data` (`uint16_t*`), `Count`,
+`IntE`, and `Mode` (`HAL_DAC_DmaTypedef`).
+
+### 20.3 HAL_DAC_Init
+
+Sets the clock divider and input mode, clears the output buffer, then
+enables the DAC. Returns `HAL_OK` or `HAL_ERROR` if the instance is
+invalid.
+
+### 20.4 HAL_DAC_DeInit
+
+Clears the output buffer and disables the DAC. Returns `HAL_OK` or
+`HAL_ERROR` if the instance is invalid.
+
+### 20.5 HAL_DAC_Convert
+
+Performs `Count` conversions. In interrupt mode (`IntE`) or DMA loop
+mode it returns immediately; completion is handled by `HAL_DAC_IRQHandler`.
+In polling non-loop mode it blocks until the conversion completes, clears
+the done flag, releases the DMA channel, and returns `HAL_OK`.
+SRAM-resident.
+
+### 20.6 HAL_DAC_IRQHandler / HAL_DAC_UserIRQ
+
+On conversion completion (`DACCF` set), `HAL_DAC_IRQHandler` calls the weak
+`HAL_DAC_UserIRQ`, clears the done flag, disables the DMA data path,
+releases the DMA channel, and disables the DAC interrupt once the channel
+is idle.
+
+## 21. CMP driver
+
+### 21.1 Features
+
+- Two comparator instances (`CMP_0`, `CMP_1`).
+- Configurable hysteresis (none/x1/x2/x4), input filter (none/x1/x2/x3),
+  input and reference sources, offset trim (+/-0..7), and a window timer
+  (off..T7) with start/end values.
+- Output enable, rise/fall flag enables, and an optional interrupt on the
+  edge (`__int1` for `CMP_0`, `__int2` for `CMP_1`).
+
+### 21.2 Configuration structure
+
+`HAL_CMP_InitTypedef` fields: `Cmp` (`MODULE_CMP_Typedef`), `Hysteresis`,
+`Filter`, `Input`, `Ref`, `RiseFlag`, `FallFlag`, `OutE`, `IntE`,
+`Offset`, `WinTimer`, `WinStart`, and `WinEnd`.
+
+### 21.3 HAL_CMP_Init
+
+Packs the configured control and window values into the instance's `CMPxCON`
+and `CMPxTW` registers. Returns `HAL_OK` or `HAL_ERROR` if the instance is
+invalid.
+
+### 21.4 HAL_CMP_DeInit
+
+Clears the instance's window timer and control registers to 0. Returns
+`HAL_OK` or `HAL_ERROR` if the instance is invalid.
+
+### 21.5 HAL_CMP_OutState
+
+Returns the comparator output state in `Result.Data` (via the instance's
+`CMPS` flag) and `Result.Error = HAL_OK` on success. SRAM-resident.
+
+### 21.6 HAL_CMP_IRQHandler / HAL_CMP_UserIRQ
+
+On the edge interrupt, `HAL_CMP_IRQHandler` clears the instance's error
+flag and calls the weak `HAL_CMP_UserIRQ`.
+
+## 22. AMP driver
+
+### 22.1 Features
+
+- Three amplifier instances (`AMP_0`, `AMP_1`, `AMP_2`) sharing the
+  `AMPCON` register.
+- Configurable gain (open-loop, x1..x64) and offset trim (none..7).
+- No interrupts; instances are enabled via `AMPE` in `AMPCON`.
+
+### 22.2 Configuration structure
+
+`HAL_AMP_InitTypedef` fields: `Amp` (`MODULE_AMP_Typedef`), `Gain`
+(`HAL_AMP_GainTypedef`), and `Offset` (`HAL_AMP_OffsetTypedef`).
+
+### 22.3 HAL_AMP_Init
+
+Writes the gain, offset, and enable bits for the selected instance into its
+`AMPCON` field (8 bits per instance), preserving the other instances.
+Returns `HAL_OK` or `HAL_ERROR` if `Init` is NULL.
+
+### 22.4 HAL_AMP_DeInit
+
+Clears the selected instance's `AMPCON` field, preserving the other
+instances. Returns `HAL_OK` or `HAL_ERROR` if `Init` is NULL.
+
+## 23. MPWM driver
+
+### 23.1 Features
+
+- Three multi-PWM instances (`MPWM_0`, `MPWM_1`, `MPWM_2`), each with 8
+  PWM "ways".
+- PWM mode: set a per-way duty cycle (`HAL_MPWM_UpdateDuty`); the way is
+  enabled by writing its `MPWxE` bit.
+- LED serial mode: stream a 16-bit sample buffer over a way pair
+  (`MPW0E`/`MPW1E`) using DMA (`HAL_MPWM_SerialLed`). The user must set the
+  base-timer period so the LED pulse width matches the serial-LED spec.
+- Base-timer select (`MPWM_BASE_TIMER0..7`), inverted-output enable, and
+  per-instance interrupt enable (`__int25/26/27`).
+
+### 23.2 Configuration structures
+
+`HAL_MPWM_InitTypedef` fields: `Mpwm` (pointer to `MODULE_MPWM_Typedef`),
+`IntE`, `Timer` (`HAL_MPWM_BaseTimerTypedef`), and `InvOutE`.
+
+`HAL_MPWM_WayDutyTypedef` fields: `Mpwm`, `Way` (`HAL_MPWM_WayTypedef`),
+and `Duty`.
+
+`HAL_MPWM_PacketTypedef` fields: `Mpwm`, `Data` (`uint16_t*`, 32-bit
+aligned), and `Length` (bytes, max 1023).
+
+### 23.3 HAL_MPWM_Init
+
+Writes `MPIE`, `MPT`, and `MPIO` from the init struct into the instance's
+`MPCON`. Returns `HAL_OK` or `HAL_ERROR` if the instance is invalid.
+
+### 23.4 HAL_MPWM_DeInit
+
+Resets the instance's `MPCON` to 0. Returns `HAL_OK` or `HAL_ERROR` if the
+instance is invalid.
+
+### 23.5 HAL_MPWM_UpdateDuty
+
+Sets the duty cycle for the selected way and enables that way (`MPWxE=1`).
+Returns `HAL_OK` or `HAL_ERROR`. SRAM-resident.
+
+### 23.6 HAL_MPWM_SerialLed
+
+Transmits a serial-LED packet over a way pair via DMA. In interrupt mode
+(`MPCON.MPIE` set) it returns immediately; completion is handled by
+`HAL_MPWM_IRQHandler`. In polling mode it blocks on the way0 completion
+flag `MPW0F`, clears it, and releases the DMA channel. SRAM-resident.
+
+### 23.7 HAL_MPWM_IRQHandler / HAL_MPWM_UserIRQ
+
+`HAL_MPWM_IRQHandler` clears each way's completion flag when set. It
+treats `MPW0F` as the **authoritative** completion flag for the instance's
+shared DMA channel: the channel is released (`DmaUpdate(..., OC32_DMA_IDLE)`)
+only inside the `MPW0F` block. The LED protocol drives ways 0 and 1, so
+way0 reaching `MPW0F` indicates the shared DMA transfer is finished; the
+remaining way flags are cleared individually without touching the channel.
+It then calls the weak `HAL_MPWM_UserIRQ`.
+
+## 24. How to use the HAL drivers
 
 The typical application sequence is:
 
@@ -988,7 +1175,7 @@ The typical application sequence is:
   signalled by the `HAL_PPP_IRQHandler`, which in turn calls the
   `__weak__` `HAL_PPP_UserIRQ` hook.
 
-## 21. Source file reference
+## 24. Source file reference
 
 | File | Description |
 |------|-------------|
@@ -1005,6 +1192,9 @@ The typical application sequence is:
 | `oc32_hal_crc.c` | CRC driver. |
 | `oc32_hal_lvd.c` | LVD driver. |
 | `oc32_hal_vts.c` | VTS driver. |
+| `oc32_hal_dac.c` | DAC driver. |
+| `oc32_hal_cmp.c` | CMP driver. |
+| `oc32_hal_amp.c` | AMP driver. |
 | `oc32_hal_int.c` | C interrupt vectors (int0..int31). |
 | `oc32_hal_int_asm.S` | Assembly interrupt vectors (`__asm_int0`..`__asm_int31`). |
 

@@ -29,14 +29,12 @@ extern "C"
 #define va_arg(v, l) __builtin_va_arg(v, l)
 #define va_copy(d, s) __builtin_va_copy(d, s)
 
-
   /* Exported macros -----------------------------------------------------*/
   /* Exported functions ----------------------------------------------------*/
   void *memcpy(void *dest, const void *src, uint32_t n);
   void *memset(void *dest, int c, uint32_t n);
 
-  __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
-
+  __sram__ HAL_StatusTypedef DmaUpdate(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
 
   HAL_StatusTypedef HAL_TICK_Init(void);
   HAL_StatusTypedef HAL_HIC_Init(HAL_HICInitTypedef *Init);
@@ -62,20 +60,27 @@ extern "C"
   extern uint32_t SysReqBuf[4];
   extern uint32_t VtIndex;
 
-#include "oc32_hal_rcm.h"
-#include "oc32_hal_gpio.h"
-#include "oc32_hal_wdt.h"
-#include "oc32_hal_flash.h"
-#include "oc32_hal_crc.h"
+/* analogs modules */
 #include "oc32_hal_lvd.h"
 #include "oc32_hal_vts.h"
 #include "oc32_hal_amp.h"
 #include "oc32_hal_cmp.h"
+#include "oc32_hal_dac.h"
+
+/* system base modules */
+#include "oc32_hal_rcm.h"
+#include "oc32_hal_gpio.h"
+
+/* digital modules */
+#include "oc32_hal_wdt.h"
+#include "oc32_hal_flash.h"
+#include "oc32_hal_crc.h"
 #include "oc32_hal_uart.h"
 #include "oc32_hal_timer.h"
 #include "oc32_hal_ccp.h"
 #include "oc32_hal_spi.h"
 #include "oc32_hal_iic.h"
+#include "oc32_hal_mpwm.h"
 
 #ifdef HAL_UART_DEBUG_ENABLE
   __weak__ int puts(const char *s);

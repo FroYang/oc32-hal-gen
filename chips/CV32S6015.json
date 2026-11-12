@@ -128,7 +128,10 @@
         {
             "key": "MPWM",
             "description": "Multiway PWM",
-            "always": false
+            "always": false,
+            "dependencies": [
+                "TIMER"
+            ]
         },
         {
             "key": "LVD",

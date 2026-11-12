@@ -20,7 +20,7 @@ extern "C"
 
   /* extern ------------------------------------------------------------*/
   extern uint32_t DMAChState[OC32_DMA_CH_TOTAL];
-  extern __sram__ HAL_StatusTypedef HAL_DMA_Update(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
+  extern __sram__ HAL_StatusTypedef DmaUpdate(HAL_EnableTypedef DMAE, HAL_DMA_ChTypedef DmaCh, HAL_DMA_MapTypedef Module, HAL_DMA_StateTypedef State);
 
   /** @addtogroup OC32_HAL_Driver
    * @{
@@ -98,8 +98,8 @@ extern "C"
    */
   typedef enum
   {
-    SPI_PINS_0 = 0x0U,
-    SPI_PINS_1 = 0x1U
+    SPI_PINS0 = 0x0U,
+    SPI_PINS1 = 0x1U
   } HAL_SPI_PinsTypedef;
 
   /**
@@ -111,9 +111,9 @@ extern "C"
     HAL_SPI_ModeTypedef Mode;         /*!< Specifies the SPI mode */
     uint32_t ClkDiv;                  /*!< Specifies the SPI clock divider */
     HAL_SPI_SlaveTypedef Slave;       /*!< Specifies the SPI slave */
-    HAL_EnableTypedef CsOutE;       /*!< Specifies the SPI cs out enable */
+    HAL_EnableTypedef CsOutE;         /*!< Specifies the SPI cs out enable */
     HAL_SPI_DuplexTypedef Duplex;     /*!< Specifies the Half-duplex */
-    HAL_EnableTypedef HalfPinShareE;   /*!< Specifies the Half-duplex pin share enable */
+    HAL_EnableTypedef HalfPinShareE;  /*!< Specifies the Half-duplex pin share enable */
     HAL_SPI_FirstBitTypedef FirstBit; /*!< Specifies the First Bit */
     HAL_SPI_PinsTypedef Pins;         /*!< Specifies the pins */
     HAL_DMA_ChTypedef DmaCh;          /*!< Specifies DMA channel for transfer */
@@ -124,6 +124,7 @@ extern "C"
    */
   typedef struct
   {
+    MODULE_SPI_Typedef *Spi;        /*!< Specifies the SPI */
     HAL_SPI_HalfTxRxTypedef HalfRx; /*!< Specifies the half-duplex tx/rx mode */
     uint32_t *TxData;               /*!< Specifies the tx data buffer */
     uint32_t *RxData;               /*!< Specifies the rx data buffer */
@@ -141,7 +142,7 @@ extern "C"
 #ifdef HAL_SPI_ENABLE
   HAL_StatusTypedef HAL_SPI_Init(HAL_SPI_InitTypedef *Init);
   HAL_StatusTypedef HAL_SPI_DeInit(MODULE_SPI_Typedef *Spi);
-  __sram__ HAL_StatusTypedef HAL_SPI_Transfer(MODULE_SPI_Typedef *Spi, HAL_SPI_PacketTypedef *Packet);
+  __sram__ HAL_StatusTypedef HAL_SPI_Transfer(HAL_SPI_PacketTypedef *Packet);
   __sram__ HAL_StatusTypedef HAL_SPI_IRQHandler(MODULE_SPI_Typedef *Spi);
   __sram__ __weak__ HAL_StatusTypedef HAL_SPI_UserIRQ(MODULE_SPI_Typedef *Spi);
 #endif /* HAL_SPI_ENABLE */

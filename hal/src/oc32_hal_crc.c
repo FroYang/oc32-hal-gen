@@ -139,7 +139,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
     /* READ_DMA: CRC acts as the initiating peripheral. The channel is bound
      * in the DMA controller (OC32_DMA_CRC role) and the source address in
      * CRCDA. CRCPDC is NOT used in this mode. */
-    if (HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_BUSY) != HAL_OK)
+    if (DmaUpdate(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_BUSY) != HAL_OK)
       return Result;
 
     /* setup DMA source address */
@@ -170,7 +170,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
   while (CRCCON->CRCCF == HAL_FLAG_INVALID)
     ;
   CRCCON->CRCCCLR = HAL_ENABLE;
-  Result.Error = HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  Result.Error = DmaUpdate(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   Result.Data = HAL_CRC_GetResult();
   return Result;
 }
@@ -196,7 +196,7 @@ __sram__ HAL_StatusTypedef HAL_CRC_IRQHandler(void)
   HAL_StatusTypedef status = HAL_CRC_UserIRQ();
   CRCCON->CRCCCLR = HAL_ENABLE;
   CRCCON->CRCIE = HAL_DISABLE;
-  HAL_DMA_Update(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  DmaUpdate(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   return status;
 }
 

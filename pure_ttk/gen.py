@@ -69,8 +69,8 @@ _UART_DUPLEX_MACROS = {
     "Half (use TX pin only)": "UART_HALF_DUPLEX",
 }
 _UART_PINS_MACROS = {
-    "TX0 & RX0": "UART_PINS_0",
-    "TX1 & RX1": "UART_PINS_1",
+    "TX0 & RX0": "UART_PINS0",
+    "TX1 & RX1": "UART_PINS1",
 }
 
 
