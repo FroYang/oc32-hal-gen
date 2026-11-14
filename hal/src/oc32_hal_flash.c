@@ -431,7 +431,7 @@ HAL_StatusTypedef HAL_FLASH_UpdateCrc(HAL_Flash_ZoneTypedef *Zone)
             crc_packet.Length = 1020U;
         }
 
-        if (HAL_CRC_Packet(&crc_packet).Error == HAL_ERROR)
+        if (HAL_CRC_Packet(&crc_packet).Status == HAL_ERROR)
         {
             HAL_CRC_DeInit();
             return HAL_ERROR;
@@ -493,7 +493,7 @@ __sram__ HAL_StatusTypedef FlashReadZone(uint32_t Address, uint32_t Size)
 
     for (i = 0; i < (Size >> 10U); i++)
     {
-        if (HAL_CRC_Packet(&crc_packet).Error == HAL_ERROR)
+        if (HAL_CRC_Packet(&crc_packet).Status == HAL_ERROR)
             return HAL_ERROR;
 
         /* 1k per kick, overwrite the data every kick */

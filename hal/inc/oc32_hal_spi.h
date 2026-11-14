@@ -141,7 +141,7 @@ extern "C"
    */
 #ifdef HAL_SPI_ENABLE
   HAL_StatusTypedef HAL_SPI_Init(HAL_SPI_InitTypedef *Init);
-  HAL_StatusTypedef HAL_SPI_DeInit(MODULE_SPI_Typedef *Spi);
+  HAL_StatusTypedef HAL_SPI_DeInit(HAL_SPI_InitTypedef *Init);
   __sram__ HAL_StatusTypedef HAL_SPI_Transfer(HAL_SPI_PacketTypedef *Packet);
   __sram__ HAL_StatusTypedef HAL_SPI_IRQHandler(MODULE_SPI_Typedef *Spi);
   __sram__ __weak__ HAL_StatusTypedef HAL_SPI_UserIRQ(MODULE_SPI_Typedef *Spi);

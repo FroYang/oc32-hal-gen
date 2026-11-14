@@ -17,9 +17,9 @@ Layered design:
   `__sram__` placement attribute.
 
 Scope of this manual: GPIO, RCM, WDT, UART, SPI, IIC, TIMER, CCP, FLASH,
-CRC, LVD, VTS, DAC, CMP, and AMP drivers, the HIC interrupt service layer,
-and the generic HAL type system. Each peripheral chapter follows a fixed
-template:
+CRC, LVD, VTS, DAC, CMP, AMP, MPWM, and ADC drivers, the HIC interrupt
+service layer, and the generic HAL type system. Each peripheral chapter
+follows a fixed template:
 features, configuration structure(s), and a per-function API description.
 No code blocks are used; API names are referenced inline in numbered steps.
 
@@ -36,6 +36,8 @@ No code blocks are used; API names are referenced inline in numbered steps.
 - **DAC**: Digital-to-Analog Converter.
 - **CMP**: Voltage Comparator.
 - **AMP**: Amplifier (analog front-end).
+- **MPWM**: Multi-PWM / serial-LED driver.
+- **ADC**: Analog-to-Digital Converter.
 - **IIC**: Inter-Integrated Circuit (I2C) bus controller.
 - **IHOSC/ILOSC**: Internal High/Low-speed Oscillator.
 - **XHOSC/XLOSC**: External High/Low-speed Oscillator.
@@ -1051,7 +1053,7 @@ Clears the instance's window timer and control registers to 0. Returns
 ### 21.5 HAL_CMP_OutState
 
 Returns the comparator output state in `Result.Data` (via the instance's
-`CMPS` flag) and `Result.Error = HAL_OK` on success. SRAM-resident.
+`CMPS` flag) and `Result.Status = HAL_OK` on success. SRAM-resident.
 
 ### 21.6 HAL_CMP_IRQHandler / HAL_CMP_UserIRQ
 
@@ -1140,7 +1142,68 @@ way0 reaching `MPW0F` indicates the shared DMA transfer is finished; the
 remaining way flags are cleared individually without touching the channel.
 It then calls the weak `HAL_MPWM_UserIRQ`.
 
-## 24. How to use the HAL drivers
+## 24. ADC driver
+
+### 24.1 Features
+
+- Two ADC instances (`ADC_0`, `ADC_1`), 8 event channels per instance
+  (`ADC_EVENT0..7`), with per-channel input select, trigger source,
+  priority, start-delay, sample cycles, watch windows, and interrupt enable.
+- Configurable resolution (12/10/9/8-bit), data alignment (LSB/MSB),
+  clock divider (div1..div8), reference source, and DMA channel.
+- Four buffer modes: 256x2, 128x2, 64x2 (dual-buffered; first buffer is
+  Event0, second is the active of Event1-7), and a combined 32-bit-per-event
+  mode.
+- Per-event watch windows (Watch0/Watch1, top/bottom limits) that can
+  raise a `HAL_SPECIAL` result and generate interrupts.
+- DMA engaged automatically when `Count > 1` or `IntE` is enabled
+  (non-DMA max 1 conversion; DMA max 128).
+
+### 24.2 Configuration structures
+
+`HAL_ADC_InitTypedef` fields: `Adc` (pointer to `MODULE_ADC_Typedef`),
+`ClkDiv`, `Res`, `Mode`, `Align`, `Ref`, `Pri` (start-delay priority),
+`Unit` (start-delay unit), `Buf` (`uint32_t*` DMA buffer, 32-bit aligned,
+may be NULL in non-DMA mode), `Watch0Top`/`Watch0Bottom`,
+`Watch1Top`/`Watch1Bottom`, and `DmaCh`.
+
+`HAL_ADC_EventTypedef` fields: `Adc`, `Channel`, `Input`, `Source`, `Pri`
+(event priority), `Delay` (start-delay count), `IntE`, `Cycle` (sample
+cycles), `Count`, `Watch0E`, and `Watch1E`.
+
+### 24.3 HAL_ADC_Init
+
+Records the per-instance DMA channel, then writes the control, watch-window,
+and data-address registers. Returns `HAL_OK` or `HAL_ERROR` if `Init` is
+NULL or the instance is invalid.
+
+### 24.4 HAL_ADC_DeInit
+
+Resets the instance's `ADCCON` to 0 and releases the recorded DMA channel
+(`DmaUpdate(..., OC32_DMA_IDLE)`), which returns the channel status.
+
+### 24.5 HAL_ADC_EventConvert
+
+Configures and starts a per-event conversion. In DMA mode (`Count > 1`) or
+interrupt mode (`IntE`) it sets up the DMA and, in interrupt mode, returns
+immediately. In polling mode it blocks on the event's completion flag
+(`ADCECF`), checks the overflow bit, and sets `Result.Status` to
+`HAL_SPECIAL` if a watch window was hit; `Result.Data` carries the 12-bit
+result for non-DMA mode (it is not meaningful in DMA mode).
+SRAM-resident. Returns `HAL_ResultTypedef`.
+
+### 24.6 HAL_ADC_IRQHandler / HAL_ADC_UserIRQ
+
+`HAL_ADC_IRQHandler` scans all 8 events; for each event whose overflow flag
+is set, conversion is complete, or a watch window was hit, it calls the weak
+`HAL_ADC_UserIRQ`, clears the overflow/done flags and the watch clear bits
+(the `ADCWE0*` position macros are shared by `ADCWC0` and `ADCWC1` because
+the two registers use identical bit layouts), clears the DMA-enable bits,
+and releases the channel. The return value is a **packed per-channel status
+word**: bit *Event* holds the result of `HAL_ADC_UserIRQ(Adc) << Event`, so
+a single word reports the outcome of all 8 channels at once.
+
+## 25. How to use the HAL drivers
 
 The typical application sequence is:
 
@@ -1175,7 +1238,7 @@ The typical application sequence is:
   signalled by the `HAL_PPP_IRQHandler`, which in turn calls the
   `__weak__` `HAL_PPP_UserIRQ` hook.
 
-## 24. Source file reference
+## 26. Source file reference
 
 | File | Description |
 |------|-------------|
@@ -1195,6 +1258,8 @@ The typical application sequence is:
 | `oc32_hal_dac.c` | DAC driver. |
 | `oc32_hal_cmp.c` | CMP driver. |
 | `oc32_hal_amp.c` | AMP driver. |
+| `oc32_hal_mpwm.c` | MPWM (multi-PWM / serial-LED) driver. |
+| `oc32_hal_adc.c` | ADC driver. |
 | `oc32_hal_int.c` | C interrupt vectors (int0..int31). |
 | `oc32_hal_int_asm.S` | Assembly interrupt vectors (`__asm_int0`..`__asm_int31`). |
 

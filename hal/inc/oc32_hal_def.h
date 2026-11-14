@@ -65,14 +65,13 @@ extern "C"
   {
     HAL_OK = 0U,
     HAL_ERROR = 1U,
-    HAL_BUSY = 2U,
-    HAL_TIMEOUT = 3U
+    HAL_SPECIAL = 2U /*!< Special status, depends on the context */
   } HAL_StatusTypedef;
 
   typedef struct
   {
-    uint32_t Data;           /*!< Specifies Data buffer */
-    HAL_StatusTypedef Error; /*!< Specifies the status */
+    uint32_t Data;            /*!< Specifies Data buffer */
+    HAL_StatusTypedef Status; /*!< Specifies the status */
   } HAL_ResultTypedef;
 
 /* Exported macros -----------------------------------------------------*/

@@ -113,7 +113,7 @@ __sram__ HAL_ResultTypedef HAL_CMP_OutState(MODULE_CMP_Typedef Cmp)
     return Result;
   }
 
-  Result.Error = HAL_OK;
+  Result.Status = HAL_OK;
   return Result;
 }
 
@@ -138,18 +138,20 @@ __sram__ HAL_StatusTypedef HAL_CMP_IRQHandler(MODULE_CMP_Typedef Cmp)
 
   if (Cmp == CMP_0)
   {
+    HAL_StatusTypedef status = HAL_CMP_UserIRQ(Cmp);
     CMP0CON->CMPECLR = HAL_ENABLE;
+    return status;
   }
   else if (Cmp == CMP_1)
   {
+    HAL_StatusTypedef status = HAL_CMP_UserIRQ(Cmp);
     CMP1CON->CMPECLR = HAL_ENABLE;
+    return status;
   }
   else
   {
     return HAL_ERROR;
   }  
-
-  return HAL_CMP_UserIRQ(Cmp);
 }
 
 #endif /* HAL_CMP_ENABLE */

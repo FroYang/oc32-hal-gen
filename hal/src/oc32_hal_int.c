@@ -361,6 +361,7 @@ __sram__ __weak__ void __int18(void)
     HIPRM->V18 = HAL_ENABLE;
 
     /* handler function */
+    HAL_ADC_IRQHandler(ADC_0);
 
     HIPRM->V18 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));
@@ -377,6 +378,7 @@ __sram__ __weak__ void __int19(void)
     HIPRM->V19 = HAL_ENABLE;
 
     /* handler function */
+    HAL_ADC_IRQHandler(ADC_1);
 
     HIPRM->V19 = HAL_DISABLE;
     __asm__ __volatile__("OR R1, R0, %0" : : "r"(eia));

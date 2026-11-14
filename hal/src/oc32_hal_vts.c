@@ -91,8 +91,9 @@ __weak__ HAL_StatusTypedef HAL_VTS_UserIRQ(void)
  */
 HAL_StatusTypedef HAL_VTS_IRQHandler(void)
 {
+  HAL_StatusTypedef status = HAL_VTS_UserIRQ();
   HAL_VTS_DeInit();
-  return HAL_VTS_UserIRQ();
+  return status;
 }
 
 #endif /* HAL_VTS_ENABLE */

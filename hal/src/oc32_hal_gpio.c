@@ -155,10 +155,9 @@ __weak__ __sram__ HAL_StatusTypedef HAL_GPIO_UserIRQ(MODULE_PORT_Typedef *Port)
 }
 
 /**
- * @brief  Handles VTS interrupt request.
- * @retval Return value of HAL_VTS_UserIRQ
- * @note   Invoked from the global interrupt handler. DeInitializes the VTS,
- *         then calls HAL_VTS_UserIRQ.
+ * @brief  Handles GPIO interrupt request.
+ * @retval Return value of HAL_GPIO_UserIRQ
+ * @note   Invoked from the global interrupt handler.
  */
 __sram__ HAL_StatusTypedef HAL_GPIO_IRQHandler(MODULE_PORT_Typedef *Port)
 {

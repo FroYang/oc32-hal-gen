@@ -246,22 +246,22 @@ __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_WaitEv(MODULE_TIMER_Typedef *Timer
 
 /**
  * @brief  DeInitializes the TIMER peripheral.
- * @param  Timer: pointer to a MODULE_TIMER_typedef structure.
+ * @param  Init: pointer to a HAL_TIMER_BaseInitTypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Timer is not TIMER_0..TIMER_7
  * @note   Resets TCON/TECON to 0, clears TARL/TCNT, and clears TOV/TEF flags.
  */
-HAL_StatusTypedef HAL_TIMER_DeInit(MODULE_TIMER_Typedef *Timer)
+HAL_StatusTypedef HAL_TIMER_DeInit(HAL_TIMER_BaseInitTypedef *Init)
 {
-  if (TimerModuleCheck(Timer) != HAL_OK)
+  if (TimerModuleCheck(Init->Timer) != HAL_OK)
     return HAL_ERROR;
 
-  WRITE_SR(&Timer->TCON, 0U);
-  WRITE_SR(&Timer->TECON, 0U);
-  Timer->TARL = 0U;
-  Timer->TCNT = 0U;
-  Timer->TCON.TOCLR = HAL_ENABLE;
-  Timer->TECON.TECLR = HAL_ENABLE;
+  WRITE_SR(&Init->Timer->TCON, 0U);
+  WRITE_SR(&Init->Timer->TECON, 0U);
+  Init->Timer->TARL = 0U;
+  Init->Timer->TCNT = 0U;
+  Init->Timer->TCON.TOCLR = HAL_ENABLE;
+  Init->Timer->TECON.TECLR = HAL_ENABLE;
 
   return HAL_OK;
 }

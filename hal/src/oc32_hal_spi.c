@@ -130,22 +130,21 @@ HAL_StatusTypedef HAL_SPI_Init(HAL_SPI_InitTypedef *Init)
 
 /**
  * @brief  DeInitializes the SPI peripheral.
- * @param  Spi: pointer to a MODULE_SPI_typedef structure, specifies which SPI
+ * @param  Init: pointer to a HAL_SPI_Inittypedef structure.
  * @retval HAL_OK: on success
- * @retval HAL_ERROR: if Spi is not SPI_0/SPI_1
+ * @retval HAL_ERROR: if Init is NULL or Init->Spi is not SPI_0/SPI_1
  * @note   Resets SPICON to 0 then clears the TX busy flag.
  */
-HAL_StatusTypedef HAL_SPI_DeInit(MODULE_SPI_Typedef *Spi)
+HAL_StatusTypedef HAL_SPI_DeInit(HAL_SPI_InitTypedef *Init)
 {
-  if (Spi != SPI_0 && Spi != SPI_1)
+  if (Init == NULL || (Init->Spi != SPI_0 && Init->Spi != SPI_1))
     return HAL_ERROR;
 
-  WRITE_SR(&Spi->SPICON, 0U);
-  Spi->SPICON.SPITCLR = HAL_ENABLE;
-  HAL_DMA_ChTypedef DmaCh = (Spi == SPI_0) ? Spi0DmaCh : Spi1DmaCh;
-  HAL_DMA_MapTypedef DmaModule = (Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
-  DmaUpdate(Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
-  return HAL_OK;
+  WRITE_SR(&Init->Spi->SPICON, 0U);
+  Init->Spi->SPICON.SPITCLR = HAL_ENABLE;
+  HAL_DMA_ChTypedef DmaCh = (Init->Spi == SPI_0) ? Spi0DmaCh : Spi1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Init->Spi == SPI_0) ? OC32_DMA_SPI0 : OC32_DMA_SPI1;
+  return DmaUpdate(Init->Spi->SPICON.SPIDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
 }
 
 /**

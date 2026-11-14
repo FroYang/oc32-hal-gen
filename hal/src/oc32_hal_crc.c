@@ -162,7 +162,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
    * if normal mode, return value is the crc result */
   if (CRCCON->CRCIE == HAL_ENABLE)
   {
-    Result.Error = HAL_OK;
+    Result.Status = HAL_OK;
     return Result;
   }
 
@@ -170,7 +170,7 @@ __sram__ HAL_ResultTypedef HAL_CRC_Packet(HAL_CRC_PacketTypedef *Packet)
   while (CRCCON->CRCCF == HAL_FLAG_INVALID)
     ;
   CRCCON->CRCCCLR = HAL_ENABLE;
-  Result.Error = DmaUpdate(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
+  Result.Status = DmaUpdate(0U, CrcDmaCh, OC32_DMA_CRC, OC32_DMA_IDLE);
   Result.Data = HAL_CRC_GetResult();
   return Result;
 }

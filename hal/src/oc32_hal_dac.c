@@ -141,17 +141,11 @@ __sram__ HAL_StatusTypedef HAL_DAC_IRQHandler(MODULE_DAC_Typedef *Dac)
   HAL_DMA_MapTypedef DmaModule = (Dac == DAC_0) ? OC32_DMA_DAC0 : OC32_DMA_DAC1;
   HAL_StatusTypedef status = HAL_OK;
 
-  if (Dac->DACCON.DACCF == HAL_FLAG_VALID)
-  {
-    status = HAL_DAC_UserIRQ(Dac);
-    Dac->DACCON.DACCCLR = HAL_ENABLE;
-    Dac->DACCON.DACDMAE = HAL_DISABLE;
-    DmaUpdate(Dac->DACCON.DACDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
-  }
-
-  if (DMAChState[DmaCh] == OC32_DMA_IDLE)
-    Dac->DACCON.DACIE = HAL_DISABLE;
-
+  status = HAL_DAC_UserIRQ(Dac);
+  Dac->DACCON.DACCCLR = HAL_ENABLE;
+  Dac->DACCON.DACDMAE = HAL_DISABLE;
+  DmaUpdate(Dac->DACCON.DACDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
+  Dac->DACCON.DACIE = HAL_DISABLE;
   return status;
 }
 

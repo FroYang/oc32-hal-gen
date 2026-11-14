@@ -134,22 +134,22 @@ HAL_StatusTypedef HAL_UART_Init(HAL_UART_InitTypedef *Init)
 
 /**
  * @brief  DeInitializes the UART peripheral.
- * @param  Uart: pointer to a MODULE_UART_typedef structure, specifies which UART
+ * @param  Init: pointer to a HAL_UART_Inittypedef structure.
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if Uart is not UART_0/UART_1
  * @note   Resets UTCON to 0 then clears TX and RX done flags.
  */
-HAL_StatusTypedef HAL_UART_DeInit(MODULE_UART_Typedef *Uart)
+HAL_StatusTypedef HAL_UART_DeInit(HAL_UART_InitTypedef *Init)
 {
-  if (Uart != UART_0 && Uart != UART_1)
+  if (Init == NULL || (Init->Uart != UART_0 && Init->Uart != UART_1))
     return HAL_ERROR;
 
-  WRITE_SR(&Uart->UTCON, 0U);
-  Uart->UTCON.UTTCLR = HAL_ENABLE;
-  Uart->UTCON.UTRCLR = HAL_ENABLE;
-  HAL_DMA_ChTypedef DmaCh = (Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
-  HAL_DMA_MapTypedef DmaModule = (Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
-  DmaUpdate(Uart->UTCON.UTTDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
+  WRITE_SR(&Init->Uart->UTCON, 0U);
+  Init->Uart->UTCON.UTTCLR = HAL_ENABLE;
+  Init->Uart->UTCON.UTRCLR = HAL_ENABLE;
+  HAL_DMA_ChTypedef DmaCh = (Init->Uart == UART_0) ? Ut0DmaCh : Ut1DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Init->Uart == UART_0) ? OC32_DMA_UART0 : OC32_DMA_UART1;
+  DmaUpdate(Init->Uart->UTCON.UTTDMAE, DmaCh, DmaModule, OC32_DMA_IDLE);
   return HAL_OK;
 }
 

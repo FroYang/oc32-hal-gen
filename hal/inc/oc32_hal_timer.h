@@ -322,7 +322,7 @@ extern "C"
 
 #ifdef HAL_TIMER_ENABLE
   HAL_StatusTypedef HAL_TIMER_Init(HAL_TIMER_BaseInitTypedef *Init);
-  HAL_StatusTypedef HAL_TIMER_DeInit(MODULE_TIMER_Typedef *Timer);
+  HAL_StatusTypedef HAL_TIMER_DeInit(HAL_TIMER_BaseInitTypedef *Init);
   HAL_StatusTypedef HAL_TIMER_ResetInit(HAL_TIMER_ResetInitTypedef *Init);
   __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_ResetNow(MODULE_TIMER_Typedef *Timer);
   __weak__ __sram__ HAL_StatusTypedef HAL_TIMER_UpdateNow(HAL_TIMER_UpdateTypedef *Update);

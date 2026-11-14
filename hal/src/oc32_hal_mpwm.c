@@ -33,8 +33,21 @@ HAL_StatusTypedef HAL_MPWM_DeInit(HAL_MPWM_InitTypedef *Init)
     return HAL_ERROR;
 
   WRITE_SR(&Init->Mpwm->MPCON, 0U);
+  HAL_DMA_ChTypedef DmaCh = (Init->Mpwm == MPWM_0) ? Mpwm0DmaCh : (Init->Mpwm == MPWM_1) ? Mpwm1DmaCh
+                                                                                         : Mpwm2DmaCh;
+  HAL_DMA_MapTypedef DmaModule = (Init->Mpwm == MPWM_0) ? OC32_DMA_MPWM0 : (Init->Mpwm == MPWM_1) ? OC32_DMA_MPWM1
+                                                                                                  : OC32_DMA_MPWM2;
 
-  return HAL_OK;
+  Init->Mpwm->MPCON.MPW0CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW1CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW2CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW3CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW4CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW5CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW6CLR = HAL_ENABLE;
+  Init->Mpwm->MPCON.MPW7CLR = HAL_ENABLE;
+
+  return DmaUpdate(HAL_DISABLE, DmaCh, DmaModule, OC32_DMA_IDLE);
 }
 
 /**
@@ -195,16 +208,21 @@ __sram__ HAL_StatusTypedef HAL_MPWM_IRQHandler(MODULE_MPWM_Typedef *Mpwm)
   if ((Mpwm != MPWM_0) && (Mpwm != MPWM_1) && (Mpwm != MPWM_2))
     return HAL_ERROR;
 
+  HAL_StatusTypedef status;
+  
   if (Mpwm->MPCON.MPW0F == HAL_FLAG_VALID)
   {
+    status = HAL_MPWM_UserIRQ(Mpwm);
     HAL_DMA_ChTypedef DmaCh = (Mpwm == MPWM_0) ? Mpwm0DmaCh : (Mpwm == MPWM_1) ? Mpwm1DmaCh
                                                                                : Mpwm2DmaCh;
     HAL_DMA_MapTypedef DmaModule = (Mpwm == MPWM_0) ? OC32_DMA_MPWM0 : (Mpwm == MPWM_1) ? OC32_DMA_MPWM1
                                                                                         : OC32_DMA_MPWM2;
     Mpwm->MPCON.MPW0CLR = HAL_ENABLE;
     DmaUpdate(HAL_DISABLE, DmaCh, DmaModule, OC32_DMA_IDLE);
+    return status;
   }
 
+  status = HAL_MPWM_UserIRQ(Mpwm);
   if (Mpwm->MPCON.MPW1F == HAL_FLAG_VALID)
   {
     Mpwm->MPCON.MPW1CLR = HAL_ENABLE;
@@ -239,8 +257,8 @@ __sram__ HAL_StatusTypedef HAL_MPWM_IRQHandler(MODULE_MPWM_Typedef *Mpwm)
   {
     Mpwm->MPCON.MPW7CLR = HAL_ENABLE;
   }
+  return status;
 
-  return HAL_MPWM_UserIRQ(Mpwm);
 }
 
 #endif /* HAL_MPWM_ENABLE */

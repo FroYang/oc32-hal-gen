@@ -302,7 +302,7 @@ extern "C"
   HAL_StatusTypedef HAL_CCP_PwmInit(HAL_CCP_PwmInitTypedef *Init);
   HAL_StatusTypedef HAL_CCP_GateInit(HAL_CCP_GateInitTypedef *Init);
   HAL_StatusTypedef HAL_CCP_ForceInit(HAL_CCP_ForceInitTypedef *Init);
-  HAL_StatusTypedef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypedef *Update);
+  __weak__ __sram__ HAL_StatusTypedef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypedef *Update);
   __weak__ __sram__ HAL_StatusTypedef HAL_CCP_HandleCov(MODULE_CCP_Typedef *CCP);
   __weak__ __sram__ HAL_StatusTypedef HAL_CCP_WaitCf(MODULE_CCP_Typedef *CCP);
   __weak__ __sram__ HAL_StatusTypedef HAL_CCP_WaitGf(MODULE_CCP_Typedef *CCP);

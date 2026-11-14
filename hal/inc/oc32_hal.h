@@ -66,6 +66,7 @@ extern "C"
 #include "oc32_hal_amp.h"
 #include "oc32_hal_cmp.h"
 #include "oc32_hal_dac.h"
+#include "oc32_hal_adc.h"
 
 /* system base modules */
 #include "oc32_hal_rcm.h"

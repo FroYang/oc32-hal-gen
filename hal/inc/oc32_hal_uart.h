@@ -127,7 +127,7 @@ extern "C"
    */
 #ifdef HAL_UART_ENABLE
   HAL_StatusTypedef HAL_UART_Init(HAL_UART_InitTypedef *Init);
-  HAL_StatusTypedef HAL_UART_DeInit(MODULE_UART_Typedef *Uart);
+  HAL_StatusTypedef HAL_UART_DeInit(HAL_UART_InitTypedef *Init);
   __sram__ HAL_StatusTypedef HAL_UART_TX(HAL_UART_PacketTypedef *Packet);
   __sram__ HAL_StatusTypedef HAL_UART_RX(HAL_UART_PacketTypedef *Packet);
   __sram__ HAL_StatusTypedef HAL_UART_IRQHandler(MODULE_UART_Typedef *Uart);

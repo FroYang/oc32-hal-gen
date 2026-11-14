@@ -17,7 +17,6 @@
  ******************************************************************************
  */
 
-
 /* Includes ------------------------------------------------------------------*/
 #include "oc32_hal_iic.h"
 
@@ -418,7 +417,7 @@ __sram__ HAL_StatusTypedef IicTransStm(HAL_IIC_PacketTypedef *Packet)
     if ((IICCON->IICDMAE == HAL_DISABLE) && (IICCON->IICTX == IIC_RX))
       Packet->Data[0] = READ_SR(IICRBUF);
 
-    IicDeInit();
+    IicTransState = IIC_TRANS_IDLE;
     break;
 
   default:
@@ -521,7 +520,7 @@ __sram__ HAL_StatusTypedef HAL_IIC_Transfer(HAL_IIC_PacketTypedef *Packet)
       if (IicTransStm(IicCurPacket) != HAL_OK)
         return HAL_ERROR;
     }
-    return HAL_OK;
+    return IicDeInit();
   }
 }
 
@@ -555,10 +554,33 @@ __sram__ HAL_StatusTypedef HAL_IIC_IRQHandler(void)
   if (IicCurPacket == NULL)
     return HAL_ERROR;
 
-  if (IicTransStm(IicCurPacket) != HAL_OK)
-    return HAL_ERROR;
 
-  return HAL_IIC_UserIRQ();
+  HAL_StatusTypedef status;
+  /* call user callback if transfer is done (master mode) */
+  if ((IICCON->IICS == IIC_MASTER) && (IicTransState == IIC_TRANS_IDLE))
+  {
+    status = HAL_IIC_UserIRQ();
+    IicDeInit();
+    return status;
+  }
+
+  status = IicTransStm(IicCurPacket);
+
+  if (status != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
+  else
+  {
+    /* call user callback if transfer is done (slave mode) */
+    if ((IICCON->IICS == IIC_SLAVE) && (IicTransState == IIC_TRANS_IDLE))
+    {
+      status = HAL_IIC_UserIRQ();
+      IicDeInit();
+    }
+    
+    return status;
+  }
 }
 
 #endif /* HAL_IIC_ENABLE */

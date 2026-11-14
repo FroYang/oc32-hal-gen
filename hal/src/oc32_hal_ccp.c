@@ -26,7 +26,7 @@
  * @retval HAL_OK: on success
  * @retval HAL_ERROR: if CCP is not CCP_0..CCP_5
  */
-HAL_StatusTypedef CCPModuleCheck(MODULE_CCP_Typedef *CCP)
+__sram__ HAL_StatusTypedef CCPModuleCheck(MODULE_CCP_Typedef *CCP)
 {
   if (CCP != CCP_0 && CCP != CCP_1 &&
       CCP != CCP_2 && CCP != CCP_3 &&
@@ -270,7 +270,7 @@ __weak__ __sram__ HAL_StatusTypedef HAL_CCP_WaitFf(MODULE_CCP_Typedef *CCP)
  *         duty/gate values, triggers a user update (CCPUT), then restores
  *         the original update mode.
  */
-HAL_StatusTypedef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypedef *Update)
+__weak__ HAL_StatusTypedef HAL_CCP_UpdateNow(HAL_CCP_UpdateTypedef *Update)
 {
   if (CCPModuleCheck(Update->CCP) != HAL_OK)
     return HAL_ERROR;

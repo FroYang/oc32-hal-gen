@@ -436,107 +436,23 @@ typedef volatile struct
     uint32_t ADCEST : 3;
     uint32_t ADCECCLR : 1;
     uint32_t ADCECF : 1;
-} ADCE0CC_Typedef; // 0x8144
-#define ADC0E0CC ((ADCE0CC_Typedef *)0x3FF088144)
-#define ADC1E0CC ((ADCE0CC_Typedef *)0x3FF088184)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE1CC_Typedef; // 0x8148
-#define ADC0E1CC ((ADCE1CC_Typedef *)0x3FF08148)
-#define ADC1E1CC ((ADCE1CC_Typedef *)0x3FF08188)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE2CC_Typedef; // 0x814C
-#define ADC0E2CC ((ADCE2CC_Typedef *)0x3FF0814C)
-#define ADC1E2CC ((ADCE2CC_Typedef *)0x3FF0818C)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE3CC_Typedef; // 0x8150
-#define ADC0E3CC ((ADCE3CC_Typedef *)0x3FF08150)
-#define ADC1E3CC ((ADCE3CC_Typedef *)0x3FF08190)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE4CC_Typedef; // 0x8154
-#define ADC0E4CC ((ADCE4CC_Typedef *)0x3FF08154)
-#define ADC1E4CC ((ADCE4CC_Typedef *)0x3FF08194)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE5CC_Typedef; // 0x8158
-#define ADC0E5CC ((ADCE5CC_Typedef *)0x3FF08158)
-#define ADC1E5CC ((ADCE5CC_Typedef *)0x3FF08198)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE6CC_Typedef; // 0x815C
-#define ADC0E6CC ((ADCE6CC_Typedef *)0x3FF0815C)
-#define ADC1E6CC ((ADCE6CC_Typedef *)0x3FF0819C)
-
-typedef volatile struct
-{
-    uint32_t ADCED : 12;
-    uint32_t ADCEIS : 4;
-    uint32_t ADCEES : 4;
-    uint32_t ADCESDLY : 4;
-    uint32_t ADCEPL : 3;
-    uint32_t ADCEST : 3;
-    uint32_t ADCECCLR : 1;
-    uint32_t ADCECF : 1;
-} ADCE7CC_Typedef; // 0x8160
-#define ADC0E7CC ((ADCE7CC_Typedef *)0x3FF08160)
-#define ADC1E7CC ((ADCE7CC_Typedef *)0x3FF081A0)
+} ADCECC_Typedef; // 0x8144
+#define ADC0E0CC ((ADCECC_Typedef *)0x3FF08144)
+#define ADC1E0CC ((ADCECC_Typedef *)0x3FF08184)
+#define ADC0E1CC ((ADCECC_Typedef *)0x3FF08148)
+#define ADC1E1CC ((ADCECC_Typedef *)0x3FF08188)
+#define ADC0E2CC ((ADCECC_Typedef *)0x3FF0814C)
+#define ADC1E2CC ((ADCECC_Typedef *)0x3FF0818C)
+#define ADC0E3CC ((ADCECC_Typedef *)0x3FF08150)
+#define ADC1E3CC ((ADCECC_Typedef *)0x3FF08190)
+#define ADC0E4CC ((ADCECC_Typedef *)0x3FF08154)
+#define ADC1E4CC ((ADCECC_Typedef *)0x3FF08194)
+#define ADC0E5CC ((ADCECC_Typedef *)0x3FF08158)
+#define ADC1E5CC ((ADCECC_Typedef *)0x3FF08198)
+#define ADC0E6CC ((ADCECC_Typedef *)0x3FF0815C)
+#define ADC1E6CC ((ADCECC_Typedef *)0x3FF0819C)
+#define ADC0E7CC ((ADCECC_Typedef *)0x3FF08160)
+#define ADC1E7CC ((ADCECC_Typedef *)0x3FF081A0)
 
 #define ADC0DA (*(volatile uint32_t *)0x3FF08164)
 #define ADC1DA (*(volatile uint32_t *)0x3FF081A4)
@@ -568,6 +484,11 @@ typedef volatile struct
 } ADCDC1_Typedef; // 0x816C
 #define ADC0DC1 ((ADCDC1_Typedef *)0x3FF0816C)
 #define ADC1DC1 ((ADCDC1_Typedef *)0x3FF081AC)
+
+#define ADCEDMAE_POS (7U)
+#define ADCEDC_BIT_MASK (0x7FU)
+#define ADCDC_BIT_MASK (0xFFU)
+#define ADCDC_BIT_WIDTH (8U)
 
 typedef volatile struct
 {
@@ -607,6 +528,11 @@ typedef volatile struct
 #define ADC0WC0 ((ADCWC0_Typedef *)0x3FF08170)
 #define ADC1WC0 ((ADCWC0_Typedef *)0x3FF081B0)
 
+#define ADCE0OV_POS (8U)
+#define ADCWE0CLR_POS (16U)
+#define ADCWE0F_POS (17U)
+
+
 typedef volatile struct
 {
     uint32_t ADCWW0T : 12;
@@ -622,6 +548,9 @@ typedef volatile struct
 } ADCWW0_Typedef; // 0x8174
 #define ADC0WW0 ((ADCWW0_Typedef *)0x3FF08174)
 #define ADC1WW0 ((ADCWW0_Typedef *)0x3FF081B4)
+
+#define ADCE0IB_POS (12U)
+#define ADCE4IB_POS (28U)
 
 typedef volatile struct
 {
@@ -661,6 +590,9 @@ typedef volatile struct
 #define ADC0WC1 ((ADCWC1_Typedef *)0x3FF08178)
 #define ADC1WC1 ((ADCWC1_Typedef *)0x3FF081B8)
 
+#define ADCWE0E_POS (0U)
+#define ADCE0IE_POS (8U)
+
 typedef volatile struct
 {
     uint32_t ADCWW1T : 12;
@@ -671,6 +603,23 @@ typedef volatile struct
 } ADCWW1_Typedef; // 0x817C
 #define ADC0WW1 ((ADCWW1_Typedef *)0x3FF0817C)
 #define ADC1WW1 ((ADCWW1_Typedef *)0x3FF081BC)
+
+typedef volatile struct
+{
+    ADCCON_Typedef ADCCON;
+    ADCECC_Typedef ADCECC[8];
+    uint32_t ADCDA;
+    ADCDC0_Typedef ADCDC0;
+    ADCDC1_Typedef ADCDC1;
+    ADCWC0_Typedef ADCWC0;
+    ADCWW0_Typedef ADCWW0;
+    ADCWC1_Typedef ADCWC1;
+    ADCWW1_Typedef ADCWW1;
+} MODULE_ADC_Typedef;
+
+#define ADC_0 ((MODULE_ADC_Typedef *)0x3FF08140)
+#define ADC_1 ((MODULE_ADC_Typedef *)0x3FF08180)
+
 
 // ---- CCP (0x3FF081C0) ----
 typedef volatile struct

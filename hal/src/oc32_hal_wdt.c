@@ -164,7 +164,8 @@ __weak__ HAL_StatusTypedef HAL_WDT_UserIRQ(void)
  */
 HAL_StatusTypedef HAL_WDT_IRQHandler(void)
 {
+  HAL_StatusTypedef status = HAL_WDT_UserIRQ();
   HAL_WDT_Clear(WDT_0);
-  return HAL_WDT_UserIRQ();
+  return status;
 }
 #endif /* HAL_WDT_ENABLE */

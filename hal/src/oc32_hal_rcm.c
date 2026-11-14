@@ -41,7 +41,7 @@ static HAL_StatusTypedef RCM_ClockSwitchWait(void)
     {
         if (++loops > RCM_CSWAIT_LOOP_MAX)
         {
-            return HAL_TIMEOUT;
+            return HAL_ERROR;
         }
     }
     return HAL_OK;
